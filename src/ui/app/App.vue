@@ -303,20 +303,18 @@ export default class App extends Vue {
         this.study.showSnippets = !treatment.enableFragments;
       }
 
+      let context = new CodeContext();
       if (treatment && !treatment.enableContext) {
-        const emptyContext = new CodeContext();
-        this.hostContext = emptyContext;
-        this.selectedContext = emptyContext;
         isContextHidden = true;
       } else {
         // Use a hard-coded context just in case they make searches when the code is not focused.
         // This also ensures that the context is comparable across all trials (even if participants do weird things in the code)
         // const context = await this.$host.getContext();
-        const context = new CodeContext(treatment.contextOverride);
-        if (!this.hostContext.isEqual(context)) {
-          this.hostContext = context;
-          this.selectedContext = context;
-        }
+        context = new CodeContext(treatment.contextOverride);
+      }
+      if (!this.hostContext.isEqual(context)) {
+        this.hostContext = context;
+        this.selectedContext = context;
       }
     } catch (err) {
       this.appEvents.push({
