@@ -16,6 +16,7 @@
 		"onView:scout.webAppView",
 		"onCommand:scout.search"
 	],
+	"main": "./dist/host/extension.js",
 	"browser": "./dist/host/extension.js",
 	"contributes": {
 		"viewsContainers": {
