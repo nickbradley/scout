@@ -79,7 +79,7 @@
           right: 0;
         "
       />
-      <v-btn absolute top right rounded color="primary" @click="closeResult">
+      <v-btn absolute top right rounded color="red" @click="closeResult">
         <v-icon medium>mdi-close</v-icon>
       </v-btn>
     </v-container>
