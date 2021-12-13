@@ -1,0 +1,119 @@
+{
+	"name": "scout",
+	"displayName": "Scout",
+	"publisher": "ncbradley",
+	"description": "",
+	"version": "0.0.1",
+	"repository": "https://github.com/nickbradley/scout",
+	"license": "MIT",
+	"engines": {
+		"vscode": "^1.59.0"
+	},
+	"categories": [
+		"Other"
+	],
+	"activationEvents": [
+		"onView:scout.webAppView",
+		"onCommand:scout.search"
+	],
+	"browser": "./dist/host/extension.js",
+	"contributes": {
+		"viewsContainers": {
+			"activitybar": [
+				{
+					"id": "scout",
+					"title": "Scout",
+					"icon": "resources/icon.png"
+				}
+			]
+		},
+		"views": {
+			"scout": [
+				{
+					"id": "scout.webAppView",
+					"name": "",
+					"type": "webview"
+				}
+			]
+		},
+		"keybindings": [
+			{
+				"command": "scout.search",
+				"key": "ctrl+'",
+				"mac": "cmd+'"
+			}
+		],
+		"commands": [
+			{
+				"command": "scout.search",
+				"title": "Perform a web search",
+				"category": "Scout"
+			}
+		]
+	},
+	"scripts": {
+		"test": "vscode-test-web --browserType=chromium --extensionDevelopmentPath=. --extensionTestsPath=dist/web/test/suite/index.js",
+		"pretest": "yarn run compile-web",
+		"vscode:prepublish": "yarn run package-web",
+		"compile-web": "webpack",
+		"watch-web": "webpack --watch",
+		"package-web": "webpack --mode production --devtool hidden-source-map",
+		"lint": "eslint src --ext ts",
+		"run-in-browser": "vscode-test-web --browserType=chromium --extensionDevelopmentPath=. .",
+		"serve": "vue-cli-service serve",
+		"build-ui": "vue-cli-service build",
+		"test:unit": "vue-cli-service test:unit",
+		"lint-ui": "vue-cli-service lint",
+		"watch-ui": "vue-cli-service build --watch --mode development"
+	},
+	"devDependencies": {
+		"@types/jest": "^27.0.3",
+		"@types/mocha": "^9.0.0",
+		"@types/vscode": "^1.59.0",
+		"@types/vscode-webview": "^1.57.0",
+		"@types/webpack-env": "^1.16.2",
+		"@typescript-eslint/eslint-plugin": "^4.31.1",
+		"@typescript-eslint/parser": "^4.31.1",
+		"@vscode/test-web": "^0.0.13",
+		"@vue/cli-plugin-babel": "~4.5.0",
+		"@vue/cli-plugin-eslint": "~4.5.0",
+		"@vue/cli-plugin-typescript": "~4.5.0",
+		"@vue/cli-plugin-unit-jest": "~4.5.0",
+		"@vue/cli-service": "~4.5.0",
+		"@vue/eslint-config-prettier": "^6.0.0",
+		"@vue/eslint-config-typescript": "^7.0.0",
+		"@vue/test-utils": "^1.0.3",
+		"assert": "^2.0.0",
+		"babel-loader": "^8.2.3",
+		"deepmerge": "^4.2.2",
+		"eslint": "^7.32.0",
+		"eslint-config-prettier": "^8.3.0",
+		"eslint-plugin-prettier": "^3.3.1",
+		"eslint-plugin-vue": "^6.2.2",
+		"jest": "^27.0.7",
+		"mocha": "^9.1.1",
+		"prettier": "2.4.1",
+		"process": "^0.11.10",
+		"sass": "~1.32",
+		"sass-loader": "^10",
+		"ts-jest": "^27.0.7",
+		"ts-loader": "^9.2.5",
+		"vue-cli-plugin-vuetify": "~2.4.4",
+		"vue-jest": "^3.0.7",
+		"vue-template-compiler": "^2.6.11",
+		"vuetify-loader": "^1.7.0",
+		"webpack": "^5.52.1",
+		"webpack-cli": "^4.8.0"
+	},
+	"dependencies": {
+		"core-js": "^3.6.5",
+		"dotenv": "^10.0.0",
+		"isomorphic-unfetch": "^3.1.0",
+		"markdown-link-extractor": "^1.3.0",
+		"typescript": "^4.5.2",
+		"vue": "^2.6.11",
+		"vue-class-component": "^7.2.3",
+		"vue-property-decorator": "^9.1.2",
+		"vuetify": "^2.6.0"
+	}
+}
