@@ -3,5 +3,6 @@
 */**
 
 # Whitelist
+!LICENSE.md
 !dist/
 !resources/
