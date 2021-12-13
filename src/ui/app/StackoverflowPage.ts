@@ -8,6 +8,8 @@ import Block from "@/Block";
 export default class StackoverflowPage extends Page {
   constructor(readonly doc: Document, ...options: PageOption[]) {
     super(doc, ...options);
+
+    doc.querySelector(".js-consent-banner")?.remove();
   }
 
   public getBlocks(): Block[] {
