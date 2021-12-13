@@ -54,7 +54,15 @@ export default class Block {
     };
   }
 
-  public toJSON(): string {
-    return "";
+  public toJSON(): Record<string, any> {
+    return {
+      identifier: this.identifier,
+      top: this.top,
+      bottom: this.bottom,
+      right: this.right,
+      left: this.left,
+      width: this.width,
+      height: this.height,
+    };
   }
 }

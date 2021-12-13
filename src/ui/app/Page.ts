@@ -73,7 +73,7 @@ export default abstract class Page {
 
   public toJSON(): any {
     return {
-      blocks: [],
+      blocks: this.getBlocks(),
     };
   }
 
@@ -218,8 +218,7 @@ export default abstract class Page {
     return matches;
   }
 
-
-/*  findAlt(tokens: string[], root: Node): Fragment[] {
+  /*  findAlt(tokens: string[], root: Node): Fragment[] {
     const fragments: Fragment[] = [];
     const iterator = this.doc.createNodeIterator(root, NodeFilter.SHOW_TEXT);
     let currentNode = iterator.nextNode() as Node;
@@ -337,10 +336,12 @@ export default abstract class Page {
     listener: (
       action: "scroll",
       data: {
-        x: number;
-        y: number;
-        height: number;
-        width: number;
+        viewport: {
+          x: number;
+          y: number;
+          height: number;
+          width: number;
+        };
         blocks: Block[];
       }
     ) => void
@@ -364,7 +365,7 @@ export default abstract class Page {
           const x = win?.scrollX ?? NaN;
           const y = win?.scrollY ?? NaN;
           const blocks = p.getBlocks();
-          listener("scroll", { x, y, height, width, blocks });
+          listener("scroll", { viewport: { x, y, height, width }, blocks });
         }, 500);
       };
 

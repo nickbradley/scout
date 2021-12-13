@@ -137,24 +137,11 @@ export default class App extends Vue {
 
   pagesToLoad = 0;
 
-  log = {
-    trialId: this.study.trialId,
-    taskId: this.study.activeTask,
-    appEvents: this.appEvents,
-    searches: this.searches,
-  };
-
   resizeTimeoutId: number;
 
   @Watch("log", { deep: true })
   async saveSearches(): Promise<void> {
     try {
-      // const content = JSON.stringify({
-      //   trialId: this.study.trialId,
-      //   taskId: this.study.activeTask,
-      //   appEvents: this.appEvents,
-      //   searches: this.searches,
-      // });
       const content = JSON.stringify(this.log);
       await this.$host.saveFile(
         `scout.data.${this.study.activeTask || "na"}.json`,
@@ -164,6 +151,15 @@ export default class App extends Vue {
       // TODO provide real feedback
       console.warn("Failed to save search data.", err);
     }
+  }
+
+  get log(): any {
+    return {
+      trialId: this.study.trialId,
+      taskId: this.study.activeTask,
+      appEvents: this.appEvents,
+      searches: this.searches,
+    };
   }
 
   get search(): Search {
