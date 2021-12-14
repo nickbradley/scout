@@ -1,4 +1,4 @@
-import Page, { Fragment, PageOption, Projection } from "./Page";
+import Page, { Fragment, PageOption } from "./Page";
 import Block from "@/Block";
 
 // const isHTMLElement = (element: HTMLElement | null): element is HTMLElement => {
