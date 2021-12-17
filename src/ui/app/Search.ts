@@ -25,6 +25,7 @@ interface EventLog {
 }
 
 export default class Search {
+  readonly timestamp: Date;
   query?: string;
   results?: Result[];
   events: EventLog[];
@@ -33,6 +34,7 @@ export default class Search {
     readonly keywords: string[],
     public readonly context?: CodeContext
   ) {
+    this.timestamp = new Date();
     this.events = [];
   }
 

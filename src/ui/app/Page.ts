@@ -1,53 +1,26 @@
 import { Snapshooter, CSSStringifier } from "@/Snapshooter";
 import Block from "@/Block";
 
-interface TokenMatches {
-  [token: string]: string[];
-}
-
-interface NodeMatch {
+export interface KeywordMatch {
+  /** The keyword that was matched */
+  keyword: string;
+  /** The matched word in the text content */
+  word: string;
   node: Node;
-  matches: TextMatch[];
+  /** The text of the line containing the matching word */
+  lineText: string;
+  /** The 0-based index of the line containing the matching word */
+  lineIndex: number;
+  /** The 0-based index of the matching word in the line */
+  offset: number;
 }
 
-// export type Match = TextMatch & { node: Node; line: number };
-
-interface TextMatch {
-  text: string;
-  line: number;
-  keywords: {
-    [keyword: string]: Array<{
-      word: string;
-      offset: number;
-    }>;
-  };
-}
-
-export type KeywordMatches = Record<
-  string,
-  Array<{ word: string; offset: number }>
->;
 export interface Fragment {
-  node: Node;
-  matches: Array<{
-    text: string;
-    line: number;
-    keywords: KeywordMatches;
-  }>;
+  id: number;
+  blockId: string;
+  element: HTMLElement;
+  matches: KeywordMatch[];
 }
-
-// export interface Block {
-//   identifier: string;
-//   selector: string;
-//   x?: number;
-//   y?: number;
-//   width?: number;
-//   height?: number;
-//   top?: number;
-//   right?: number;
-//   bottom?: number;
-//   left?: number;
-// }
 
 export interface Projection {
   body: string;
@@ -59,70 +32,125 @@ export interface Projection {
 export type PageOption = (p: Page) => void;
 
 export default abstract class Page {
-  public readonly title: string;
+  protected _title: string;
+  public projections: Array<{
+    url: string;
+    type: "snippet" | "fragment";
+    blockId: string;
+    content: string;
+  }>;
+  protected _blocks: Block[] = [];
+  protected _fragments: Fragment[] = [];
 
   constructor(readonly doc: Document, ...options: PageOption[]) {
-    this.title = doc.title;
+    this._title = doc.title;
+    this.projections = [];
 
     for (const option of options) {
       option(this);
     }
   }
 
-  public abstract getBlocks(): Block[];
-
-  public toJSON(): any {
-    return {
-      blocks: this.getBlocks(),
-    };
+  public get title(): string {
+    return this._title;
   }
 
-  public createProjection(fragment: Fragment): Projection {
-    const projection = {
-      body: "",
-      css: "",
-      el: null,
-    };
-    const matches = fragment.matches;
-    if (matches === null) {
-      return projection;
-    }
-    let extract;
-    const textElement = fragment.node.parentElement as HTMLElement;
-    let el = textElement;
-    if (textElement && textElement.tagName === "CODE") {
-      const containingElement = textElement.parentElement;
-      if (containingElement) {
-        el = containingElement;
-        extract = this.extractElement(containingElement);
-        if (containingElement.tagName === "PRE") {
-          console.log("FOUND CODE ELEMENT", matches);
-          /** Shows select lines from a code block.
-           *  Picks the first three lines that have at least one match.
-           *  If the lines are not adjacent, adds ellipses between lines.
-           */
-          extract.html = `<pre id="PRE_1"><code id="CODE_1">${matches
-            .slice(0, 3)
-            .map((match, i, matches) => {
-              let line = match.text.trimStart();
-              const nextMatch = matches[i + 1];
-              if (nextMatch && nextMatch.line > match.line + 1) {
-                line += `\n...`;
-              }
-              return line;
-            })
-            .join("\n")}</code></pre>`;
+  public abstract getBlocks(): Block[];
+
+  public abstract getFragments(block: Block, keywords: string[]): Fragment[];
+
+  public abstract sortFragments(fragments: Fragment[]): Fragment[];
+
+  public findKeywords(keywords: string[], node: Node): KeywordMatch[] {
+    const matches: KeywordMatch[] = [];
+    const searchTerms = keywords.map((k) => k.toLowerCase());
+    const isWord = /^\S+$/;
+    const cleanRegex = /[^\p{L}\p{N}\s]/gu;
+
+    // const iterator = this.doc.createNodeIterator(
+    //   node,
+    //   4 //NodeFilter.SHOW_TEXT
+    // );
+    // let currentNode = iterator.nextNode() as Node;
+    // while (currentNode) {
+    //   const text = currentNode.textContent;
+    const text = node.textContent;
+    if (text) {
+      const lines = text.split("\n");
+      for (const [i, line] of lines.entries()) {
+        const words = line
+          .split(" ")
+          .map((word) => word.toLowerCase().replace(cleanRegex, "").trim())
+          .filter((word) => isWord.test(word));
+        for (const [offset, word] of words.entries()) {
+          for (const [j, term] of searchTerms.entries()) {
+            if (word.includes(term)) {
+              matches.push({
+                keyword: keywords[j],
+                word,
+                offset,
+                lineText: line,
+                lineIndex: i,
+                node,
+                // node: currentNode,
+              });
+            }
+          }
         }
       }
-    } else if (textElement && textElement.tagName === "P") {
-      extract = this.extractElement(textElement);
     }
-    projection.el = el as unknown as null;
-    if (extract) {
-      projection.body = extract.html;
-      projection.css = extract.style;
+    //   currentNode = iterator.nextNode() as Node;
+    // }
+
+    return matches;
+  }
+
+  public createFragmentProjection(fragment: Fragment): Projection {
+    const extract = this.extractElement(fragment.element);
+    const projection = {
+      body: extract.html,
+      css: extract.style,
+      el: fragment.element,
+    };
+    if (fragment.element.tagName === "PRE") {
+      const lineMatches: Array<{ lineIndex: number; lineText: string }> = [];
+      for (const match of fragment.matches) {
+        const line = lineMatches.find(
+          (line) => line.lineIndex === match.lineIndex
+        );
+        if (!line) {
+          lineMatches.push({
+            lineIndex: match.lineIndex,
+            lineText: match.lineText,
+          });
+        }
+      }
+
+      /** Shows select lines from a code block.
+       *  Picks the first three lines that have at least one match.
+       *  If the lines are not adjacent, adds ellipses between lines.
+       */
+      projection.body = `<pre id="PRE_1"><code id="CODE_1">${lineMatches
+        .slice(0, 3)
+        .map((match, i, matches) => {
+          let line = match.lineText.trimStart();
+          const nextMatch = matches[i + 1];
+          if (nextMatch && nextMatch.lineIndex > match.lineIndex + 1) {
+            line += `\n...`;
+          }
+          return line;
+        })
+        .join("\n")}</code></pre>`;
     }
+
     return projection;
+  }
+
+  public toJSON(): { blocks: Block[]; fragments: Fragment[] } {
+    return {
+      blocks: this._blocks,
+      fragments: this._fragments,
+    };
   }
 
   public extractElement(element: HTMLElement): { html: string; style: string } {
@@ -136,161 +164,6 @@ export default abstract class Page {
     const style = cssStringifier.process(css);
 
     return { html, style };
-  }
-
-  // find(tokens: string[], root: Node): HTMLMatches[] {
-  //   const matches: HTMLMatches[] = [];
-  //   const iterator = this.doc.createNodeIterator(root, 0x00000001); // NodeFilter.SHOW_ELEMENT
-  //
-  //   let currentNode;
-  //   // eslint-disable-next-line no-cond-assign
-  //   while ((currentNode = iterator.nextNode() as HTMLElement)) {
-  //     // const text = currentNode.innerText;
-  //     const text = currentNode.textContent;
-  //     if (text) {
-  //       const textMatches = Page.findInText(text, tokens);
-  //       if (Object.keys(textMatches).length > 0) {
-  //         matches.push({ element: currentNode, matches: textMatches });
-  //       }
-  //     }
-  //   }
-  //
-  //   return matches;
-  // }
-
-  find(tokens: string[], root: Node): NodeMatch[] {
-    const matches: NodeMatch[] = [];
-    const iterator = this.doc.createNodeIterator(root, NodeFilter.SHOW_TEXT);
-    let currentNode = iterator.nextNode() as Node;
-    while (currentNode) {
-      const text = currentNode.textContent;
-      if (text) {
-        const textMatches = Page.findInText(text, tokens);
-        if (Object.keys(textMatches).length > 0) {
-          matches.push({ node: currentNode, matches: textMatches });
-        }
-      }
-      currentNode = iterator.nextNode() as Node;
-    }
-    return matches;
-  }
-
-  static findInText(text: string, keywords: string[]): TextMatch[] {
-    const matches: TextMatch[] = [];
-    const lines = text.split("\n");
-    const searchTerms = keywords.map((k) => k.toLowerCase());
-    for (const [i, line] of lines.entries()) {
-      const match = {
-        text: line,
-        line: i,
-        keywords: {} as {
-          [keyword: string]: Array<{
-            word: string;
-            offset: number;
-          }>;
-        },
-      };
-      const words = line.split(" ").map((word) => word.toLowerCase());
-      for (const [offset, word] of words.entries()) {
-        for (const term of searchTerms) {
-          if (word.includes(term)) {
-            const keywordMatch = match.keywords[term];
-            if (keywordMatch) {
-              keywordMatch.push({
-                word,
-                offset,
-              });
-            } else {
-              match.keywords[term] = [
-                {
-                  word,
-                  offset,
-                },
-              ];
-            }
-          }
-        }
-      }
-      if (Object.keys(match.keywords).length > 0) {
-        matches.push(match);
-      }
-    }
-    return matches;
-  }
-
-  /*  findAlt(tokens: string[], root: Node): Fragment[] {
-    const fragments: Fragment[] = [];
-    const iterator = this.doc.createNodeIterator(root, NodeFilter.SHOW_TEXT);
-    let currentNode = iterator.nextNode() as Node;
-    while (currentNode) {
-      const matches = [];
-      const text = currentNode.textContent;
-      if (text) {
-        const lines = text.split("\n");
-        for (const [i, line] of lines.entries()) {
-          const keywordMatches = Page.findInText(line, tokens);
-          if (Object.keys(keywordMatches).length > 0) {
-            const match = {
-              text: line,
-              line: i,
-              keywords: keywordMatches,
-            };
-            matches.push(match);
-          }
-        }
-        fragments.push({ node: currentNode, matches });
-      }
-      currentNode = iterator.nextNode() as Node;
-    }
-    return fragments;
-  }*/
-
-  static findInTextAlt(text: string, keywords: string[]): KeywordMatches {
-    const searchTerms = keywords.map((k) => k.toLowerCase());
-    const matches: KeywordMatches = {};
-    const words = text.split(" ").map((word) => word.toLowerCase());
-    for (const [offset, word] of words.entries()) {
-      for (const term of searchTerms) {
-        if (word.includes(term)) {
-          const keywordMatch = matches[term];
-          if (keywordMatch) {
-            keywordMatch.push({
-              word,
-              offset,
-            });
-          } else {
-            matches[term] = [
-              {
-                word,
-                offset,
-              },
-            ];
-          }
-        }
-      }
-    }
-    return matches;
-  }
-
-  static findInText2(text: string, searchTokens: string[]): TokenMatches {
-    const matches: TokenMatches = {};
-    // searchTokens.forEach((t) => (matches[t] = []));
-    const tokens = searchTokens.map((t) => t.toLowerCase());
-
-    const words = text.split(" ");
-    for (const word of words) {
-      tokens.some((token, idx) => {
-        const searchToken = searchTokens[idx];
-        if (word.toLowerCase().includes(token)) {
-          if (matches[searchToken]) {
-            matches[searchToken].push(word);
-          } else {
-            matches[searchToken] = [word];
-          }
-        }
-      });
-    }
-    return matches;
   }
 
   public static WithSelectionListener(
@@ -307,7 +180,7 @@ export default abstract class Page {
           if (selection && !selection.isCollapsed) {
             listener("selectionchange", selection.toString());
           }
-        }, 850);
+        }, 850) as unknown as number;
       };
       p.doc.addEventListener("selectionchange", onSelectionChange);
     };
@@ -366,7 +239,7 @@ export default abstract class Page {
           const y = win?.scrollY ?? NaN;
           const blocks = p.getBlocks();
           listener("scroll", { viewport: { x, y, height, width }, blocks });
-        }, 500);
+        }, 500) as unknown as number;
       };
 
       p.doc.addEventListener("scroll", onScroll);
