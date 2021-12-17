@@ -293,6 +293,7 @@ export default class App extends Vue {
         }
         this.$refs.input.reset();
         this.searches = [];
+        this.appEvents = [];
         this.study.activeTask = activeTaskId;
         isNewTask = true;
       }
