@@ -1,23 +1,28 @@
 <template>
-  <v-alert
-    v-if="kind === 'fragment'"
-    class="py-1"
-    border="left"
-    colored-border
-    elevation="1"
-    @click="() => $emit('click', undefined, this.el)"
-  >
-    <iframe class="pa-0" :srcdoc="srcdoc" :style="'height:' + height + ';'">
-    </iframe>
-  </v-alert>
+  <v-hover v-slot="{ hover }">
+    <v-alert
+      v-if="kind === 'fragment'"
+      class="pa-0 mb-1"
+      :elevation="hover ? 5 : 1"
+      @click="onClick"
+    >
+      <iframe
+        class="pa-0"
+        :srcdoc="srcdoc"
+        :style="'height:' + height + ';'"
+        :class="dim ? 'dim' : ''"
+      >
+      </iframe>
+    </v-alert>
 
-  <iframe
-    v-else
-    class="pa-0"
-    :srcdoc="srcdoc"
-    :style="'height:' + height + ';'"
-  >
-  </iframe>
+    <iframe
+      v-else
+      class="pa-0"
+      :srcdoc="srcdoc"
+      :style="'height:' + height + ';'"
+    >
+    </iframe>
+  </v-hover>
 </template>
 
 <script lang="ts">
@@ -44,6 +49,8 @@ export default class SearchResultProjection extends Vue implements Projection {
   window: Window | null = null;
 
   nonce = SearchResultProjection.getNonce();
+
+  dim = false;
 
   get srcdoc(): string {
     return `
@@ -125,6 +132,19 @@ export default class SearchResultProjection extends Vue implements Projection {
     `;
   }
 
+  onClick(): void {
+    // const dimmed = `p,pre {
+    //                 color: #9d99c7 !important;
+    //                 -webkit-text-fill-color: #9d99c7 !important;
+    //               }`;
+    // const doc = this.window.document;
+    // const style = doc.createElement("style");
+    // doc.head.appendChild(style);
+    // style.appendChild(doc.createTextNode(dimmed));
+    this.dim = true;
+    this.$emit("click", undefined, this.el);
+  }
+
   clearAllSections(): void {
     if (this.window) {
       this.window.postMessage(
@@ -146,6 +166,8 @@ export default class SearchResultProjection extends Vue implements Projection {
           this.$emit("load");
         } else if (event.data.action === "resize") {
           this.height = `${event.data.data.height}px`;
+        } else if (event.data.action === "click") {
+          this.onClick();
         } else {
           this.$emit(event.data.action, event.data.data, this.el);
         }
@@ -171,5 +193,9 @@ iframe {
   border: none;
   padding: 0;
   overflow: hidden;
+}
+
+.dim {
+  opacity: 40%;
 }
 </style>

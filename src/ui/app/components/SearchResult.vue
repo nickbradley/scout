@@ -3,7 +3,10 @@
     v-if="projections.length > 0"
     :v-show="projectionsToLoad === 0"
     height="240px"
-    class="ma-0 px-2"
+    class="ma-0 px-1 mb-2 pb-1"
+    flat
+    outlined
+    rounded="0"
     style="display: flex !important; flex-direction: column"
   >
     <v-toolbar
@@ -16,7 +19,7 @@
       </v-avatar>
       <a class="pr-2 text-truncate">{{ page.title }} </a>
     </v-toolbar>
-    <v-card-text>
+    <v-card-text class="pa-0">
       <SearchResultProjection
         v-for="(projection, i) of projections"
         :key="i"
@@ -109,8 +112,8 @@ export default class SearchResult extends Vue {
   /* height: 32px !important; */
 }
 /deep/ .v-toolbar__content {
-  /* padding-left: 0; */
-  /* padding-right: 0; */
+  padding-left: 0;
+  padding-right: 0;
   /* height: 32px !important; */
 }
 /deep/ .v-skeleton-loader__image {

@@ -41,10 +41,16 @@ export default abstract class Page {
   }>;
   protected _blocks: Block[] = [];
   protected _fragments: Fragment[] = [];
+  private observer?: IntersectionObserver;
+  private _activeElement?: HTMLElement;
 
   constructor(readonly doc: Document, ...options: PageOption[]) {
     this._title = doc.title;
     this.projections = [];
+
+    const style = doc.createElement("style");
+    doc.head.appendChild(style);
+    style.appendChild(doc.createTextNode(this.style));
 
     for (const option of options) {
       option(this);
@@ -53,6 +59,94 @@ export default abstract class Page {
 
   public get title(): string {
     return this._title;
+  }
+
+  public get style(): string {
+    return `
+    body {
+      background: white !important;
+    }
+    @-webkit-keyframes yellow-fade {
+      from {
+        background: #f96;
+      }
+      to {
+        background: #fff;
+      }
+    }
+    @-moz-keyframes yellow-fade {
+      from {
+        background: #f96;
+      }
+      to {
+        background: #fff;
+      }
+    }
+    @keyframes yellow-fade {
+      from {
+        background: #f96;
+      }
+      to {
+        background: #fff;
+      }
+    }
+    .fade-in {
+      -webkit-animation: yellow-fade 1s ease-in-out 0s;
+      -moz-animation: yellow-fade 1s ease-in-out 0s;
+      -o-animation: yellow-fade 1s ease-in-out 0s;
+      animation: yellow-fade 1s ease-in-out 0s;
+    }
+    .dismissed {
+      opacity: 40%;
+    }
+    `;
+  }
+
+  public set activeElement(element: HTMLElement) {
+    this._activeElement = element;
+  }
+
+  public highlightOnScroll(): void {
+    if (this.observer) {
+      this.clearHighlighOnScroll();
+    }
+
+    if (this._activeElement === undefined) {
+      return;
+    }
+
+    this.observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            this._activeElement?.classList.add("fade-in");
+            return;
+          }
+          this._activeElement?.classList.remove("fade-in");
+        });
+      },
+      { threshold: 0.5 }
+    );
+    this.observer.observe(this._activeElement);
+  }
+
+  public clearHighlighOnScroll(): void {
+    this.observer?.disconnect();
+  }
+
+  public dismissFragmentBlock(): void {
+    if (this._activeElement === undefined) {
+      return;
+    }
+
+    if (this._blocks.length === 0) {
+      this.getBlocks();
+    }
+    this._blocks
+      .find((block) =>
+        block.element.contains(this._activeElement as HTMLElement)
+      )
+      ?.element.classList.add("dismissed");
   }
 
   public abstract getBlocks(): Block[];
@@ -67,40 +161,40 @@ export default abstract class Page {
     const isWord = /^\S+$/;
     const cleanRegex = /[^\p{L}\p{N}\s]/gu;
 
-    // const iterator = this.doc.createNodeIterator(
-    //   node,
-    //   4 //NodeFilter.SHOW_TEXT
-    // );
-    // let currentNode = iterator.nextNode() as Node;
-    // while (currentNode) {
-    //   const text = currentNode.textContent;
-    const text = node.textContent;
-    if (text) {
-      const lines = text.split("\n");
-      for (const [i, line] of lines.entries()) {
-        const words = line
-          .split(" ")
-          .map((word) => word.toLowerCase().replace(cleanRegex, "").trim())
-          .filter((word) => isWord.test(word));
-        for (const [offset, word] of words.entries()) {
-          for (const [j, term] of searchTerms.entries()) {
-            if (word.includes(term)) {
-              matches.push({
-                keyword: keywords[j],
-                word,
-                offset,
-                lineText: line,
-                lineIndex: i,
-                node,
-                // node: currentNode,
-              });
+    const iterator = this.doc.createNodeIterator(
+      node,
+      4 //NodeFilter.SHOW_TEXT
+    );
+    let currentNode = iterator.nextNode() as Node;
+    while (currentNode) {
+      const text = currentNode.textContent;
+      // const text = node.textContent;
+      if (text) {
+        const lines = text.split("\n");
+        for (const [i, line] of lines.entries()) {
+          const words = line
+            .split(" ")
+            .map((word) => word.toLowerCase().replace(cleanRegex, "").trim())
+            .filter((word) => isWord.test(word));
+          for (const [offset, word] of words.entries()) {
+            for (const [j, term] of searchTerms.entries()) {
+              if (word.includes(term)) {
+                matches.push({
+                  keyword: keywords[j],
+                  word,
+                  offset,
+                  lineText: line,
+                  lineIndex: i,
+                  // node,
+                  node: currentNode,
+                });
+              }
             }
           }
         }
       }
+      currentNode = iterator.nextNode() as Node;
     }
-    //   currentNode = iterator.nextNode() as Node;
-    // }
 
     return matches;
   }

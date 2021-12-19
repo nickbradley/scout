@@ -99,41 +99,6 @@ export default class XFrame extends Vue {
             window.parent.postMessage({ url: "${url}", kind: "loaded" }, "*");
           });
           <\/script>
-          <style>
-              body {
-                  background: white !important;
-              }
-              @-webkit-keyframes yellow-fade {
-                from {
-                  background: #f96;
-                }
-                to {
-                  background: #fff;
-                }
-              }
-              @-moz-keyframes yellow-fade {
-                from {
-                  background: #f96;
-                }
-                to {
-                  background: #fff;
-                }
-              }
-              @keyframes yellow-fade {
-                from {
-                  background: #f96;
-                }
-                to {
-                  background: #fff;
-                }
-              }
-              .fade-in {
-                -webkit-animation: yellow-fade 1s ease-in-out 0s;
-                -moz-animation: yellow-fade 1s ease-in-out 0s;
-                -o-animation: yellow-fade 1s ease-in-out 0s;
-                animation: yellow-fade 1s ease-in-out 0s;
-              }
-          </style>
     `;
     return text.replace(/<head([^>]*)>/i, pageContent);
   }

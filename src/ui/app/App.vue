@@ -255,9 +255,11 @@ export default class App extends Vue {
 
   onResultProjectionClick(result: Result, pageElement: HTMLElement): void {
     this.openResult(result);
+    result.page.activeElement = pageElement;
     pageElement.scrollIntoView({ block: "center", inline: "center" });
-    pageElement.classList.add("fade-in");
-    setTimeout(() => pageElement.classList.remove("fade-in"), 1000);
+    // pageElement.classList.add("fade-in");
+    // setTimeout(() => pageElement.classList.remove("fade-in"), 1000);
+    result.page.highlightOnScroll();
   }
 
   onAppResize(): void {
@@ -371,6 +373,7 @@ export default class App extends Vue {
   }
 
   closeResult(): void {
+    this.visibleResult.page.dismissFragmentBlock();
     this.search.logEvent(this.visibleResult.url, "page", "close");
     this.visibleResult = null;
   }
