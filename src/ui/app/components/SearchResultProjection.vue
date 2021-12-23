@@ -2,8 +2,10 @@
   <v-hover v-slot="{ hover }">
     <v-alert
       v-if="kind === 'fragment'"
-      class="pa-0 mb-1"
+      class="py-0 pr-0 mb-1"
       :elevation="hover ? 5 : 1"
+      dense
+      border="left"
       @click="onClick"
     >
       <iframe
