@@ -1,5 +1,68 @@
 // Generated 08-dec-2021
 export const resultsCache = {
+  "javascript bcrypt match passwords site:stackoverflow.com": [
+    {
+      title: "Compare passwords BcryptJS - Stack Overflow",
+      snippet:
+        "Compare passwords BcryptJS · javascript node.js express bcrypt. So I'm trying to build a very basic user login. I'm trying ...",
+      url: "https://stackoverflow.com/questions/40076638/compare-passwords-bcryptjs",
+    },
+    {
+      title: "how to compare bcrypt hash password - Stack Overflow",
+      snippet:
+        "bcrypt has a built-in method for comparing hashes. async function passCheck(event) { var fromDB = await pool.query('SELECT password from ...",
+      url: "https://stackoverflow.com/questions/65920404/how-to-compare-bcrypt-hash-password",
+    },
+    {
+      title: "nodejs - how to compare two hashes password of bcrypt",
+      snippet:
+        "I have these 2 hash password that came from the same password in bcrypt: var password = E@Js#07Do=U$ var hash1 = $2a$10$ ...",
+      url: "https://stackoverflow.com/questions/55801772/nodejs-how-to-compare-two-hashes-password-of-bcrypt",
+    },
+    {
+      title: "How does node.bcrypt.js compare hashed and plaintext ...",
+      snippet:
+        "Bcrypt compare hashed and plaintext passwords without the salt string because the hashed password contains the salt string which we created at ...",
+      url: "https://stackoverflow.com/questions/13023361/how-does-node-bcrypt-js-compare-hashed-and-plaintext-passwords-without-the-salt",
+    },
+    {
+      title: "Bcrypt password fails when i try to compare? - Stack Overflow",
+      snippet:
+        "node.js bcrypt ... I am using bcrypt to compare the hashed password with the original string but i am getting false statement.",
+      url: "https://stackoverflow.com/questions/66134693/bcrypt-password-fails-when-i-try-to-compare",
+    },
+    {
+      title: "Nodejs : in bcrypt it returns false at compare password hash",
+      snippet:
+        "When you compare() , you need to pass in the plaintext value as the first argument and the hash from your database as the second argument.",
+      url: "https://stackoverflow.com/questions/24583608/nodejs-in-bcrypt-it-returns-false-at-compare-password-hash",
+    },
+    {
+      title: "bcryptjs compare function returns false when passwords ...",
+      snippet:
+        "In the users.js file at the comparePassword function inside the compare method of bcrypt you are throwing the error instead of passing it to ...",
+      url: "https://stackoverflow.com/questions/63408204/bcryptjs-compare-function-returns-false-when-passwords-contain-numbers",
+    },
+    {
+      title: "Bcrypt-NodeJS compare() returns false whatever the password",
+      snippet:
+        "I know the solution has been found but just in case you are landing here out of google search and have the same issue, especially if you are ...",
+      url: "https://stackoverflow.com/questions/46022956/bcrypt-nodejs-compare-returns-false-whatever-the-password/50537073",
+    },
+    {
+      title: "Why am I getting isMatch null from bcrypt compare even ...",
+      snippet:
+        "When the user signup you save the hashed version of it not the actual text. const password = req.body.password // This hasedPassword will be ...",
+      url: "https://stackoverflow.com/questions/66532228/why-am-i-getting-ismatch-null-from-bcrypt-compare-even-though-two-password-strin",
+    },
+    {
+      title:
+        "bcrypt-nodejs compare method returns false every time - Stack ...",
+      snippet:
+        "You appear to be passing in a string 'user.login.local.password' instead of the actual password in your userSchema pre save function: e.g. this ...",
+      url: "https://stackoverflow.com/questions/30494856/bcrypt-nodejs-compare-method-returns-false-every-time",
+    },
+  ],
   "javascript jszip add html file JSZip generateAsync site:stackoverflow.com": [
     {
       title: "How to Zip files using jszip library - Stack Overflow",

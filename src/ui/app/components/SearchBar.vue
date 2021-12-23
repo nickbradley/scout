@@ -27,6 +27,7 @@ export default class SearchBar extends Vue {
   @Prop({ default: false }) readonly loading!: boolean;
   @Prop({ default: null }) readonly value!: string;
   @Prop({ default: {} }) readonly cache!: Record<string, Result[]>;
+  @Prop({ default: false }) readonly demo!: boolean;
 
   input = null;
   isLoading = false;
@@ -55,22 +56,6 @@ export default class SearchBar extends Vue {
       .filter((word) => word.length > 0);
   }
 
-  get query(): string {
-    const keywords = this.keywords;
-    const lang = this.context.languageName || "";
-    const libs = this.context.libraryNames;
-    const calls = this.context.callNames;
-    // const sites = this.context.libraries
-    //   .map((lib) => lib.docSites)
-    //   .flat()
-    //   .filter((site) => !["github.com"].includes(site))
-    //   .map((site) => `site:${site}`)
-    //   .concat("site:stackoverflow.com")
-    //   .join(" OR ");
-    const sites = "site:stackoverflow.com";
-    return [lang, ...libs, ...keywords, ...calls, sites].join(" ").trim();
-  }
-
   public reset(): void {
     this.input = null;
   }
@@ -79,14 +64,22 @@ export default class SearchBar extends Vue {
     // eslint-disable-next-line no-async-promise-executor
     const searchPromise = new Promise<Search>(async (resolve, reject) => {
       try {
-        const search = new Search(this.keywords, this.context);
-        const cachedResults = this.cache[this.query];
+        const search = this.demo
+          ? new Search(
+              ["match", "passwords"],
+              new CodeContext([
+                { kind: "language", value: "javascript" },
+                { kind: "library", value: "bcrypt", docSites: [], typings: [] },
+              ])
+            )
+          : new Search(this.keywords, this.context);
+          console.log("SEARCH", search.keywords, search.context, search.query);
+        const cachedResults = this.cache[search.query];
         if (cachedResults) {
-          console.info("Using cached results for query", this.query);
-          search.query = this.query;
+          console.info("Using cached results for query", search.query);
           search.results = cachedResults;
         } else {
-          await search.getResults(this.searchProvider, this.query);
+          await search.getResults(this.searchProvider, search.query);
         }
         resolve(search);
       } catch (err) {

@@ -26,7 +26,6 @@ interface EventLog {
 
 export default class Search {
   readonly timestamp: Date;
-  query?: string;
   results?: Result[];
   events: EventLog[];
 
@@ -38,12 +37,27 @@ export default class Search {
     this.events = [];
   }
 
+  public get query(): string {
+    const keywords = this.keywords;
+    const lang = this.context?.languageName || "";
+    const libs = this.context?.libraryNames ?? [];
+    const calls = this.context?.callNames ?? [];
+    // const sites = this.context.libraries
+    //   .map((lib) => lib.docSites)
+    //   .flat()
+    //   .filter((site) => !["github.com"].includes(site))
+    //   .map((site) => `site:${site}`)
+    //   .concat("site:stackoverflow.com")
+    //   .join(" OR ");
+    const sites = "site:stackoverflow.com";
+    return [lang, ...libs, ...keywords, ...calls, sites].join(" ").trim();
+  }
+
   public async getResults(
     provider: SearchProvider,
     query: string
   ): Promise<Result[]> {
     console.log("Serach::getResults(..) - ", query, provider);
-    this.query = query;
     this.results = await provider.fetch(query);
     return this.results;
   }

@@ -103,6 +103,9 @@ export default class SearchResult extends Vue {
 
   onProjectionLoad(): void {
     this.projectionsToLoad -= 1;
+    if (this.projectionsToLoad === 0) {
+      this.$emit("load");
+    }
   }
 }
 </script>

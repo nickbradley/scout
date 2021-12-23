@@ -3,6 +3,7 @@
     <v-app-bar app tile flat dark>
       <v-spacer></v-spacer>
       <SearchBar
+        id="input"
         ref="input"
         :history="searches"
         :context="context"
@@ -10,11 +11,13 @@
         :loading="isSearchInProgress"
         :cache="searchCache"
         :value="searchValue"
+        :demo="!wtDisable && wtStep === 1"
         @search="onSearch"
       ></SearchBar>
       <v-spacer></v-spacer>
       <template v-slot:extension>
         <ContextList
+          id="context"
           :context="hostContext"
           :disabled="isSearchInProgress || visibleResult !== null"
           @changed="onSelectedContextChanged"
@@ -40,8 +43,8 @@
         :snippet="study.showSnippets ? result.snippet : ''"
         :keywords="[
           ...search.keywords,
-          ...context.libraryNames,
-          ...context.callNames,
+          ...(search.context.libraryNames || []),
+          ...(search.context.callNames || []),
         ]"
         @open="() => openResult(result)"
         @click="
@@ -54,6 +57,7 @@
         @copy="
           (data) => search.logEvent(result.url, 'projection', 'copy', data)
         "
+        @load="() => onResultLoaded(result)"
       ></SearchResult>
     </v-main>
 
@@ -84,6 +88,12 @@
       </v-btn>
     </v-container>
     <v-overlay :value="visibleResult !== null" opacity=".9"></v-overlay>
+
+    <Walkthrough
+      v-if="!wtDisable && wtStep <= 4"
+      :value="wtShow"
+      v-bind="walkthroughStep"
+    ></Walkthrough>
   </v-app>
 </template>
 
@@ -99,6 +109,7 @@ import ContextList from "@/components/ContextList.vue";
 import CodeContext from "@/CodeContext";
 import { AppConfig } from "../../common/types";
 import { resultsCache } from "./resultsCache";
+import Walkthrough from "@/components/Walkthrough.vue";
 
 interface AppEvent {
   timestamp: Date;
@@ -106,11 +117,22 @@ interface AppEvent {
   data: Record<string, string | number>;
 }
 
+interface WalkthroughStep {
+  attach: string | Node;
+  top?: boolean;
+  point?: boolean;
+  title: string;
+  text: string;
+  action: string;
+  progress: number;
+}
+
 @Component({
   components: {
     ContextList,
     SearchBar,
     SearchResult,
+    Walkthrough,
     XFrame,
   },
 })
@@ -138,6 +160,10 @@ export default class App extends Vue {
   pagesToLoad = 0;
 
   resizeTimeoutId: number;
+
+  wtShow = false;
+  wtStep = 0;
+  wtDisable = true;
 
   @Watch("log", { deep: true })
   async saveSearches(): Promise<void> {
@@ -186,12 +212,59 @@ export default class App extends Vue {
     return this.$refs.input.$el.querySelector<HTMLInputElement>("input");
   }
 
+  get walkthroughStep(): WalkthroughStep {
+    const steps = [
+      {
+        attach: ".v-toolbar__extension",
+        title: "Context Terms",
+        text: "These terms are automatically identified in the code and are included in your search by default.",
+        action: 'Uncheck "mongodb" and click Apply.',
+      },
+      {
+        attach: ".v-select__slot",
+        title: "Search",
+        text: "Search Google for Stack Overflow results. Checked context terms are included with your search terms.",
+        action: 'Type "match passwords" and press Enter.',
+        progress: 25,
+      },
+      {
+        attach: ".v-alert__content",
+        title: "Fragments",
+        text: "Scout extracts text fragments containing your search terms from each answer on the Stack Overflow page.",
+        action:
+          "Click anywhere inside the fragment to open the full page scrolled to the right location. You can also click the title to open the page scrolled to the top.",
+        progress: 50,
+      },
+      {
+        attach: ".v-btn",
+        title: "Navigation",
+        text: "Scout uses popups to show each page. Notice that the page is scrolled with the answer fragment in the middle.",
+        action: "Click the close button to return to the search results.",
+        progress: 75,
+        point: false,
+      },
+      {
+        attach: document.querySelectorAll(".v-alert__content")[6],
+        title: "Solution Fragments",
+        text: "The fragment below contains the solution we are looking for.",
+        action:
+          "Copy the text from this fragment and paste it into the source code. Finish the task by renaming the parameters.",
+        progress: 100,
+        top: true,
+      },
+    ];
+    return steps[this.wtStep];
+  }
   onSelectedContextChanged(selectedContext: CodeContext): void {
+    this.wtStep++;
+
     // TODO Log when context is changed??
     this.selectedContext = selectedContext;
   }
 
   async onSearch(searchPromise: Promise<Search>): Promise<void> {
+    this.wtShow = false;
+
     try {
       setTimeout(() => (this.pagesToLoad = 0), 12000);
       this.pagesToLoad = 1; // trigger loading indicator
@@ -253,6 +326,14 @@ export default class App extends Vue {
     this.pagesToLoad -= 1;
   }
 
+  onResultLoaded(result: Result): void {
+    const resultIndex = this.results.findIndex((res) => res.url === result.url);
+    if (resultIndex === 0) {
+      this.wtShow = true;
+      this.wtStep++;
+    }
+  }
+
   onResultProjectionClick(result: Result, pageElement: HTMLElement): void {
     this.openResult(result);
     result.page.activeElement = pageElement;
@@ -260,6 +341,8 @@ export default class App extends Vue {
     // pageElement.classList.add("fade-in");
     // setTimeout(() => pageElement.classList.remove("fade-in"), 1000);
     result.page.highlightOnScroll();
+
+    this.wtStep++;
   }
 
   onAppResize(): void {
@@ -298,6 +381,11 @@ export default class App extends Vue {
         this.appEvents = [];
         this.study.activeTask = activeTaskId;
         isNewTask = true;
+      }
+      if (activeTaskId === "tutorial") {
+        this.wtDisable = false;
+      } else {
+        this.wtDisable = true;
       }
       const treatment = toastData.tasks.find(
         (task) => task.id === activeTaskId
@@ -376,6 +464,8 @@ export default class App extends Vue {
     this.visibleResult.page.dismissFragmentBlock();
     this.search.logEvent(this.visibleResult.url, "page", "close");
     this.visibleResult = null;
+
+    this.wtStep++;
   }
 
   async created(): Promise<void> {
@@ -407,6 +497,7 @@ export default class App extends Vue {
 
   async mounted(): Promise<void> {
     await this.onAppFocus();
+    this.wtShow = true;
   }
 }
 </script>
@@ -424,5 +515,21 @@ export default class App extends Vue {
 .hidden {
   position: fixed;
   left: -200% !important;
+}
+.tooltip-bottom::before {
+  border-right: solid 8px transparent;
+  border-left: solid 8px transparent;
+  transform: translateX(-50%);
+  position: absolute;
+  z-index: -21;
+  content: "";
+  bottom: 100%;
+  left: 50%;
+  height: 0;
+  width: 0;
+}
+
+.tooltip-bottom.primary::before {
+  border-bottom: solid 8px #246fb3;
 }
 </style>
