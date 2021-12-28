@@ -398,10 +398,14 @@ export default class App extends Vue {
       if (treatment && !treatment.enableContext) {
         isContextHidden = true;
       } else {
-        // Use a hard-coded context just in case they make searches when the code is not focused.
-        // This also ensures that the context is comparable across all trials (even if participants do weird things in the code)
-        // const context = await this.$host.getContext();
-        context = new CodeContext(treatment.contextOverride);
+        const actualContext = await this.$host.getContext();
+        if (actualContext.isEmpty()) {
+          // Use a hard-coded context just in case they make searches when the code is not focused.
+          // This also ensures that the context is comparable across all trials (even if participants do weird things in the code)
+          context = new CodeContext(treatment.contextOverride);
+        } else {
+          context = actualContext;
+        }
       }
       if (!this.hostContext.isEqual(context)) {
         this.hostContext = context;

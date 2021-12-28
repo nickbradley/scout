@@ -44,4 +44,8 @@ export default class CodeContext {
         .join("")
     );
   }
+
+  isEmpty(): boolean {
+    return this.tokens.length === 0;
+  }
 }
