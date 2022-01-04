@@ -107,10 +107,6 @@ export default abstract class Page {
   }
 
   public highlightOnScroll(): void {
-    if (this.observer) {
-      this.clearHighlighOnScroll();
-    }
-
     if (this._activeElement === undefined) {
       return;
     }
