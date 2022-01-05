@@ -231,14 +231,13 @@ export default class App extends Vue {
         attach: ".v-alert__content",
         title: "Fragments",
         text: "Scout extracts text fragments containing your search terms from each answer on the Stack Overflow page.",
-        action:
-          "Click anywhere inside the fragment to open the full page scrolled to the right location. You can also click the title to open the page scrolled to the top.",
+        action: "Click the fragment to open the page.",
         progress: 50,
       },
       {
         attach: ".v-btn",
         title: "Navigation",
-        text: "Scout uses popups to show each page. Notice that the page is scrolled with the answer fragment in the middle.",
+        text: "Scout uses popups to show each page scrolled to the answer fragment.",
         action: "Click the close button to return to the search results.",
         progress: 75,
         point: false,
@@ -247,8 +246,7 @@ export default class App extends Vue {
         attach: document.querySelectorAll(".v-alert__content")[6],
         title: "Solution Fragments",
         text: "The fragment below contains the solution we are looking for.",
-        action:
-          "Copy the text from this fragment and paste it into the source code. Finish the task by renaming the parameters.",
+        action: "Walkthrough complete. Click Next in the task instructions.",
         progress: 100,
         top: true,
       },

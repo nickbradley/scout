@@ -13,9 +13,20 @@
     <v-card-title>{{ title }}</v-card-title>
     <v-card-text class="text-left">
       {{ text }}
-      <b>Action:</b> {{ action }}
+      <v-divider></v-divider>
+      <v-alert
+        dense
+        elevation="2"
+        class="text-caption"
+        border="left"
+        colored-border
+        color="yellow"
+        icon="mdi-rocket-launch"
+      >
+      {{ action }}
+      </v-alert>
     </v-card-text>
-    <v-progress-linear :value="progress" color="secondary"></v-progress-linear>
+    <v-progress-linear :value="progress" color="yellow"></v-progress-linear>
   </v-tooltip>
 </template>
 
@@ -51,7 +62,7 @@ export default class Walkthrough extends Vue {
   }
 
   get css(): string {
-    let classes = "primary menuable__content__active";
+    let classes = "primary menuable__content__active pa-0";
     if (this.point) {
       if (this.top) {
         classes += " tooltip-top";
@@ -114,5 +125,15 @@ export default class Walkthrough extends Vue {
 
 .tooltip-top.primary::before {
   border-top: solid 8px #246fb3;
+}
+
+/deep/ .v-card__title {
+  letter-spacing: initial;
+  line-height: initial;
+  padding: 8px;
+}
+
+/deep/ .v-card__text {
+  padding: 0 8px;
 }
 </style>
