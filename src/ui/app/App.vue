@@ -153,6 +153,7 @@ export default class App extends Vue {
   searches: Search[] = [];
   searchValue: string | null = null;
   searchCache: Record<string, Result[]> = {};
+  resetResults = false;
 
   hostContext: CodeContext = new CodeContext();
   selectedContext: CodeContext | null = null;
@@ -195,7 +196,11 @@ export default class App extends Vue {
   }
 
   get results(): Result[] {
-    return this.search?.results ?? [];
+    if (this.resetResults) {
+      return [];
+    } else {
+      return this.search?.results ?? [];
+    }
   }
 
   get loadedResults(): Result[] {
@@ -266,9 +271,11 @@ export default class App extends Vue {
     this.wtShow = false;
 
     try {
+      this.resetResults = true;
       setTimeout(() => (this.pagesToLoad = 0), 12000);
       this.pagesToLoad = 1; // trigger loading indicator
       const search = await searchPromise;
+      this.resetResults = false;
       this.pagesToLoad = search.results?.length ?? 0;
       this.searches.push(search);
     } catch (err) {
