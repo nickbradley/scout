@@ -25,8 +25,8 @@
         :key="i"
         v-bind="projection"
         @click="(_, el) => $emit('click', el, i)"
-        @selectionchange="$emit('select')"
-        @copy="(text) => $emit('copy', text)"
+        @selectionchange="$emit('select', { projection: i })"
+        @copy="(text) => $emit('copy', { text, projection: i })"
         @load="onProjectionLoad"
       ></SearchResultProjection>
     </v-card-text>

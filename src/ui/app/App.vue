@@ -55,7 +55,9 @@
             onResultProjectionClick(result, el);
           }
         "
-        @select="() => search.logEvent(result.url, 'projection', 'select')"
+        @select="
+          (data) => search.logEvent(result.url, 'projection', 'select', data)
+        "
         @copy="
           (data) => search.logEvent(result.url, 'projection', 'copy', data)
         "
