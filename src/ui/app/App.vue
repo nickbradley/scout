@@ -367,6 +367,11 @@ export default class App extends Vue {
 
   async onAppFocus(): Promise<void> {
     console.log("App::onAppFocus()");
+    if (this.visibleResult) {
+      // A full page result is open so don't do anything
+      return;
+    }
+
     let isNewTask = false;
     let isContextHidden = false;
     try {
