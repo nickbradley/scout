@@ -48,8 +48,10 @@
         ]"
         @open="() => openResult(result)"
         @click="
-          (el) => {
-            search.logEvent(result.url, 'projection', 'click');
+          (el, index) => {
+            search.logEvent(result.url, 'projection', 'click', {
+              projection: index,
+            });
             onResultProjectionClick(result, el);
           }
         "

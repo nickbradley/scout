@@ -24,7 +24,7 @@
         v-for="(projection, i) of projections"
         :key="i"
         v-bind="projection"
-        @click="(_, el) => $emit('click', el)"
+        @click="(_, el) => $emit('click', el, i)"
         @selectionchange="$emit('select')"
         @copy="(text) => $emit('copy', text)"
         @load="onProjectionLoad"
