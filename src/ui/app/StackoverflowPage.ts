@@ -45,7 +45,7 @@ export default class StackoverflowPage extends Page {
       matches: this.findKeywords(keywords, element),
     }));
 
-    this._fragments = fragments;
+    this._fragments.push(...fragments);
     return fragments;
   }
 

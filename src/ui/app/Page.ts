@@ -236,10 +236,21 @@ export default abstract class Page {
     return projection;
   }
 
-  public toJSON(): { blocks: Block[]; fragments: Fragment[] } {
+  public toJSON(): { blocks: Block[]; fragments: any[] } {
     return {
       blocks: this._blocks,
-      fragments: this._fragments,
+      fragments: this._fragments.map((f) => ({
+        id: f.id,
+        blockId: f.blockId,
+        element: f.element.tagName.toLowerCase(),
+        matches: f.matches.map((m) => ({
+          lineIndex: m.lineIndex,
+          offset: m.offset,
+          word: m.word,
+          lineText: m.lineText,
+          keyword: m.keyword,
+        })),
+      })),
     };
   }
 
