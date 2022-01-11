@@ -57,7 +57,7 @@
         @copy="
           (data) => search.logEvent(result.url, 'projection', 'copy', data)
         "
-        @load="() => onResultLoaded(result)"
+        @load="(blocks) => onResultLoaded(result, blocks)"
       ></SearchResult>
     </v-main>
 
@@ -324,7 +324,13 @@ export default class App extends Vue {
     this.pagesToLoad -= 1;
   }
 
-  onResultLoaded(result: Result): void {
+  onResultLoaded(
+    result: Result,
+    blocks: Array<{ text: string; html: string }>
+  ): void {
+    result["projections"] = blocks;
+    // Not sure if this is needed or not
+    this.saveSearches();
     const resultIndex = this.results.findIndex((res) => res.url === result.url);
     if (resultIndex === 0) {
       this.wtShow = true;

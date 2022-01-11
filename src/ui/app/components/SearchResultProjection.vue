@@ -75,10 +75,6 @@ export default class SearchResultProjection extends Vue implements Projection {
                     margin: 0 !important;
                   }
                 </style>
-            </head>
-            <body>
-                ${this.body}
-
                 <script>
                   const sendAction = (action, data) => {
                       window.parent.postMessage({ nonce: "${this.nonce}", action, data }, "*");
@@ -129,6 +125,9 @@ export default class SearchResultProjection extends Vue implements Projection {
                     }
                   });
                 </\script>
+            </head>
+            <body>
+                ${this.body}
             </body>
         </html>
     `;
@@ -165,7 +164,11 @@ export default class SearchResultProjection extends Vue implements Projection {
 
         if (event.data.action === "loaded") {
           this.height = `${event.data.data.height}px`;
-          this.$emit("load");
+          const projectionBody = this.window.document.body;
+          this.$emit("load", {
+            text: projectionBody.innerText,
+            html: projectionBody.innerHTML,
+          });
         } else if (event.data.action === "resize") {
           this.height = `${event.data.data.height}px`;
         } else if (event.data.action === "click") {

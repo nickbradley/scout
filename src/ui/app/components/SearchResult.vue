@@ -53,6 +53,8 @@ export default class SearchResult extends Vue {
 
   projectionsToLoad = 0;
 
+  blocks: { text: string; html: string } = [];
+
   get favicon(): string {
     const url = new URL(this.url);
     const href =
@@ -101,10 +103,11 @@ export default class SearchResult extends Vue {
     this.projections = projections;
   }
 
-  onProjectionLoad(): void {
+  onProjectionLoad(block: { text: string; html: string }): void {
     this.projectionsToLoad -= 1;
+    this.blocks.push(block);
     if (this.projectionsToLoad === 0) {
-      this.$emit("load");
+      this.$emit("load", this.blocks);
     }
   }
 }
