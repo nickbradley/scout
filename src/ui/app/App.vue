@@ -385,6 +385,7 @@ export default class App extends Vue {
 
     let isNewTask = false;
     let isContextHidden = false;
+    let actualContext = new CodeContext();
     try {
       // For the study
       const trialConfig = await this.$host.readFile("./toast.data.json");
@@ -414,11 +415,11 @@ export default class App extends Vue {
         this.study.showSnippets = !treatment.enableFragments;
       }
 
+      actualContext = await this.$host.getContext();
       let context = new CodeContext();
       if (treatment && !treatment.enableContext) {
         isContextHidden = true;
       } else {
-        const actualContext = await this.$host.getContext();
         if (actualContext.isEmpty()) {
           // Use a hard-coded context just in case they make searches when the code is not focused.
           // This also ensures that the context is comparable across all trials (even if participants do weird things in the code)
@@ -458,6 +459,7 @@ export default class App extends Vue {
           isNewTask,
           isContextHidden,
           isShowingSnippets: this.study.showSnippets,
+          detectedContext: actualContext,
         },
       });
     }
