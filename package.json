@@ -3,7 +3,7 @@
 	"displayName": "Scout",
 	"publisher": "ncbradley",
 	"description": "",
-	"version": "0.7.7",
+	"version": "0.7.8",
 	"repository": "https://github.com/nickbradley/scout",
 	"license": "MIT",
 	"engines": {
