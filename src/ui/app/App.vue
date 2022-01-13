@@ -33,7 +33,7 @@
         fluid
         fill-height
       >
-        <span v-if="search">No results.</span>
+        <span v-if="search">No results. This might be caused by a network timeout. Try your search again.</span>
         <span v-else>Enter some terms above to make a search.</span>
       </v-container>
       <SearchResult
@@ -378,10 +378,6 @@ export default class App extends Vue {
 
   async onAppFocus(): Promise<void> {
     console.log("App::onAppFocus()");
-    if (this.visibleResult) {
-      // A full page result is open so don't do anything
-      return;
-    }
 
     let isNewTask = false;
     let isContextHidden = false;
@@ -402,6 +398,10 @@ export default class App extends Vue {
         this.appEvents = [];
         this.study.activeTask = activeTaskId;
         isNewTask = true;
+      }
+      if (this.visibleResult) {
+        // A full page result is open so don't do anything
+        return;
       }
       if (activeTaskId === "tutorial") {
         this.wtDisable = false;

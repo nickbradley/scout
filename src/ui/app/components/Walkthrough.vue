@@ -20,13 +20,13 @@
         class="text-caption"
         border="left"
         colored-border
-        color="yellow"
+        color="success"
         icon="mdi-rocket-launch"
       >
       {{ action }}
       </v-alert>
     </v-card-text>
-    <v-progress-linear :value="progress" color="yellow"></v-progress-linear>
+    <v-progress-linear :value="progress" color="success"></v-progress-linear>
   </v-tooltip>
 </template>
 
