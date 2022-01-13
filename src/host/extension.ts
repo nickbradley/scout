@@ -4,6 +4,7 @@ import NodeModule from "./NodeModule";
 import WebAppView, { SaveFileMessage, ReadFileMessage } from "./WebAppView";
 import { ContextToken, LibraryToken } from "../common/types";
 import Util from "./Util";
+import Lexer from "./Lexer";
 
 export async function activate(context: vscode.ExtensionContext) {
   // eslint-disable-next-line no-undef
@@ -26,6 +27,22 @@ export async function activate(context: vscode.ExtensionContext) {
   }
 
   const provider = new WebAppView(context.extensionUri);
+
+  provider.tokensMessageListener = async () => {
+    let tokens: string[] = [];
+    const editor = vscode.window.activeTextEditor;
+    const filename = editor?.document.uri.fsPath ?? "";
+    if (editor) {
+      const sourceText = editor?.document.getText() ?? "";
+      try {
+        const lexer = new Lexer();
+        tokens = lexer.parse(sourceText);
+      } catch (err) {
+        console.warn(`Failed to tokenize ${filename}`, err);
+      }
+    }
+    return { filename, tokens };
+  };
 
   provider.contextMessageListener = async () => {
     let contextTokens: ContextToken[] = [];
@@ -85,7 +102,7 @@ export async function activate(context: vscode.ExtensionContext) {
   provider.configMessageListener = async () => {
     // TODO check env for config values first
     const config = {}; //JSON.parse(
-      // await Util.readWorkspaceFile("scout.config.json")
+    // await Util.readWorkspaceFile("scout.config.json")
     //);
     return Object.assign(config, { serpApiToken: searchApiToken as string });
     // const keys = await import("../common/secrets");

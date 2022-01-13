@@ -460,6 +460,7 @@ export default class App extends Vue {
           isContextHidden,
           isShowingSnippets: this.study.showSnippets,
           detectedContext: actualContext,
+          tokens: await this.$host.getTokens(),
         },
       });
     }

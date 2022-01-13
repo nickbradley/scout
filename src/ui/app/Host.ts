@@ -6,6 +6,7 @@ export interface HostServiceProvider {
   saveFile: (filename: string, content: string) => Promise<void>;
   readFile: (filename: string) => Promise<string>;
   getContext: (mockContext?: CodeContext) => Promise<CodeContext>;
+  getTokens: () => Promise<{ filename: string; tokens: string[] }>;
   getConfig: () => Promise<AppConfig>;
   signalReady: () => void;
 }
@@ -103,6 +104,28 @@ export class VsCodeHost implements HostServiceProvider {
     return replyPromise;
   }
 
+  public async getTokens(): Promise<{ filename: string; tokens: string[] }> {
+    const listener = (
+      resolve: (data: { filename: string; tokens: string[] }) => void,
+      reject: (error: Error) => void
+    ) => {
+      this.dispatchQueue.push({
+        messageType: "getTokens",
+        resolve,
+        reject,
+      });
+    };
+    const replyPromise = new Promise<{ filename: string; tokens: string[] }>(
+      listener
+    );
+    const message: VsCodeMessage = {
+      sender: "scout",
+      type: "getTokens",
+    };
+    this.vscode.postMessage(message);
+    return replyPromise;
+  }
+
   public async getConfig(): Promise<AppConfig> {
     const listener = (
       resolve: (data: AppConfig) => void,
@@ -163,6 +186,9 @@ export class MockHost implements HostServiceProvider {
     }
   }
 
+  public async getTokens(): Promise<{ filename: string; tokens: string[] }> {
+    throw new Error("Not implemented");
+  }
   public async getConfig(mockConfig?: AppConfig): Promise<AppConfig> {
     if (mockConfig) {
       return mockConfig;

@@ -6,6 +6,7 @@ type MessageHandler<T, U> = (message: T) => Promise<U> | U;
 interface MessageListeners {
   saveFile?: MessageHandler<SaveFileMessage, void>;
   readFile?: MessageHandler<ReadFileMessage, string>;
+  getTokens?: MessageHandler<GetTokensMessage, {filename: string; tokens: string[]}>;
   getContext?: MessageHandler<GetContextMessage, ContextToken[]>;
   getConfig?: MessageHandler<GetConfigMessage, AppConfig>;
   signal?: MessageHandler<SignalMessage, void>;
@@ -13,6 +14,10 @@ interface MessageListeners {
 
 export interface WebAppMessage {
   sender: "scout";
+}
+
+export interface GetTokensMessage extends WebAppMessage {
+  type: "getTokens";
 }
 
 export interface GetContextMessage extends WebAppMessage {
@@ -91,6 +96,12 @@ export default class WebAppView implements vscode.WebviewViewProvider {
     webviewView.webview.html = this.getHtml();
   }
 
+  public set tokensMessageListener(
+    listener: (message: GetTokensMessage) => Promise<{filename: string, tokens: string[]}>
+  ) {
+    this.messageListeners["getTokens"] = listener;
+  }
+
   public set contextMessageListener(
     listener: (
       message: GetContextMessage
@@ -120,7 +131,10 @@ export default class WebAppView implements vscode.WebviewViewProvider {
   public sendMessage(type: string, data: any): void {
     const sender = "vscode" as "vscode";
     const message = { sender, type, data };
-    if (!Object.keys(this.messageListeners).includes(type) && !this.isClientReady) {
+    if (
+      !Object.keys(this.messageListeners).includes(type) &&
+      !this.isClientReady
+    ) {
       // We are sending the message so we need to wait for the app to signal that it is ready.
       this.messageQueue.push(message);
     } else {
