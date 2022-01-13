@@ -398,8 +398,7 @@ export default class App extends Vue {
         this.appEvents = [];
         this.study.activeTask = activeTaskId;
         isNewTask = true;
-      }
-      if (this.visibleResult) {
+      } else if (this.visibleResult) {
         // A full page result is open so don't do anything
         return;
       }
