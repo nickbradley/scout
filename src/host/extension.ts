@@ -1,7 +1,7 @@
 import * as vscode from "vscode";
 import ContextProvider from "./ContextProvider";
 import NodeModule from "./NodeModule";
-import WebAppView, { SaveFileMessage, ReadFileMessage } from "./WebAppView";
+import WebAppView, { SaveFileMessage, ReadFileMessage, GetTokensMessage } from "./WebAppView";
 import { ContextToken, LibraryToken } from "../common/types";
 import Util from "./Util";
 import Lexer from "./Lexer";
@@ -28,19 +28,28 @@ export async function activate(context: vscode.ExtensionContext) {
 
   const provider = new WebAppView(context.extensionUri);
 
-  provider.tokensMessageListener = async () => {
+  provider.tokensMessageListener = async (msg: GetTokensMessage) => {
     let tokens: string[] = [];
-    const editor = vscode.window.activeTextEditor;
-    const filename = editor?.document.uri.fsPath ?? "";
-    if (editor) {
-      const sourceText = editor?.document.getText() ?? "";
-      try {
-        const lexer = new Lexer();
-        tokens = lexer.parse(sourceText);
-      } catch (err) {
-        console.warn(`Failed to tokenize ${filename}`, err);
-      }
+    let sourceText = "";
+    let filename = "";
+
+    if (msg.data?.filename) {
+      filename = msg.data.filename;
+      sourceText = await Util.readWorkspaceFile(filename);
+      // sourceText = (await vscode.workspace.fs.readFile(vscode.Uri.file(filename))).toString();
+    } else {
+      const editor = vscode.window.activeTextEditor;
+      filename = editor?.document.uri.fsPath ?? "";
+      sourceText = editor?.document.getText() ?? "";
     }
+
+    try {
+      const lexer = new Lexer();
+      tokens = lexer.parse(sourceText);
+    } catch (err) {
+      console.warn(`Failed to tokenize ${filename}`, err);
+    }
+
     return { filename, tokens };
   };
 

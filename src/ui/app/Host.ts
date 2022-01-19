@@ -6,7 +6,9 @@ export interface HostServiceProvider {
   saveFile: (filename: string, content: string) => Promise<void>;
   readFile: (filename: string) => Promise<string>;
   getContext: (mockContext?: CodeContext) => Promise<CodeContext>;
-  getTokens: () => Promise<{ filename: string; tokens: string[] }>;
+  getTokens: (
+    filename?: string
+  ) => Promise<{ filename: string; tokens: string[] }>;
   getConfig: () => Promise<AppConfig>;
   signalReady: () => void;
 }
@@ -104,7 +106,9 @@ export class VsCodeHost implements HostServiceProvider {
     return replyPromise;
   }
 
-  public async getTokens(): Promise<{ filename: string; tokens: string[] }> {
+  public async getTokens(
+    filename?: string
+  ): Promise<{ filename: string; tokens: string[] }> {
     const listener = (
       resolve: (data: { filename: string; tokens: string[] }) => void,
       reject: (error: Error) => void
@@ -121,6 +125,7 @@ export class VsCodeHost implements HostServiceProvider {
     const message: VsCodeMessage = {
       sender: "scout",
       type: "getTokens",
+      data: { filename },
     };
     this.vscode.postMessage(message);
     return replyPromise;

@@ -382,12 +382,13 @@ export default class App extends Vue {
     let isNewTask = false;
     let isContextHidden = false;
     let actualContext = new CodeContext();
+    let activeTaskId = "";
     try {
       // For the study
       const trialConfig = await this.$host.readFile("./toast.data.json");
       const toastData = JSON.parse(trialConfig);
       this.study.trialId = toastData.id;
-      const activeTaskId = toastData.activeTaskId as string;
+      activeTaskId = toastData.activeTaskId as string;
       if (activeTaskId !== this.study.activeTask) {
         // reset UI
         if (this.visibleResult) {
@@ -447,6 +448,14 @@ export default class App extends Vue {
         this.searchBox.select();
       });
 
+      const taskSourceFiles = {
+        tutorial: "src/tutorial.js",
+        zip: "public/zipFiles.js",
+        get: "src/getPhotos.js",
+        patch: "src/patchPhoto.js",
+        submit: "public/submitPhoto.js",
+      };
+
       this.appEvents.push({
         timestamp: new Date(),
         name: "focus",
@@ -459,7 +468,7 @@ export default class App extends Vue {
           isContextHidden,
           isShowingSnippets: this.study.showSnippets,
           detectedContext: actualContext,
-          tokens: await this.$host.getTokens(),
+          sourceCode: await this.$host.getTokens(taskSourceFiles[activeTaskId]),
         },
       });
     }

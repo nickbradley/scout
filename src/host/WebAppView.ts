@@ -18,6 +18,7 @@ export interface WebAppMessage {
 
 export interface GetTokensMessage extends WebAppMessage {
   type: "getTokens";
+  data: { filename?: string }
 }
 
 export interface GetContextMessage extends WebAppMessage {
