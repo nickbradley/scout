@@ -7,7 +7,9 @@
         ref="input"
         :history="searches"
         :context="context"
-        :disabled="isSearchInProgress || visibleResult !== null"
+        :disabled="
+          isSearchInProgress || visibleResult !== null || searchDisabled
+        "
         :loading="isSearchInProgress"
         :cache="searchCache"
         :value="searchValue"
@@ -15,7 +17,7 @@
         @search="onSearch"
       ></SearchBar>
       <v-spacer></v-spacer>
-      <template v-slot:extension>
+      <!-- <template v-slot:extension>
         <ContextList
           id="context"
           :context="hostContext"
@@ -23,7 +25,7 @@
           @changed="onSelectedContextChanged"
         >
         </ContextList>
-      </template>
+      </template> -->
     </v-app-bar>
 
     <v-main>
@@ -33,10 +35,13 @@
         fluid
         fill-height
       >
-        <span v-if="search">No results. This might be caused by a network timeout. Try your search again.</span>
+        <span v-if="search"
+          >No results. This might be caused by a network timeout. Try your
+          search again.</span
+        >
         <span v-else>Enter some terms above to make a search.</span>
       </v-container>
-      <SearchResult
+      <!-- <SearchResult
         v-for="result of loadedResults"
         :key="result.url"
         v-bind="result"
@@ -62,10 +67,16 @@
           (data) => search.logEvent(result.url, 'projection', 'copy', data)
         "
         @load="(blocks) => onResultLoaded(result, blocks)"
-      ></SearchResult>
+      ></SearchResult> -->
+      <SignatureSearchResult
+        v-for="result of results"
+        :key="result.url"
+        v-bind="result"
+      >
+      </SignatureSearchResult>
     </v-main>
 
-    <v-container
+    <!-- <v-container
       v-for="result of results"
       :key="result.url"
       style="z-index: 6; position: fixed"
@@ -91,7 +102,7 @@
         <v-icon medium>mdi-close</v-icon>
       </v-btn>
     </v-container>
-    <v-overlay :value="visibleResult !== null" opacity=".9"></v-overlay>
+    <v-overlay :value="visibleResult !== null" opacity=".9"></v-overlay> -->
 
     <Walkthrough
       v-if="!wtDisable && wtStep <= 4"
@@ -107,13 +118,16 @@ import XFrame from "@/components/XFrame.vue";
 import SearchResult from "@/components/SearchResult.vue";
 import Search, { Result } from "@/Search";
 import Page from "@/Page";
-import StackoverflowPage from "@/StackoverflowPage";
+import StackOverflowPage from "@/StackOverflowPage";
 import SearchBar from "@/components/SearchBar.vue";
 import ContextList from "@/components/ContextList.vue";
 import CodeContext from "@/CodeContext";
 import { AppConfig } from "../../common/types";
 import { resultsCache } from "./resultsCache";
 import Walkthrough from "@/components/Walkthrough.vue";
+import GoogleSearchResult from "@/components/GoogleSearchResult.vue";
+import SignatureSearchResult from "@/components/SignatureSearchResult.vue";
+import WorkerPool from "@/WorkerPool";
 
 interface AppEvent {
   timestamp: Date;
@@ -138,13 +152,16 @@ interface WalkthroughStep {
     SearchResult,
     Walkthrough,
     XFrame,
+    GoogleSearchResult,
+    SignatureSearchResult,
   },
 })
 export default class App extends Vue {
+  workerPool: WorkerPool;
   study = {
     trialId: "",
     activeTask: "",
-    showSnippets: false,
+    showSnippets: true,
   };
 
   appEvents: AppEvent[] = [];
@@ -155,6 +172,7 @@ export default class App extends Vue {
   searches: Search[] = [];
   searchValue: string | null = null;
   searchCache: Record<string, Result[]> = {};
+  searchDisabled = false;
   resetResults = false;
 
   hostContext: CodeContext = new CodeContext();
@@ -206,7 +224,9 @@ export default class App extends Vue {
   }
 
   get loadedResults(): Result[] {
-    return this.results.filter((result) => result.page);
+    const res = this.results; //.filter((result) => result.page);
+    console.log("*************", res);
+    return res;
   }
 
   get context(): CodeContext {
@@ -277,8 +297,34 @@ export default class App extends Vue {
       setTimeout(() => (this.pagesToLoad = 0), 12000);
       this.pagesToLoad = 1; // trigger loading indicator
       const search = await searchPromise;
+      this.pagesToLoad = search.results.length;
+
+      // Process results
+      search.results.forEach((r, i) => {
+        this.workerPool
+          .acquireWorker()
+          .then((worker) => {
+            return Promise.all([worker.run({ pageURL: r.url }), worker]);
+          })
+          .then(([result, worker]) => {
+            this.workerPool.releaseWorker(worker);
+            Vue.set(
+              this.results,
+              i,
+              Object.assign({}, this.results[i], {
+                recommendations: result,
+              })
+            );
+            this.pagesToLoad--;
+          })
+          .catch((err) => {
+            this.pagesToLoad = 0;
+            console.warn("Getting results failed.", err);
+          });
+      });
+
       this.resetResults = false;
-      this.pagesToLoad = search.results?.length ?? 0;
+      // this.pagesToLoad = search.results?.length ?? 0;
       this.searches.push(search);
     } catch (err) {
       this.appEvents.push({
@@ -306,7 +352,7 @@ export default class App extends Vue {
       const hostname = new URL(url).hostname;
       switch (hostname) {
         case "stackoverflow.com": {
-          page = new StackoverflowPage(
+          page = new StackOverflowPage(
             document,
             Page.WithCopyListener(logger),
             Page.WithScrollListener(logger),
@@ -415,6 +461,7 @@ export default class App extends Vue {
         this.study.showSnippets = !treatment.enableFragments;
       }
 
+      // TODO: For the first four tasks: set enableContext to false (which looks like it just uses an empty context object)
       actualContext = await this.$host.getContext();
       let context = new CodeContext();
       if (treatment && !treatment.enableContext) {
@@ -431,6 +478,15 @@ export default class App extends Vue {
       if (!this.hostContext.isEqual(context)) {
         this.hostContext = context;
         this.selectedContext = context;
+      }
+
+      // TODO: Read the search value here
+      // set this.searchValue to the search terms for the task
+      // set this.searchDisabled to true
+
+      if (treatment && treatment.searchTerms) {
+        this.searchValue = treatment.searchTerms;
+        this.searchDisabled = true;
       }
     } catch (err) {
       this.appEvents.push({
@@ -526,6 +582,10 @@ export default class App extends Vue {
         });
       }
     });
+    const response = await fetch(window.workerURL + "/signatureWorker.js");
+    const blob = await response.blob();
+    const scriptURL = URL.createObjectURL(blob);
+    this.workerPool = new WorkerPool(scriptURL, 4);
     this.searchCache = resultsCache;
     this.$host.signalReady();
   }

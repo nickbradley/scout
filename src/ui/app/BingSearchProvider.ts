@@ -48,6 +48,8 @@ export default class BingSearchProvider implements SearchProvider {
         title: page.name,
         snippet: page.snippet,
         url: page.url,
+        displayLink: "",
+        snippetHighlightWords: [],
       }));
     } else {
       return [];

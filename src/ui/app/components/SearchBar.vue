@@ -73,7 +73,7 @@ export default class SearchBar extends Vue {
               ])
             )
           : new Search(this.keywords, this.context);
-          console.log("SEARCH", search.keywords, search.context, search.query);
+        console.log("SEARCH", search.keywords, search.context, search.query);
         const cachedResults = this.cache[search.query];
         if (cachedResults) {
           console.info("Using cached results for query", search.query);
@@ -81,6 +81,18 @@ export default class SearchBar extends Vue {
         } else {
           await search.getResults(this.searchProvider, search.query);
         }
+        // Remove duplicate Stack Overflow answers
+        const answerIds = {};
+        search.results = search.results.filter((item) => {
+          const id = item.url.match(
+            /https:\/\/stackoverflow.com\/questions\/(\d+)\//
+          )[0];
+          return Object.prototype.hasOwnProperty.call(answerIds, id)
+            ? false
+            : (answerIds[id] = item);
+        })
+        //.slice(0, 5);
+        console.log("RESULTS", search);
         resolve(search);
       } catch (err) {
         reject(err);

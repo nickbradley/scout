@@ -47,7 +47,7 @@ const webExtensionConfig = {
     rules: [
       {
         test: /\.ts$/,
-        exclude: /node_modules/,
+        exclude: [/node_modules/, path.join(__dirname, "./src/ui")],
         use: [
           {
             loader: "ts-loader",
@@ -94,4 +94,60 @@ const webExtensionConfig = {
   devtool: "nosources-source-map", // create a source map that points to the original source file
 };
 
-module.exports = [webExtensionConfig];
+
+/** @type WebpackConfig */
+// To bundle ts-morph, needed to add these settings https://github.com/dsherret/ts-morph/issues/171#issuecomment-1107867732
+const webWorkerConfig = {
+  mode: "none",
+  target: 'webworker',
+  entry: {
+    page: { import: './src/ui/workers/signatureWorker.ts', filename: "./ui/signatureWorker.js" },
+  },
+  output: {
+    library: {
+      type: "global"
+    }
+  },
+  // entry: './src/ui/worker/index.ts',
+  // output: {
+  //   filename: 'worker.js',
+  //   path: path.resolve(__dirname, 'dist/ui'),
+  //   libraryTarget: "commonjs",
+  //   devtoolModuleFilenameTemplate: "../../[resource-path]",
+  // },
+  resolve: {
+    extensions: [".ts", ".js"],
+  },
+  module: {
+    noParse: [
+      require.resolve("typescript/lib/typescript.js"),
+      require.resolve("@ts-morph/common/dist/typescript.js")
+    ],
+    rules: [
+      {
+        test: /\.ts$/,
+        exclude: /node_modules/,
+        use: [
+          {
+            loader: "ts-loader",
+            options: {
+              // configFile: __dirname + "/src/ui/app/tsconfig.json",
+              projectReferences: true
+            },
+          },
+        ],
+      },
+      {
+        test: /node_modules[\\|/]code-block-writer[\\|/]umd[\\|/]/,
+        use: { loader: "umd-compat-loader" },
+      }
+    ]
+  },
+  plugins: [
+    new webpack.optimize.LimitChunkCountPlugin({
+      maxChunks: 1
+    })
+  ],
+};
+
+module.exports = [webExtensionConfig, webWorkerConfig];

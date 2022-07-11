@@ -199,7 +199,7 @@ export class MockHost implements HostServiceProvider {
       return mockConfig;
     } else {
       console.log("ENV", process.env);
-      const searchApiToken = process.env.SEARCH_API_TOKEN;
+      const searchApiToken = process.env.SEARCH_API_TOKEN ?? "";
       // const keys = await import("../../common/secrets");
       return {
         // bingApiToken: "",

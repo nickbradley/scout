@@ -7,6 +7,9 @@ interface GoogleOrganicResult {
   link: string;
   displayed_link: string;
   snippet: string;
+  snippet_highlighted_words: string[];
+  date?: string;
+  rich_snippet?: any;
 }
 
 export default class SerpSearchProvider implements SearchProvider {
@@ -39,6 +42,10 @@ export default class SerpSearchProvider implements SearchProvider {
         title: or.title,
         snippet: or.snippet,
         url: or.link,
+        displayLink: or.displayed_link,
+        snippetHighlightWords: or.snippet_highlighted_words,
+        date: or?.date,
+        extensions: or.rich_snippet?.top?.extensions,
       }));
     }
     return [];

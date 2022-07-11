@@ -1,5 +1,7 @@
 import { Snapshooter, CSSStringifier } from "@/Snapshooter";
 import Block from "@/Block";
+import { Signature } from "./Signature";
+import { CodeBlock } from "./CodeBlock";
 
 export interface KeywordMatch {
   /** The keyword that was matched */
@@ -27,6 +29,31 @@ export interface Projection {
   css: string;
   el: HTMLElement | null;
   kind?: "snippet" | "fragment";
+}
+
+export interface Recommendation {
+  /**
+   * Call signature with types abstracted.
+   */
+  signature: Signature;
+
+  /**
+   * Concrete examples extracted from the code blocks sorted by their "quality."
+   * `ref` is the url to the answer containing the code block.
+   * `code` provides the extract
+   */
+  usages: Array<{ ref: string; code: CodeBlock; text: string }>;
+  examples: Array<{ answerURL: string; call: string; declaration?: string }>;
+
+  /**
+   * Information for ranking recommendations.
+   */
+  metrics: {
+    occurrences: number;
+    isFromAcceptedAnswer: boolean;
+    isFromPopularAnswer: boolean;
+    isFromLatestAnswer: boolean;
+  };
 }
 
 export type PageOption = (p: Page) => void;
@@ -65,6 +92,7 @@ export default abstract class Page {
     return `
     body {
       background: white !important;
+      padding: 0 !important;
     }
     @-webkit-keyframes yellow-fade {
       from {
@@ -144,6 +172,12 @@ export default abstract class Page {
       )
       ?.element.classList.add("dismissed");
   }
+
+  public scrollToActiveElement(): void {
+    this._activeElement?.scrollIntoView();
+  }
+
+  public abstract getRecommendations(): Recommendation[];
 
   public abstract getBlocks(): Block[];
 

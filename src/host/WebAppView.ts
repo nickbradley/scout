@@ -180,6 +180,7 @@ export default class WebAppView implements vscode.WebviewViewProvider {
               src="${this.getUri("dist/ui/js/app.js")}"
               nonce="${nonce}"
             ></script>
+            <script nonce="${nonce}">window.workerURL = "${this.getUri("dist/ui")}"</script>
           </body>
         </html> 
     `;

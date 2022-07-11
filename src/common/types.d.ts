@@ -14,6 +14,5 @@ export interface CallToken {
 }
 export declare type ContextToken = LanguageToken | LibraryToken | CallToken;
 export interface AppConfig {
-    bingApiToken: string;
     serpApiToken: string;
 }

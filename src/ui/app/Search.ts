@@ -13,7 +13,12 @@ export interface Result {
   url: string;
   title: string;
   snippet: string;
+  displayLink: string;
   page?: Page;
+
+  date?: string;
+  extensions?: string[];
+  snippetHighlightWords: string[];
 }
 
 interface EventLog {

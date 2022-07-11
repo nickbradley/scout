@@ -1,318 +1,257 @@
-// Generated 08-dec-2021
+// Generated 16-mar-2022
 export const resultsCache = {
-  "javascript bcrypt match passwords site:stackoverflow.com": [
+  "javascript format currency site:stackoverflow.com": [
     {
-      title: "Compare passwords BcryptJS - Stack Overflow",
+      title:
+        "How to format numbers as currency strings - javascript - Stack ...",
       snippet:
-        "Compare passwords BcryptJS · javascript node.js express bcrypt. So I'm trying to build a very basic user login. I'm trying ...",
-      url: "https://stackoverflow.com/questions/40076638/compare-passwords-bcryptjs",
+        'All you need is to add the currency symbol (e.g. "$" + profits.toFixed(2) ) and you will have your amount in dollars. Custom function. If you require the use of ...',
+      url: "https://stackoverflow.com/questions/149055/how-to-format-numbers-as-currency-strings",
     },
     {
-      title: "how to compare bcrypt hash password - Stack Overflow",
+      title: "Javascript Function to Format as Money [duplicate] - Stack ...",
       snippet:
-        "bcrypt has a built-in method for comparing hashes. async function passCheck(event) { var fromDB = await pool.query('SELECT password from ...",
-      url: "https://stackoverflow.com/questions/65920404/how-to-compare-bcrypt-hash-password",
+        "String.prototype.formatMoney = function(places, symbol, thousand, decimal) { if((this).match(/^\\$/) && (this).indexOf(',') != -1 && (this).",
+      url: "https://stackoverflow.com/questions/40426965/javascript-function-to-format-as-money",
     },
     {
-      title: "nodejs - how to compare two hashes password of bcrypt",
+      title: "How do I print currency format in JavaScript - Stack Overflow",
       snippet:
-        "I have these 2 hash password that came from the same password in bcrypt: var password = E@Js#07Do=U$ var hash1 = $2a$10$ ...",
-      url: "https://stackoverflow.com/questions/55801772/nodejs-how-to-compare-two-hashes-password-of-bcrypt",
-    },
-    {
-      title: "How does node.bcrypt.js compare hashed and plaintext ...",
-      snippet:
-        "Bcrypt compare hashed and plaintext passwords without the salt string because the hashed password contains the salt string which we created at ...",
-      url: "https://stackoverflow.com/questions/13023361/how-does-node-bcrypt-js-compare-hashed-and-plaintext-passwords-without-the-salt",
-    },
-    {
-      title: "Bcrypt password fails when i try to compare? - Stack Overflow",
-      snippet:
-        "node.js bcrypt ... I am using bcrypt to compare the hashed password with the original string but i am getting false statement.",
-      url: "https://stackoverflow.com/questions/66134693/bcrypt-password-fails-when-i-try-to-compare",
-    },
-    {
-      title: "Nodejs : in bcrypt it returns false at compare password hash",
-      snippet:
-        "When you compare() , you need to pass in the plaintext value as the first argument and the hash from your database as the second argument.",
-      url: "https://stackoverflow.com/questions/24583608/nodejs-in-bcrypt-it-returns-false-at-compare-password-hash",
-    },
-    {
-      title: "bcryptjs compare function returns false when passwords ...",
-      snippet:
-        "In the users.js file at the comparePassword function inside the compare method of bcrypt you are throwing the error instead of passing it to ...",
-      url: "https://stackoverflow.com/questions/63408204/bcryptjs-compare-function-returns-false-when-passwords-contain-numbers",
-    },
-    {
-      title: "Bcrypt-NodeJS compare() returns false whatever the password",
-      snippet:
-        "I know the solution has been found but just in case you are landing here out of google search and have the same issue, especially if you are ...",
-      url: "https://stackoverflow.com/questions/46022956/bcrypt-nodejs-compare-returns-false-whatever-the-password/50537073",
-    },
-    {
-      title: "Why am I getting isMatch null from bcrypt compare even ...",
-      snippet:
-        "When the user signup you save the hashed version of it not the actual text. const password = req.body.password // This hasedPassword will be ...",
-      url: "https://stackoverflow.com/questions/66532228/why-am-i-getting-ismatch-null-from-bcrypt-compare-even-though-two-password-strin",
+        "I am writing a function that takes the float price and returns the formatted currency value with currency code too. like fnPrice( 1001.01 ) should print $ ...",
+      url: "https://stackoverflow.com/questions/4022171/how-do-i-print-currency-format-in-javascript",
     },
     {
       title:
-        "bcrypt-nodejs compare method returns false every time - Stack ...",
+        "How to format numbers as currency strings - javascript - Stack ...",
       snippet:
-        "You appear to be passing in a string 'user.login.local.password' instead of the actual password in your userSchema pre save function: e.g. this ...",
-      url: "https://stackoverflow.com/questions/30494856/bcrypt-nodejs-compare-method-returns-false-every-time",
+        "Numbers can be formatted to look like currency, percentages, times, or even plain old numbers with decimal places, thousands, and abbreviations. And you can ...",
+      url: "https://stackoverflow.com/questions/149055/how-to-format-numbers-as-currency-strings/5681208",
+    },
+    {
+      title: "Format currency in JavaScript removing .00 - Stack Overflow",
+      snippet:
+        "where symbol is £,$ etc. and value is a number with many decimal places. This works great but I now want to remove trailing .00 if present.",
+      url: "https://stackoverflow.com/questions/46235907/format-currency-in-javascript-removing-00",
+    },
+    {
+      title: "Proper JS currency format with commas and decimals - Stack ...",
+      snippet:
+        'After trying many different solutions, this seems (to me) the best way: jsFiddle Demo (1234568).toLocaleString("en-US", {style: "decimal", ...',
+      url: "https://stackoverflow.com/questions/19664926/proper-js-currency-format-with-commas-and-decimals",
+    },
+    {
+      title: "How to format currency and time in javascript - Stack Overflow",
+      snippet:
+        "For your desire currency number output, you need to use the following methods, new Intl.NumberFormat('en-IN', {minimumFractionDigits: 2}).",
+      url: "https://stackoverflow.com/questions/60689698/how-to-format-currency-and-time-in-javascript",
+    },
+    {
+      title: "How to format a big number (represented by string) in ...",
+      snippet:
+        "Not the answer you're looking for? Browse other questions tagged javascript locale number-formatting bigdecimal currency-formatting or ask your ...",
+      url: "https://stackoverflow.com/questions/68848954/how-to-format-a-big-number-represented-by-string-in-javascript-with-currency-a",
+    },
+    {
+      title: "How to format numbers to currency as the user types in ...",
+      snippet:
+        "Not the answer you're looking for? Browse other questions tagged javascript jquery html or ask your own question. The Overflow Blog.",
+      url: "https://stackoverflow.com/questions/54715599/how-to-format-numbers-to-currency-as-the-user-types-in-javascript",
+    },
+    {
+      title: "Currency formatting of JavaScript created numbers - Stack ...",
+      snippet:
+        "It's unclear from your question, but are you trying to use the formatted value for further calculation? If so - then this is definitely a ...",
+      url: "https://stackoverflow.com/questions/66939307/currency-formatting-of-javascript-created-numbers",
     },
   ],
-  "javascript jszip add html file JSZip generateAsync site:stackoverflow.com": [
+  "javascript remove items from array by value site:stackoverflow.com": [
     {
-      title: "How to Zip files using jszip library - Stack Overflow",
+      title: "How to remove item from array by value? [duplicate] - Stack ...",
       snippet:
-        "Just keep calling zip.file() . Look at the example from their documentation page (comments mine): var zip = new JSZip(); // Add a text file ...",
-      url: "https://stackoverflow.com/questions/17986432/how-to-zip-files-using-jszip-library",
+        "You can use splice to remove a single element from the array but splice can't remove multiple similar elements from the array. function ...",
+      url: "https://stackoverflow.com/questions/3954438/how-to-remove-item-from-array-by-value",
     },
     {
-      title: "How to Zip files using JavaScript? - Stack Overflow",
+      title: "How can I remove a specific item from an array? - Stack ...",
       snippet:
-        "6 Answers · Extract the zip and find jszip.js file inside dist folder · Import jszip.js file in your html file like below · Add below function in your code and ...",
-      url: "https://stackoverflow.com/questions/8608724/how-to-zip-files-using-javascript",
+        "JavaScript Array elements can be removed from the end of an array by setting the length property to a value less than the current value. Any element whose index ...",
+      url: "https://stackoverflow.com/questions/5767325/how-can-i-remove-a-specific-item-from-an-array",
     },
     {
-      title: "Need a JavaScript Simple Code For Zip A Folder - Stack ...",
-      snippet:
-        "I tried the jszip.js and zip.js but didnt work.why i dont know.. Here is the code: <html> <head> ...",
-      url: "https://stackoverflow.com/questions/62300627/need-a-javascript-simple-code-for-zip-a-folder",
+      title: "The best way to remove array element by value - Stack Overflow",
+      snippet: `Here's how it's done: var arr = ["orange","red","black","white"]; var index = arr.indexOf("red"); if (index >= 0) { arr.splice( index, ...`,
+      url: "https://stackoverflow.com/questions/7310559/the-best-way-to-remove-array-element-by-value",
     },
     {
-      title:
-        "Zip Generated by JSZip contains only single image file - Stack ...",
+      title: "Find and remove objects in an array based on a key value in ...",
       snippet:
-        "Its quite simple. JSZipUtils.getBinaryContent calls a callback inside which you are appending filesto zip . And since callbacks don't run in ...",
-      url: "https://stackoverflow.com/questions/58619118/zip-generated-by-jszip-contains-only-single-image-file",
+        "Here is a solution if you are not using jQuery: myArray = myArray.filter(function( obj ) { return obj.id !== id; });.",
+      url: "https://stackoverflow.com/questions/21659888/find-and-remove-objects-in-an-array-based-on-a-key-value-in-javascript",
     },
     {
-      title: "Saving images from URL using JSzip - Stack Overflow",
+      title: "Javascript - removing object from array by key value - Stack ...",
       snippet:
-        "I'm using JSzip to download the html of a div. The div has images inside of it (they're not base64 encoded). Is there a way I can use JSzip to ...",
-      url: "https://stackoverflow.com/questions/26635627/saving-images-from-url-using-jszip",
+        'You can use splice and findIndex methods and remove specific object from an array. let people = [{"Name":"Bob","Age":"45"},{"Name":"Jim" ...',
+      url: "https://stackoverflow.com/questions/51724323/javascript-removing-object-from-array-by-key-value",
     },
     {
-      title: "Progress callback not updating during progress - Stack Overflow",
-      snippet:
-        'JavaScript execution and page rendering are done in the same ... var zip = new JSZip(); zip.file("myfile.txt", this.files[0]); statusEl.',
-      url: "https://stackoverflow.com/questions/63246487/progress-callback-not-updating-during-progress",
+      title: "Remove array element based on object property - Stack ...",
+      snippet: `findIndex(prop => prop.key === 'Test Value') testArray.splice(index,1) ... <script src="https://cdnjs.cloudflare.com/ajax/libs/lodash.js/4.17.5/lodash.js">< ...`,
+      url: "https://stackoverflow.com/questions/15287865/remove-array-element-based-on-object-property",
     },
     {
-      title: "Hottest 'jszip' Answers - Stack Overflow",
+      title: "javascript - remove array element on condition - Stack Overflow",
       snippet:
-        "Extracting zipped files using JSZIP in javascript ... is not defined when using JSzip. It works after adding the following script tag in the HTML <script ...",
-      url: "https://stackoverflow.com/tags/jszip/hot?filter=all",
+        'It would be nice if index conditions could work as well. Ex. ar = [ {num:1, str:"a"}, { ...',
+      url: "https://stackoverflow.com/questions/15995963/javascript-remove-array-element-on-condition",
     },
     {
-      title: 'JSzip "generateAsync" not working on Internet Explorer?',
+      title: "Remove all elements contained in another array - Stack ...",
       snippet:
-        'I want to download and save a collection of PDFs in a single ZIP file using "JSZip" ver. 3.2.1 and "FileSaver" of 24-Jan-2014 working with ...',
-      url: "https://stackoverflow.com/questions/57976108/jszip-generateasync-not-working-on-internet-explorer",
+        "grep(myArray, function(value) { return $.inArray(value, toRemove) < 0; });. Is there a pure javascript way to do this without looping and splicing ...",
+      url: "https://stackoverflow.com/questions/19957348/remove-all-elements-contained-in-another-array",
     },
     {
       title:
-        "I have to different zip files created using JSZip. Is is possible to ...",
+        "Javascript - remove an array item by value [duplicate] - Stack ...",
       snippet:
-        'stuk.github.io/jszip/documentation/howto/read_zip.html. See: "In node Js" the comment // read a file and add it to a zip. You need to call file ...',
-      url: "https://stackoverflow.com/questions/57513029/i-have-to-different-zip-files-created-using-jszip-is-is-possible-to-combile-the",
+        "You'll want to use JavaScript's Array splice method: var tag_story = [1,3,56,6,8,90], id_tag = 90, position = tag_story.indexOf(id_tag); if ( ~position ) ...",
+      url: "https://stackoverflow.com/questions/7142890/javascript-remove-an-array-item-by-value",
     },
     {
-      title: "saveAs is not defined when using JSzip - Stack Overflow",
+      title:
+        "Deleting array elements in JavaScript - delete vs splice - Stack ...",
       snippet:
-        "There is a comment in their example: // see FileSaver.js. You need that module if you want to use saveAs().",
-      url: "https://stackoverflow.com/questions/41704748/saveas-is-not-defined-when-using-jszip",
+        'The splice() method completely removes the target value and the "placeholder" as well. oak has been removed as well as the space it used to occupy in the array.',
+      url: "https://stackoverflow.com/questions/500606/deleting-array-elements-in-javascript-delete-vs-splice",
     },
   ],
-  "javascript mongodb find less than site:stackoverflow.com": [
+  "javascript merge objects site:stackoverflow.com": [
     {
-      title: "NodeJS + MongoDB: find() where { 'value' : < 5 AND >1}",
+      title: "How can I merge properties of two JavaScript objects ...",
       snippet:
-        "It's a simple string, containing UNIX time of the last call. I'd like to find all the companies, where lastcall is higher than a AND lower than ...",
-      url: "https://stackoverflow.com/questions/11069417/nodejs-mongodb-find-where-value-5-and-1-how",
+        'BTW, the top few answers do a "shallow" merge: if the same key exists in both obj1 and obj2, the value in obj2 is kept, the value in obj1 is ...',
+      url: "https://stackoverflow.com/questions/171251/how-can-i-merge-properties-of-two-javascript-objects-dynamically",
     },
     {
-      title: "How to use a less than comparison within a mongo find ...",
+      title: "Merging two javascript objects into one? [duplicate] - Stack ...",
       snippet:
-        "Assuming LastUpdateTime is a timestamp, something like this should work: const twoHoursAgo = Date.now() - (1000 * 60 * 60 * 2); const ...",
-      url: "https://stackoverflow.com/questions/67320987/how-to-use-a-less-than-comparison-within-a-mongo-find-javascript",
+        "I have tried object.assign() but it is just removing the initial posts data - what is the best approach for this? javascript json merge.",
+      url: "https://stackoverflow.com/questions/50176456/merging-two-javascript-objects-into-one",
     },
     {
-      title: "MongoDB - find result where value is null or less than X",
+      title: "How to merge Object values of two Objects - Stack Overflow",
       snippet:
-        "You are looking for the $or operation, which accepts an array of operations. It would be like so: $or: [{end_date: null}, {end_date: {$gte: ...",
-      url: "https://stackoverflow.com/questions/18342529/mongodb-find-result-where-value-is-null-or-less-than-x",
+        "What is the easiest way to do this? I can use ES2017 and other libraries like lodash. javascript object ecmascript-6 lodash.",
+      url: "https://stackoverflow.com/questions/54376660/how-to-merge-object-values-of-two-objects",
     },
     {
-      title: "mongodb find where field lower than another field plus ...",
+      title: "How to merge nested objects Javascript? [duplicate] - Stack ...",
       snippet:
-        "I want to have a find() query that returns the documents in this collection where 'warehouseStock' is less than ('reservedStock' + threshold), ...",
-      url: "https://stackoverflow.com/questions/43306657/mongodb-find-where-field-lower-than-another-field-plus-parameter-value",
+        "I would use lodash: _.merge(object, [sources]). This method is like _.assign except that it recursively merges own and inherited enumerable ...",
+      url: "https://stackoverflow.com/questions/60637201/how-to-merge-nested-objects-javascript",
     },
     {
-      title: "Query date less than today in mongodb - Stack Overflow",
+      title: "In JavaScript there an elegant way to merge two Objects and ...",
       snippet:
-        "I'd like to count how many data is durationEnd date is less than today date. From the data above I know I have one. Using nodejs I have tried with the below ...",
-      url: "https://stackoverflow.com/questions/27633480/query-date-less-than-today-in-mongodb",
+        "There isn't really any shortcut in vanilla JS, you have to explicitly iterate through each object and each property, and sum them up somehow ...",
+      url: "https://stackoverflow.com/questions/58441263/in-javascript-there-an-elegant-way-to-merge-two-objects-and-sum-any-common-prope",
     },
     {
-      title: "Query MongoDb for a datetime value less than NOW - Stack ...",
+      title: "Es6 merge two objects using spread not working - Stack ...",
       snippet:
-        "Use the Javascript function new Date() : db.collection.find({ Expiration: { $lte: new Date() } }). The Mongo shell is just a Javascript ...",
-      url: "https://stackoverflow.com/questions/29791171/query-mongodb-for-a-datetime-value-less-than-now",
+        "I want to merge two javascript objects using spread operators , but i am unable to produce the expected result. Here is my first objects ...",
+      url: "https://stackoverflow.com/questions/57016150/es6-merge-two-objects-using-spread-not-working",
     },
     {
-      title: "Mongoose greater than and equal - Stack Overflow",
+      title: "How to merge objects in JS only when they are defined?",
       snippet:
-        "$gte selects the documents where the value of the field is greater than or equal to (i.e. >=) a specified value query.find( { marks: { $gte: ...",
-      url: "https://stackoverflow.com/questions/50043003/mongoose-greater-than-and-equal/50043155",
+        "Object.assign ignores undefined argument values. You can simplify to return Object.assign({}, first, second, third, fourth);.",
+      url: "https://stackoverflow.com/questions/52116146/how-to-merge-objects-in-js-only-when-they-are-defined",
     },
     {
-      title: "NodeJS MongoDB Find posts that are older than current date",
+      title: "Merge two JavaScript Objects and conflicting properties",
       snippet:
-        "You can subtract one hour from the moment using .subtract function and then use $gte operator to obtain only the greater values/documents ...",
-      url: "https://stackoverflow.com/questions/54890174/nodejs-mongodb-find-posts-that-are-older-than-current-date",
+        "You could merge by property and check if target is not an array or if thje value is an array. const merge = (target, source) ...",
+      url: "https://stackoverflow.com/questions/61137322/merge-two-javascript-objects-and-conflicting-properties",
     },
     {
-      title: "How to find documents where field1 is greater than field2 ...",
+      title: "JavaScript merge objects with same key and sum their values",
       snippet:
-        "How to find documents where field1 is greater than field2? ( Nodejs/Mongoose/MongoDB) · node.js mongodb mongoose nosql. How do you use values from fields in ...",
-      url: "https://stackoverflow.com/questions/31206795/how-to-find-documents-where-field1-is-greater-than-field2-nodejs-mongoose-mon",
-    },
-    {
-      title: "check the condition if the values are less then or equal or ...",
-      snippet:
-        "This query answers in the question : user enters 1 or 2 saved in a application variable lets say var=parameter; if he entered 1 => i want ...",
-      url: "https://stackoverflow.com/questions/69285429/check-the-condition-if-the-values-are-less-then-or-equal-or-greater-than-mongodb",
-    },
-  ],
-  "javascript mongodb findOneAndUpdate return updated document site:stackoverflow.com":
-    [
-      {
-        title: "findOneAndUpdate doesn't return updated document - Stack ...",
-        snippet:
-          "Why this happens? The default is to return the original, unaltered document. If you want the new, updated document to be returned you have ...",
-        url: "https://stackoverflow.com/questions/32811510/mongoose-findoneandupdate-doesnt-return-updated-document",
-      },
-      {
-        title: "How to get updated document back from the ...",
-        snippet:
-          "The Node.js driver documentation doesn't mention a returnNewDocument option for findOneAndUpdate() (which is an option for the MongoDB shell ...",
-        url: "https://stackoverflow.com/questions/35626040/how-to-get-updated-document-back-from-the-findoneandupdate-method",
-      },
-      {
-        title: "db.collection.findOneAndUpdate () is not returning the ...",
-        snippet:
-          "Always check the Node JS MongoDB API ... For mongoose to return the new document, you need to add { new: true } to the query.",
-        url: "https://stackoverflow.com/questions/64941311/db-collection-findoneandupdate-is-not-returning-the-updated-document",
-      },
-      {
-        title: "Update And Return Document In Mongodb - Stack Overflow",
-        snippet:
-          "Update And Return Document In Mongodb · node.js mongodb. I want to get updated documents. This is my original code and it successfully updates ...",
-        url: "https://stackoverflow.com/questions/24747189/update-and-return-document-in-mongodb",
-      },
-      {
-        title: "Return updated collection with Mongoose - Stack Overflow",
-        snippet:
-          'use findOneAndUpdate() method and in query parameter use option as { "new": true} return this.sessionModel .findOneAndUpdate({user_id: ...',
-        url: "https://stackoverflow.com/questions/20667739/return-updated-collection-with-mongoose/42385630",
-      },
-      {
-        title: "mongoose findOneAndUpdate returns updated document but ...",
-        snippet:
-          "Mongoose can only update the table with the defined fields in schema. So, if the processed field does not exist in Mongoose schema, it won't ...",
-        url: "https://stackoverflow.com/questions/48545733/mongoose-findoneandupdate-returns-updated-document-but-doesnt-update-database",
-      },
-      {
-        title: "Update multiple documents and return all updated documents",
-        snippet:
-          "In Mongoose, the findOneAndUpdate() is based on the native findAndModify() method of MongoDB. If you check the offical documentation of the ...",
-        url: "https://stackoverflow.com/questions/42246188/update-multiple-documents-and-return-all-updated-documents",
-      },
-      {
-        title: "How can I return an updated document from mongodb ...",
-        snippet:
-          "Use the {new: true} option. User.findOneAndUpdate({ email: userEmail }, { $set: { resetPasswordToken: token, resetPasswordExpires: now } } ...",
-        url: "https://stackoverflow.com/questions/62475673/how-can-i-return-an-updated-document-from-mongodb-mongoose",
-      },
-      {
-        title: "Get the updated document in MongoDB - Stack Overflow",
-        snippet:
-          "In nodejs API solution is to set: {returnOriginal: false}. collection.findOneAndUpdate( whereObj, updateObj, {returnOriginal: false});.",
-        url: "https://stackoverflow.com/questions/16333343/get-the-updated-document-in-mongodb",
-      },
-      {
-        title: "Document not updated in findOneAndUpdate - Stack Overflow",
-        snippet:
-          "It matters what schema you use to query database. Discriminators build the mongo queries based on the object you use.",
-        url: "https://stackoverflow.com/questions/54892850/document-not-updated-in-findoneandupdate",
-      },
-    ],
-  "javascript axios cancel post request site:stackoverflow.com": [
-    {
-      title: "how to cancel/abort ajax request in axios - Stack Overflow",
-      snippet:
-        "Axios does not support canceling requests at the moment. Please see this issue for details. UPDATE: Cancellation support was added in axios ...",
-      url: "https://stackoverflow.com/questions/38329209/how-to-cancel-abort-ajax-request-in-axios",
-    },
-    {
-      title: "Canceling my promises a POST Request through axios in ...",
-      snippet:
-        "If you use axios this can be done by using a cancel token: axios.isCancel(thrown).",
-      url: "https://stackoverflow.com/questions/63422796/canceling-my-promises-a-post-request-through-axios-in-reactjs",
-    },
-    {
-      title: "Cant cancel Axios post request via CancelToken - Stack ...",
-      snippet:
-        "In previous code,i have passed cancelToken to the POST data request not as a axios setting. import axios from 'axios' var CancelToken = axios.",
-      url: "https://stackoverflow.com/questions/44852054/cant-cancel-axios-post-request-via-canceltoken",
-    },
-    {
-      title: "Cancel axios get request when typing reactjs - Stack Overflow",
-      snippet:
-        "Since axios v0.15 you can cancel request: You can also create a cancel token by passing an executor function to the CancelToken constructor:.",
-      url: "https://stackoverflow.com/questions/42896831/cancel-axios-get-request-when-typing-reactjs",
-    },
-    {
-      title: "Cancelling previous API requests with Axios - Stack Overflow",
-      snippet:
-        "I am trying to follow Axios documentation to cancel repeated requests to an URL but while I get no errors the requests aren't being cancelled. I ...",
-      url: "https://stackoverflow.com/questions/57382537/cancelling-previous-api-requests-with-axios",
-    },
-    {
-      title: "Cancel File Upload Post request using Axios - Stack Overflow",
-      snippet:
-        "You need to make use of CancelToken . Basically, you need to pass a canceltoken in the config object while using axios.post and when you ...",
-      url: "https://stackoverflow.com/questions/55051917/cancel-file-upload-post-request-using-axios",
-    },
-    {
-      title: "Cancel previous request using axios with vue.js - Stack Overflow",
-      snippet:
-        "2020 UPDATE: How to cancel an axios request. generate a cancelToken and store it. import axios from 'axios' const request = axios.",
-      url: "https://stackoverflow.com/questions/50516438/cancel-previous-request-using-axios-with-vue-js",
+        "the simplest way: const objArr = [ { location_id: 1, quantity: 20, name: 'AB' } , { location_id: 1, quantity: 20, ...",
+      url: "https://stackoverflow.com/questions/62504053/javascript-merge-objects-with-same-key-and-sum-their-values",
     },
     {
       title:
-        "Cancel previous post requests by using axios ... - Stack Overflow",
+        "Merge two objects only if id in object 2 exists in object 1 in ...",
       snippet:
-        "Cancel previous post requests by using axios and axios cancel token · javascript react-native axios. I'm using a post request to retrieve some ...",
-      url: "https://stackoverflow.com/questions/61198475/cancel-previous-post-requests-by-using-axios-and-axios-cancel-token",
+        "JavaScript zips.forEach(index,object){ var zipID=object.id; master.forEach(indexMaster,objectMaster){ if(zipID==objectMaster.id){ ...",
+      url: "https://stackoverflow.com/questions/68192814/merge-two-objects-only-if-id-in-object-2-exists-in-object-1-in-plain-javascript",
+    },
+  ],
+  "javascript sort object array by value numeric site:stackoverflow.com": [
+    {
+      title:
+        "JavaScript: Sort an array of objects by a numeric property in ...",
+      snippet:
+        'You can use destructuring assignment and the .sort method like so: ... "naturally" gives the correct values to properly sort your array.',
+      url: "https://stackoverflow.com/questions/54623130/javascript-sort-an-array-of-objects-by-a-numeric-property-in-each-object",
     },
     {
-      title: "Cancel Axios post request outside useEffect hook - Stack ...",
+      title: "Sorting an array of objects by property values - Stack Overflow",
       snippet:
-        "This is because you're losing the changes between renders. During the handleCreate call the variable changes only for that render.",
-      url: "https://stackoverflow.com/questions/57463256/cancel-axios-post-request-outside-useeffect-hook",
+        "js. Let's create a method to sort arrays being able to arrange objects by some property. Creating the sorting function. var sortBy = ...",
+      url: "https://stackoverflow.com/questions/979256/sorting-an-array-of-objects-by-property-values",
     },
     {
-      title: "Not working on cancellation of POST in Axios - Stack Overflow",
+      title: "Javascript sort an array of objects based on numeric key",
       snippet:
-        "I faced the same issue with a get request. You need to pass headers in axios properties. axios.get(url, { cancelToken: ..., headers: { .",
-      url: "https://stackoverflow.com/questions/51380394/not-working-on-cancellation-of-post-in-axios",
+        "Simply you can use JavaScript sort function. It will work in Angular(TypeScript) also. Note: When sorting numbers, you can simply use the ...",
+      url: "https://stackoverflow.com/questions/51412901/javascript-sort-an-array-of-objects-based-on-numeric-key",
+    },
+    {
+      title: "Sort array of objects by string property value - Stack Overflow",
+      snippet:
+        "How can I sort them by the value of last_nom in JavaScript? I know about sort(a,b) , but that only seems to work on strings and numbers. Do I need to add a ...",
+      url: "https://stackoverflow.com/questions/1129216/sort-array-of-objects-by-string-property-value",
+    },
+    {
+      title:
+        "Javascript how to sort array of objects by numeric value of the ...",
+      snippet:
+        "You have to include the parse function in your compare function like this: var compare = function(a, b) { return parseInt(a.name) ...",
+      url: "https://stackoverflow.com/questions/50793491/javascript-how-to-sort-array-of-objects-by-numeric-value-of-the-string",
+    },
+    {
+      title: "Sorting object property by values - javascript - Stack Overflow",
+      snippet:
+        "Move them to an array, sort that array, and then use that array for your purposes. Here's a solution: var maxSpeed = { car: 300, bike: 60, motorbike: 200, ...",
+      url: "https://stackoverflow.com/questions/1069666/sorting-object-property-by-values",
+    },
+    {
+      title: "Javascript: Sort object array by number properties which ...",
+      snippet:
+        "You can return the difference between the existence of a number property on each object being compared, OR return the difference in their ...",
+      url: "https://stackoverflow.com/questions/56312968/javascript-sort-object-array-by-number-properties-which-include-undefined",
+    },
+    {
+      title: "Sort an array of objects based on a numeric key given as String",
+      snippet:
+        'The id column value is of type string type but I want to sort them as numeric values. var items = [ { "id": "165", "name": "a ...',
+      url: "https://stackoverflow.com/questions/51080370/sort-an-array-of-objects-based-on-a-numeric-key-given-as-string",
+    },
+    {
+      title:
+        "Sorting arrays in javascript by object key value - Stack Overflow",
+      snippet:
+        "When you're dealing with numeric values, the simplest solution is to subtract the second value from the first which will produce an ...",
+      url: "https://stackoverflow.com/questions/7889006/sorting-arrays-in-javascript-by-object-key-value",
+    },
+    {
+      title: "Sorting an array of objects based on a property value (int)",
+      snippet:
+        "You can use Array.prototype.sort() and define a compare function: function compareIndexFound(a, b) { if (a.indexFound < b.",
+      url: "https://stackoverflow.com/questions/42499698/sorting-an-array-of-objects-based-on-a-property-value-int",
     },
   ],
 };

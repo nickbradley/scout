@@ -1,6 +1,8 @@
 {
     "extends": "./tsconfig.base.json",
-    "files": [],
+    "compilerOptions": {
+        "moduleResolution":"node",
+    },
     "references": [
         { "path": "./src/ui" },
         { "path": "./src/common" },

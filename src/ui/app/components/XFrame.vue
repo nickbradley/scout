@@ -94,7 +94,7 @@ export default class XFrame extends Vue {
             window.stop();
             window.parent.postMessage({ url: "${url}", kind: "load-timeout" }, "*");
           }, ${options.loadTimeout});
-          window.addEventListener("load", () => {
+          window.addEventListener("DOMContentLoaded", () => {
             clearTimeout(loadTimeout);
             window.parent.postMessage({ url: "${url}", kind: "loaded" }, "*");
           });
@@ -110,10 +110,11 @@ export default class XFrame extends Vue {
           this.window = event.source as Window;
           this.$emit("loaded", this.url, this.window.document);
         } else {
-          this.$emit("error", {
-            url: this.url,
-            message: `Timeout reached loading page ${this.url}`,
-          });
+          this.$emit(
+            "error",
+            this.url,
+            `Timeout reached loading page ${this.url}`
+          );
         }
         window.removeEventListener("message", handleMessage);
       }
@@ -125,15 +126,13 @@ export default class XFrame extends Vue {
       this.srcdoc = await XFrame.fetch(this.url);
     } catch (err) {
       if (err instanceof DOMException) {
-        this.$emit("error", {
-          url: this.url,
-          message: `Timeout reached fetching page ${this.url}`,
-        });
+        this.$emit(
+          "error",
+          this.url,
+          `Timeout reached fetching page ${this.url}`
+        );
       } else {
-        this.$emit("error", {
-          url: this.url,
-          message: err.message,
-        });
+        this.$emit("error", this.url, err.message);
       }
     }
   }
