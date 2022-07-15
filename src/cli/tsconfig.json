@@ -1,0 +1,20 @@
+{
+    "extends": "../../tsconfig-base",
+    "compilerOptions": {
+        "composite": true,
+        "rootDir": ".",
+        "outDir": "../../dist/cli",
+        "target": "es6",
+        "module": "commonJS",
+        "moduleResolution": "node",
+        "strict": true,
+        "skipLibCheck": true,
+        "esModuleInterop": true,
+        "types": [ "node" ]
+    },
+    "references": [
+        {
+            "path": "../common"
+        }
+    ]
+}

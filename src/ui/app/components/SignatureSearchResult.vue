@@ -8,13 +8,13 @@
       <v-card-title
         class="pa-0 d-block text-truncate"
         tag="a"
-        @click="$emit('click', undefined, undefined)"
+        @click="openPage()"
         >{{ title }}</v-card-title
       >
       <v-card-text v-if="extensions" class="pa-0">{{
         extensions.join(" · ")
       }}</v-card-text>
-      <v-container v-if="!loaded">
+      <v-container v-if="loading">
         <v-spacer></v-spacer>
         <v-progress-circular
           indeterminate
@@ -117,12 +117,16 @@
               </v-expansion-panel-header>
             </v-hover>
             <v-expansion-panel-content eager class="pa-0">
-              <div v-if="rec.examples[0].declaration">
-                declaration
-                <pre><code class="language-javascript">{{rec.examples[0].declaration}}</code></pre>
-              </div>
-              call
-              <pre><code class="language-javascript">{{rec.examples[0].call}}</code></pre>
+              <v-list>
+                <v-list-item
+                  v-for="ex of rec.examples"
+                  :key="ex.call"
+                  eager
+                  show-arrows
+                >
+                  <pre><code class="language-javascript">{{ex.text}}</code></pre>
+                </v-list-item>
+              </v-list>
             </v-expansion-panel-content>
           </v-expansion-panel>
         </v-expansion-panels>
@@ -176,6 +180,7 @@ import "prismjs/components/prism-javascript";
 import XFrame from "@/components/XFrame.vue";
 import { Recommendation } from "@/Page";
 import StackOverflowPage from "../StackOverflowPage";
+import WebWorker from "../WebWorker";
 
 @Component({
   components: { XFrame },
@@ -188,12 +193,9 @@ export default class SignatureSearchResult extends Vue {
   @Prop() readonly date!: string;
   @Prop() readonly snippetHighlightWords!: string[];
   @Prop() readonly extensions!: string[];
-  @Prop({
-    default() {
-      return [];
-    },
-  })
-  readonly recommendations: Recommendation[];
+
+  loading = true;
+  recommendations = [];
 
   page?: StackOverflowPage;
   loaded = false;
@@ -264,6 +266,10 @@ export default class SignatureSearchResult extends Vue {
     // this.loaded = true;
   }
 
+  openPage(): void {
+    this.dialog = true;
+  }
+
   openSignature(recommendation: Recommendation): void {
     this.dialog = true;
     this.answerId = recommendation.examples[0].answerId;
@@ -283,7 +289,28 @@ export default class SignatureSearchResult extends Vue {
   mounted(): void {
     window.Prism = window.Prism || {};
     window.Prism.manual = true;
-    setTimeout(() => (this.loaded = true), 10000);
+    // setTimeout(() => (this.loaded = true), 20000);
+  }
+
+  async created(): Promise<void> {
+    const pool = this.$workerPool;
+    let worker: WebWorker;
+    const token = {};
+    try {
+      const to = setTimeout(() => token.cancel(), 50);
+      worker = await pool.acquireWorker(token);
+      clearTimeout(to);
+      const timeout = setTimeout(() => worker.cancel(), 3000);
+      this.recommendations = await worker.run({ pageURL: this.url });
+      clearTimeout(timeout);
+    } catch (err) {
+      console.warn("Failed to get signatures from", this.url, ".", err);
+    } finally {
+      this.loading = false;
+      if (worker) {
+        pool.releaseWorker(worker);
+      }
+    }
   }
 }
 </script>

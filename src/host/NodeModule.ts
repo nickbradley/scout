@@ -1,5 +1,5 @@
 import * as vscode from "vscode";
-import markdownLinkExtractor = require("markdown-link-extractor");
+import markdownLinkExtractor from "markdown-link-extractor";
 import Util from "./Util";
 
 export default class NodeModule {

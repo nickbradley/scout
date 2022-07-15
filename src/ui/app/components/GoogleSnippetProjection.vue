@@ -1,28 +1,16 @@
 <template>
-  <v-card class="pa-1 pb-4" :elevation="0">
-    <v-card-subtitle class="pa-0 black--text text-truncate">{{
-      displayLink
-    }}</v-card-subtitle>
-    <!-- Add :href="url" to open link in browser --> 
-    <v-card-title class="pa-0 d-block text-truncate" tag="a" @click="$emit('click', undefined, undefined);">{{
-      title
-    }}</v-card-title>
-    <v-card-text v-if="extensions" class="pa-0">{{
-      extensions.join(" · ")
-    }}</v-card-text>
-    <v-card-text
-      id="snippet"
-      class="pa-0"
-      v-html="embelishedSnippet"
-    ></v-card-text>
-  </v-card>
+  <v-card-text
+    id="snippet"
+    class="pa-0"
+    v-html="embelishedSnippet"
+  ></v-card-text>
 </template>
 
 <script lang="ts">
-import { Vue, Component, Prop, Watch } from "vue-property-decorator";
+import { Vue, Component, Prop } from "vue-property-decorator";
 
 @Component()
-export default class GoogleSearchResult extends Vue {
+export default class GoogleSnippetProjection extends Vue {
   @Prop() readonly url!: string;
   @Prop() readonly title!: string;
   @Prop() readonly displayLink!: string;
@@ -30,6 +18,8 @@ export default class GoogleSearchResult extends Vue {
   @Prop() readonly date!: string;
   @Prop() readonly snippetHighlightWords!: string[];
   @Prop() readonly extensions!: string[];
+
+  dialog = false;
 
   get embelishedSnippet(): string {
     let embelishedSnippet = this.date

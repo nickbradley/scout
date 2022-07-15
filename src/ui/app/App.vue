@@ -68,12 +68,11 @@
         "
         @load="(blocks) => onResultLoaded(result, blocks)"
       ></SearchResult> -->
-      <SignatureSearchResult
-        v-for="result of results"
-        :key="result.url"
-        v-bind="result"
-      >
-      </SignatureSearchResult>
+      <div v-for="result of results" :key="result.url">
+        <!-- <SignatureSearchResult v-if="study.showSnippets" v-bind="result">
+        </SignatureSearchResult> -->
+        <SearchResult v-bind="result" projectionType="signature"></SearchResult>
+      </div>
     </v-main>
 
     <!-- <v-container
@@ -125,7 +124,7 @@ import CodeContext from "@/CodeContext";
 import { AppConfig } from "../../common/types";
 import { resultsCache } from "./resultsCache";
 import Walkthrough from "@/components/Walkthrough.vue";
-import GoogleSearchResult from "@/components/GoogleSearchResult.vue";
+// import GoogleSearchResult from "@/components/GoogleSearchResult.vue";
 import SignatureSearchResult from "@/components/SignatureSearchResult.vue";
 import WorkerPool from "@/WorkerPool";
 
@@ -152,7 +151,7 @@ interface WalkthroughStep {
     SearchResult,
     Walkthrough,
     XFrame,
-    GoogleSearchResult,
+    // GoogleSearchResult,
     SignatureSearchResult,
   },
 })
@@ -161,7 +160,7 @@ export default class App extends Vue {
   study = {
     trialId: "",
     activeTask: "",
-    showSnippets: true,
+    showSnippets: false,
   };
 
   appEvents: AppEvent[] = [];
@@ -297,32 +296,7 @@ export default class App extends Vue {
       setTimeout(() => (this.pagesToLoad = 0), 12000);
       this.pagesToLoad = 1; // trigger loading indicator
       const search = await searchPromise;
-      this.pagesToLoad = search.results.length;
-
-      // Process results
-      search.results.forEach((r, i) => {
-        this.workerPool
-          .acquireWorker()
-          .then((worker) => {
-            return Promise.all([worker.run({ pageURL: r.url }), worker]);
-          })
-          .then(([result, worker]) => {
-            this.workerPool.releaseWorker(worker);
-            Vue.set(
-              this.results,
-              i,
-              Object.assign({}, this.results[i], {
-                recommendations: result,
-              })
-            );
-            this.pagesToLoad--;
-          })
-          .catch((err) => {
-            this.pagesToLoad = 0;
-            console.warn("Getting results failed.", err);
-          });
-      });
-
+      this.pagesToLoad = 0;
       this.resetResults = false;
       // this.pagesToLoad = search.results?.length ?? 0;
       this.searches.push(search);
@@ -582,10 +556,6 @@ export default class App extends Vue {
         });
       }
     });
-    const response = await fetch(window.workerURL + "/signatureWorker.js");
-    const blob = await response.blob();
-    const scriptURL = URL.createObjectURL(blob);
-    this.workerPool = new WorkerPool(scriptURL, 4);
     this.searchCache = resultsCache;
     this.$host.signalReady();
   }

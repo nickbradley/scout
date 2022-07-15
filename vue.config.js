@@ -16,6 +16,21 @@ module.exports = {
       .rule("js")
       .use("babel-loader")
       .tap(() => ({ rootMode: "upward" }));
+    // config.module
+    //   .rule('ts')
+    //   .use('ts-loader')
+    //   .merge({
+    //     options: {
+    //       configFile: path.join(__dirname, "src/tsconfig.json"),
+    //     },
+    //   });
+    // config
+    //   .plugin('fork-ts-checker')
+    //   .tap(args => {
+    //     console.log("ARGS", args);
+    //     args[0].typescript.configFile = path.join(__dirname, "src/tsconfig.json");
+    //     return args;
+    //   });
     config.plugin("define").tap((definitions) => {
       const env = dotenv.parsed;
       // TODO This masks the process.env that must be set elsewhere.

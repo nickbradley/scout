@@ -155,6 +155,7 @@ export default abstract class Page {
   }
 
   public clearHighlighOnScroll(): void {
+    this._activeElement?.classList.remove("fade-in");
     this.observer?.disconnect();
   }
 

@@ -6,7 +6,7 @@ import {
   CallExpression,
   Diagnostic,
 } from "ts-morph";
-import { CallSignature } from "../../common/types";
+// import { Signature } from "./Signature";
 
 export interface Signature {
   readonly text: string;
@@ -95,7 +95,7 @@ export class CodeBlock implements IsCodeBlock {
     return this.project.getPreEmitDiagnostics();
   }
 
-  public getSignatures(): CallSignature[] {
+  public getSignatures(): Signature[] {
     const sigs: Signature[] = [];
     const calls = this.getUnnestedCallExpressions();
     const getDefn = (node: Node): string => {

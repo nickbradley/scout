@@ -33,7 +33,7 @@ export default class XFrame extends Vue {
     url: string,
     options: FetchAndLoadOptions = {
       fetchTimeout: 10000,
-      loadTimeout: 5000,
+      loadTimeout: 8000,
       userAgent:
         "Mozilla/5.0 (iPhone; CPU iPhone OS 12_2 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148",
     }

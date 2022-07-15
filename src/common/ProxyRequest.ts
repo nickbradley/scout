@@ -9,7 +9,7 @@ export default class ProxyRequest {
   public static async fetch(
     url: string,
     options: FetchOptions = {
-      fetchTimeout: 15000,
+      fetchTimeout: 6000,
       userAgent:
         "Mozilla/5.0 (iPhone; CPU iPhone OS 12_2 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148",
     }
@@ -30,7 +30,7 @@ export default class ProxyRequest {
       signal: controller.signal,
     };
     if (options.userAgent) {
-      init.headers = { "user-agent": options.userAgent };
+      init.headers = { "user-agent": options.userAgent, "x-requested-with": "XMLHttpRequest" };
     }
     const res = await fetch(`${proxyUrl}/${url}`, init);
     clearTimeout(timerId);

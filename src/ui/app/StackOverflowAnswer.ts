@@ -89,6 +89,7 @@ export class StackOverflowAnswer implements IsAnswer {
       const sigString = signature.toString();
       if (!Object.prototype.hasOwnProperty.call(results, sigString)) {
         results[sigString] = {
+          // @ts-expect-error still working on finalizing the design
           signature,
           sourceCodeBlock: this.codeBlock,
         };

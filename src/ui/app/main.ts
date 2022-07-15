@@ -2,7 +2,14 @@ import Vue from "vue";
 import App from "./App.vue";
 import vuetify from "./plugins/vuetify";
 import { MockHost, VsCodeHost } from "@/Host";
+import WorkerPool from "@/WorkerPool";
 import { WebviewApi } from "vscode-webview";
+
+declare global {
+  interface Window {
+    workerURL: string;
+  }
+}
 
 (async () => {
   Vue.config.productionTip = false;
@@ -24,6 +31,13 @@ import { WebviewApi } from "vscode-webview";
   );
   Vue.prototype.$config = await Vue.prototype.$host.getConfig();
   clearTimeout(timer);
+
+  const response = await fetch(window.workerURL + "/signatureWorker.js");
+  const blob = await response.blob();
+  const scriptURL = URL.createObjectURL(blob);
+  const pool = new WorkerPool(scriptURL);
+  Vue.prototype.$workerPool = pool;
+  console.info("Using", pool.maxWorkerCount, "workers.");
 
   new Vue({
     vuetify,

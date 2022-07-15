@@ -1,7 +1,7 @@
 {
-  "extends": "../../tsconfig.json",
+  "extends": "../../tsconfig-base",
   "compilerOptions": {
-    "rootDir": ".",
+    // "rootDir": ".",
     "outDir": "../../dist/ui",
     "composite": true,
     "target": "esnext",
@@ -32,6 +32,9 @@
       "scripthost"
     ]
   },
+  "files": [
+    "../common/types.ts"
+  ],
   "references": [
     { "path": "../common" }
   ]

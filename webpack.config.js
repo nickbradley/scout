@@ -52,7 +52,8 @@ const webExtensionConfig = {
           {
             loader: "ts-loader",
             options: {
-              // configFile: __dirname + "/src/host/tsconfig.json",
+              // configFile: "tsconfig.json",
+              // configFile: path.join(__dirname, "src/tsconfig.json"),
               // projectReferences: true
             },
           },
@@ -131,8 +132,9 @@ const webWorkerConfig = {
           {
             loader: "ts-loader",
             options: {
+              // configFile: "tsconfig.json",
               // configFile: __dirname + "/src/ui/app/tsconfig.json",
-              projectReferences: true
+              // projectReferences: true
             },
           },
         ],
@@ -146,7 +148,7 @@ const webWorkerConfig = {
   plugins: [
     new webpack.optimize.LimitChunkCountPlugin({
       maxChunks: 1
-    })
+    }),
   ],
 };
 

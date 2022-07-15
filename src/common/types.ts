@@ -23,3 +23,25 @@ export interface AppConfig {
   serpApiToken: string;
   // studyMode: "baseline" | "treatment";
 }
+
+export interface CancellationToken {
+  cancel: () => void;
+}
+
+export interface CallSignature {
+  readonly text: string;
+  readonly name: string;
+  readonly parameters: string[];
+  readonly returnType: string;
+  readonly parentType: string | undefined;
+  readonly usage: string;
+  readonly definition: string;
+}
+
+export type StackOverflowCallSignature = CallSignature & {
+  answerId: string;
+  answerUrl: string;
+  voteCount: number;
+  isAccepted: boolean;
+  lastModified?: Date;
+};

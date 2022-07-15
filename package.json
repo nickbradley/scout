@@ -65,11 +65,14 @@
 		"build-ui": "vue-cli-service build",
 		"test:unit": "vue-cli-service test:unit",
 		"lint-ui": "vue-cli-service lint",
-		"watch-ui": "vue-cli-service build --watch --mode development"
+		"watch-ui": "vue-cli-service build --watch --mode development",
+		"build-cli": "tsc --build ./src/cli/tsconfig.json",
+		"scout": "node ./dist/cli/index.js"
 	},
 	"devDependencies": {
 		"@types/jest": "^27.0.3",
 		"@types/mocha": "^9.0.0",
+		"@types/node": "^18.0.4",
 		"@types/parse5": "^6.0.3",
 		"@types/vscode": "^1.59.0",
 		"@types/vscode-webview": "^1.57.0",
@@ -112,7 +115,7 @@
 		"@web/parse5-utils": "^1.3.0",
 		"async-batch": "^1.1.2",
 		"core-js": "^3.6.5",
-		"dotenv": "^10.0.0",
+		"dotenv": "^16.0.1",
 		"isomorphic-unfetch": "^3.1.0",
 		"markdown-link-extractor": "^1.3.0",
 		"parse5": "^7.0.0",
