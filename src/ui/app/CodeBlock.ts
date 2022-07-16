@@ -188,7 +188,8 @@ export class CodeBlock implements IsCodeBlock {
 
       if (Node.isIdentifier(exp)) {
         // ignore alert() call expressions
-        if (exp.getText() === "alert") {
+        const text = exp.getText();
+        if (text === "alert" || text === "require") {
           flag = false;
         }
       } else if (Node.isPropertyAccessExpression(exp)) {

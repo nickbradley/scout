@@ -178,8 +178,6 @@ export default abstract class Page {
     this._activeElement?.scrollIntoView();
   }
 
-  public abstract getRecommendations(): Recommendation[];
-
   public abstract getBlocks(): Block[];
 
   public abstract getFragments(block: Block, keywords: string[]): Fragment[];

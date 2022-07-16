@@ -1,4 +1,4 @@
-import Page, { Fragment, PageOption, Recommendation } from "@/Page";
+import Page, { Fragment, PageOption } from "@/Page";
 import Block from "@/Block";
 import { StackOverflowAnswer } from "./StackOverflowAnswer";
 
@@ -13,11 +13,10 @@ export default class StackOverflowPage extends Page {
       .filter((part) => part.includes(" "))
       .join(" - ");
 
-    // const answerElements = doc.body.querySelectorAll<HTMLDivElement>(".answer");
-    // this.answers = Array.from(answerElements).map(
-    //   (el) => new StackOverflowAnswer(el)
-    // );
-    this.answers = [];
+    const answerElements = doc.body.querySelectorAll<HTMLDivElement>(".answer");
+    this.answers = Array.from(answerElements).map(
+      (el) => new StackOverflowAnswer(el)
+    );
   }
 
   public getAcceptedAnswer(): StackOverflowAnswer | undefined {
@@ -34,53 +33,6 @@ export default class StackOverflowPage extends Page {
 
   public getPopularAnswer(): StackOverflowAnswer | undefined {
     return this.answers.sort((a, b) => b.voteCount - a.voteCount)[0];
-  }
-
-  public getRecommendations(): Recommendation[] {
-    const latestAnswer = this.getLatestAnswer();
-    const popularAnswer = this.getPopularAnswer();
-    const recommendations: { [signature: string]: Recommendation } = {};
-
-    for (const answer of this.answers) {
-      const sigs = answer.getSignatures();
-
-      for (const sig of sigs) {
-        const sigString = sig.signature.toString();
-        if (!Object.prototype.hasOwnProperty.call(recommendations, sigString)) {
-          recommendations[sigString] = {
-            signature: sig.signature,
-            usages: [],
-            examples: [],
-            metrics: {
-              occurrences: 0,
-              isFromAcceptedAnswer: false,
-              isFromPopularAnswer: false,
-              isFromLatestAnswer: false,
-            },
-          };
-        }
-        const s = recommendations[sigString];
-        s.usages.push({
-          ref: answer.url,
-          code: sig.sourceCodeBlock,
-          text: sig.signature.usage,
-        });
-        s.examples?.push({
-          answerURL: answer.url,
-          call: sig.signature.usage,
-          declaration: sig.signature.definition,
-        });
-        s.metrics.occurrences++;
-        s.metrics.isFromAcceptedAnswer =
-          s.metrics.isFromAcceptedAnswer || answer.isAccepted;
-        s.metrics.isFromPopularAnswer =
-          s.metrics.isFromPopularAnswer || popularAnswer?.id === answer.id;
-        s.metrics.isFromLatestAnswer =
-          s.metrics.isFromLatestAnswer || latestAnswer?.id === answer.id;
-      }
-    }
-
-    return Object.values(recommendations);
   }
 
   public getBlocks(): Block[] {

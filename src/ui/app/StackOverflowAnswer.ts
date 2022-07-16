@@ -49,18 +49,18 @@ export class StackOverflowAnswer implements IsAnswer {
       this.modified = new Date(modifiedDated);
     }
 
-    const codeBlockContents = Array.from(
-      this.element.querySelectorAll<HTMLPreElement>("pre") // .lang-js
-    )
-      .filter(
-        (el) => el.firstElementChild && el.firstElementChild.nodeName === "CODE"
-      )
-      .map((el) => (el.firstElementChild as HTMLElement).textContent ?? "");
-    this.codeBlock = new CodeBlock(codeBlockContents.join("\n"));
-    if (this.codeBlock.diagnostics.length > 0) {
-      console.warn("The were errors parsing the code block");
-      console.log(this.codeBlock.getPrettyDiagnostics());
-    }
+    // const codeBlockContents = Array.from(
+    //   this.element.querySelectorAll<HTMLPreElement>("pre") // .lang-js
+    // )
+    //   .filter(
+    //     (el) => el.firstElementChild && el.firstElementChild.nodeName === "CODE"
+    //   )
+    //   .map((el) => (el.firstElementChild as HTMLElement).textContent ?? "");
+    // this.codeBlock = new CodeBlock(codeBlockContents.join("\n"));
+    // if (this.codeBlock.diagnostics.length > 0) {
+    //   console.warn("The were errors parsing the code block");
+    //   console.log(this.codeBlock.getPrettyDiagnostics());
+    // }
   }
 
   get body(): HTMLDivElement {

@@ -1,6 +1,6 @@
 <template>
   <v-container class="pa-0">
-    <v-card class="pa-1 pb-4" :elevation="0">
+    <v-card class="pa-1 pb-4" :elevation="0" ref="searchResult">
       <v-card-subtitle class="pa-0 black--text text-truncate">{{
         displayLink
       }}</v-card-subtitle>
@@ -19,6 +19,9 @@
           v-if="projectionType === 'signature'"
           :url="url"
           @open="openPageToAnswer"
+          @expand="(data) => $emit('expand', data)"
+          @load="(data) => $emit('load', data)"
+          @error="(err) => $emit('error', err)"
         >
         </SignatureProjection>
         <GoogleSnippetProjection
@@ -72,6 +75,7 @@
 <script lang="ts">
 import { Vue, Component, Prop, Watch } from "vue-property-decorator";
 import XFrame from "@/components/XFrame.vue";
+import Page from "@/Page";
 import StackOverflowPage from "@/StackOverflowPage";
 import GoogleSnippetProjection from "@/components/GoogleSnippetProjection.vue";
 import SignatureProjection from "@/components/SignatureProjection.vue";
@@ -105,12 +109,18 @@ export default class SearchResult extends Vue {
     document.querySelector("a[href='/questions/ask")?.parentElement?.remove();
     document.querySelector(".js-consent-banner")?.remove(); // cookie consent
     document.querySelector(".js-launch-popover-toggle")?.remove(); // remove sort option popover
-    this.page = new StackOverflowPage(document);
+    const emitter = (action: string, data?: string | Record<string, unknown>) =>
+      this.$emit(action + "-page", data);
+    this.page = new StackOverflowPage(
+      document,
+      Page.WithCopyListener(emitter),
+      Page.WithScrollListener(emitter),
+      Page.WithSelectionListener(emitter)
+    );
     if (this.answerIdToHighlight) {
       this.scrollToAnswer(this.answerIdToHighlight);
       this.answerIdToHighlight = undefined;
     }
-    // this.showAnswerOnPage();
   }
 
   onPageError(url: string, message: string): void {
@@ -122,20 +132,22 @@ export default class SearchResult extends Vue {
 
   @Watch("dialog")
   closePage(): void {
-    console.log("dialog is now", this.dialog);
     if (!this.dialog) {
+      this.$emit("close");
       this.page?.clearHighlighOnScroll();
     }
   }
 
   openPage(): void {
+    this.$emit("open-page");
     this.answerIdToHighlight = undefined;
     this.dialog = true;
   }
 
   openPageToAnswer(answerId: number): void {
-    this.openPage();
+    this.$emit("open", answerId);
     this.answerIdToHighlight = answerId;
+    this.dialog = true;
     this.scrollToAnswer(answerId);
   }
 
@@ -147,6 +159,32 @@ export default class SearchResult extends Vue {
       this.page.highlightOnScroll();
       setTimeout(() => this.page.scrollToActiveElement(), 250);
     }
+  }
+
+  mounted(): void {
+    document.addEventListener("mouseup", (event) => {
+      if (
+        // this.$refs.searchResult.$el === event.target ||
+        this.$refs.searchResult.$el.contains(event.target)
+      ) {
+        const selection = document.getSelection();
+        if (selection && !selection.isCollapsed) {
+          this.$emit("selectionchange", selection.toString());
+        }
+      }
+    });
+    document.addEventListener("keydown", (event) => {
+      if (event.key === "c" && (event.ctrlKey || event.metaKey)) {
+        const selection = document.getSelection();
+        if (
+          selection &&
+          !selection.isCollapsed &&
+          this.$refs.searchResult.$el.contains(selection.anchorNode)
+        ) {
+          this.$emit("copy", selection.toString());
+        }
+      }
+    });
   }
 }
 </script>

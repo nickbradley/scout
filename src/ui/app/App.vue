@@ -69,39 +69,44 @@
         @load="(blocks) => onResultLoaded(result, blocks)"
       ></SearchResult> -->
       <div v-for="result of results" :key="result.url">
-        <!-- <SignatureSearchResult v-if="study.showSnippets" v-bind="result">
-        </SignatureSearchResult> -->
-        <SearchResult v-bind="result" projectionType="signature"></SearchResult>
+        <SearchResult
+          v-bind="result"
+          :projectionType="study.showSnippets ? 'signature' : 'snippet'"
+          @close="() => search.logEvent(result.url, 'page', 'close')"
+          @copy="
+            (data) => search.logEvent(result.url, 'projection', 'copy', data)
+          "
+          @copy-page="
+            (data) => search.logEvent(result.url, 'page', 'copy', data)
+          "
+          @error="
+            (err) => search.logEvent(result.url, 'projection', 'error', err)
+          "
+          @expand="
+            (data) => search.logEvent(result.url, 'projection', 'expand', data)
+          "
+          @load="
+            (data) => search.logEvent(result.url, 'projection', 'load', data)
+          "
+          @open="
+            (data) => {
+              search.logEvent(result.url, 'projection', 'open', data);
+            }
+          "
+          @open-page="() => search.logEvent(result.url, 'page', 'open')"
+          @scroll-page="
+            (data) => search.logEvent(result.url, 'page', 'scroll', data)
+          "
+          @selectionchange="
+            (data) =>
+              search.logEvent(result.url, 'projection', 'selection', data)
+          "
+          @selectionchange-page="
+            (data) => search.logEvent(result.url, 'page', 'selection', data)
+          "
+        ></SearchResult>
       </div>
     </v-main>
-
-    <!-- <v-container
-      v-for="result of results"
-      :key="result.url"
-      style="z-index: 6; position: fixed"
-      :class="{
-        hidden: visibleResult === null || result.url !== visibleResult.url,
-      }"
-    >
-      <XFrame
-        sandbox="allow-scripts allow-same-origin"
-        :url="result.url"
-        @loaded="onPageLoaded"
-        @error="onPageError"
-        style="
-          height: calc(100vh - 20px);
-          width: 100%;
-          position: absolute;
-          top: 20px;
-          left: 0;
-          right: 0;
-        "
-      />
-      <v-btn absolute top right rounded color="red" @click="closeResult">
-        <v-icon medium>mdi-close</v-icon>
-      </v-btn>
-    </v-container>
-    <v-overlay :value="visibleResult !== null" opacity=".9"></v-overlay> -->
 
     <Walkthrough
       v-if="!wtDisable && wtStep <= 4"
@@ -113,19 +118,18 @@
 
 <script lang="ts">
 import { Component, Vue, Watch } from "vue-property-decorator";
-import XFrame from "@/components/XFrame.vue";
+import SearchBar from "@/components/SearchBar.vue";
+import ContextList from "@/components/ContextList.vue";
 import SearchResult from "@/components/SearchResult.vue";
+import Walkthrough from "@/components/Walkthrough.vue";
+
 import Search, { Result } from "@/Search";
 import Page from "@/Page";
 import StackOverflowPage from "@/StackOverflowPage";
-import SearchBar from "@/components/SearchBar.vue";
-import ContextList from "@/components/ContextList.vue";
 import CodeContext from "@/CodeContext";
 import { AppConfig } from "../../common/types";
 import { resultsCache } from "./resultsCache";
-import Walkthrough from "@/components/Walkthrough.vue";
-// import GoogleSearchResult from "@/components/GoogleSearchResult.vue";
-import SignatureSearchResult from "@/components/SignatureSearchResult.vue";
+
 import WorkerPool from "@/WorkerPool";
 
 interface AppEvent {
@@ -150,9 +154,6 @@ interface WalkthroughStep {
     SearchBar,
     SearchResult,
     Walkthrough,
-    XFrame,
-    // GoogleSearchResult,
-    SignatureSearchResult,
   },
 })
 export default class App extends Vue {
@@ -160,7 +161,7 @@ export default class App extends Vue {
   study = {
     trialId: "",
     activeTask: "",
-    showSnippets: false,
+    showSnippets: true,
   };
 
   appEvents: AppEvent[] = [];
@@ -460,7 +461,7 @@ export default class App extends Vue {
 
       if (treatment && treatment.searchTerms) {
         this.searchValue = treatment.searchTerms;
-        this.searchDisabled = true;
+        // this.searchDisabled = true;
       }
     } catch (err) {
       this.appEvents.push({

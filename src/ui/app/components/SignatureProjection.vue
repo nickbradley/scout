@@ -9,7 +9,11 @@
   </v-card-text>
   <v-card-text v-else class="pa-0">
     <v-expansion-panels v-model="panel">
-      <v-expansion-panel v-for="(rec, i) of recommendations" :key="i">
+      <v-expansion-panel
+        v-for="(rec, i) of recommendations"
+        :key="i"
+        @change="$emit('expand', rec.text)"
+      >
         <v-expansion-panel-header class="pa-0" color="rgba(0, 0, 0, 0.05)">
           <v-tooltip bottom open-delay="300">
             <template v-slot:activator="{ on, attrs }">
@@ -121,6 +125,7 @@ import { StackOverflowCallSignature } from "../../common/types";
 @Component()
 export default class SignatureProjection extends Vue {
   @Prop() readonly url!: string;
+  @Prop({ default: 8000 }) readonly loadTimeout!: number;
 
   loading = true;
   signatures: StackOverflowCallSignature[] = [];
@@ -208,23 +213,25 @@ export default class SignatureProjection extends Vue {
 
   async created(): Promise<void> {
     const pool = this.$workerPool;
-    let worker: WebWorker;
     const token = {};
+    let worker: WebWorker;
+    let timerId: number;
+    let startTime = new Date().getTime();
     try {
-        console.log("Acquire worker", pool);
-    //   const to = setTimeout(() => token.cancel(), 15000);
+      timerId = setTimeout(() => token.cancel(), this.loadTimeout);
       worker = await pool.acquireWorker(token);
-      console.log("Worker acquired");
-    //   clearTimeout(to);
-      const timeout = setTimeout(() => { console.log("TIMEOUT"); worker.cancel() }, 8000);
-      console.log("WORKER IS WORKING");
+      clearTimeout(timerId);
+      timerId = setTimeout(
+        () => worker.cancel(),
+        this.loadTimeout - (new Date().getTime() - startTime)
+      );
       this.signatures = await worker.run({ pageURL: this.url });
-      console.log("WORKER IS DONE")
-      clearTimeout(timeout);
-      this.loaded = true;
+      clearTimeout(timerId);
       setTimeout(() => Prism.highlightAll(), 250);
+      this.$emit("load", this.recommendations);
     } catch (err) {
       console.warn("Failed to get signatures from", this.url, ".", err);
+      this.$emit("error", err);
     } finally {
       this.loading = false;
       if (worker) {

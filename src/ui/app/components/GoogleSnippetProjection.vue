@@ -11,15 +11,9 @@ import { Vue, Component, Prop } from "vue-property-decorator";
 
 @Component()
 export default class GoogleSnippetProjection extends Vue {
-  @Prop() readonly url!: string;
-  @Prop() readonly title!: string;
-  @Prop() readonly displayLink!: string;
   @Prop() readonly snippet!: string;
   @Prop() readonly date!: string;
   @Prop() readonly snippetHighlightWords!: string[];
-  @Prop() readonly extensions!: string[];
-
-  dialog = false;
 
   get embelishedSnippet(): string {
     let embelishedSnippet = this.date

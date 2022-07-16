@@ -32,7 +32,11 @@ declare global {
   Vue.prototype.$config = await Vue.prototype.$host.getConfig();
   clearTimeout(timer);
 
-  const response = await fetch(window.workerURL + "/signatureWorker.js");
+  const scriptUrl = window.workerURL + "/signatureWorker.js";
+  const response = await fetch(scriptUrl);
+  if (!response.ok) {
+    throw new Error(`Failed to load worker script from ${scriptUrl}`);
+  }
   const blob = await response.blob();
   const scriptURL = URL.createObjectURL(blob);
   const pool = new WorkerPool(scriptURL);
