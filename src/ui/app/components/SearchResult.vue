@@ -32,6 +32,7 @@
           :date="date"
           :snippet="snippet"
           :snippetHighlightWords="snippetHighlightWords"
+          @load="(data) => $emit('load', data)"
         ></GoogleSnippetProjection>
       </slot>
     </v-card>

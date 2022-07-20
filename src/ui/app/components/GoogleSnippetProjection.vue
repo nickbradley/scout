@@ -22,6 +22,10 @@ export default class GoogleSnippetProjection extends Vue {
     }
     return snippet;
   }
+
+  created(): void {
+    this.$emit("load", this.snippet);
+  }
 }
 </script>
 
