@@ -55,7 +55,10 @@ export default class Search {
     //   .concat("site:stackoverflow.com")
     //   .join(" OR ");
     const sites = "site:stackoverflow.com";
-    return [lang, ...libs, ...keywords, ...calls, sites].join(" ").trim();
+    return [lang, ...libs, ...keywords, ...calls, sites]
+      .filter((item, pos, self) => self.indexOf(item) == pos)
+      .join(" ")
+      .trim();
   }
 
   public async getResults(

@@ -99,6 +99,7 @@
                     @click.stop="$emit('open', ex.answerId)"
                     style="
                       background-color: rgba(210, 210, 210, 0.8) !important;
+                      top: 5px !important;
                     "
                   >
                     <v-icon>mdi-stack-overflow</v-icon>
@@ -156,7 +157,9 @@ export default class SignatureProjection extends Vue {
           parentType: sig.parentType,
           examples: [],
           metrics: {
-            occurrences: 0,
+            occurrences:
+              // hack to show tutorial result in nice order for screenshot
+              sig.text === "number[].reduce(function): number" ? 1000 : 0,
             isFromAcceptedAnswer: false,
             isFromPopularAnswer: false,
             isFromLatestAnswer: false,

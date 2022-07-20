@@ -14,6 +14,9 @@
       <v-card-text v-if="extensions" class="pa-0">{{
         extensions.join(" · ")
       }}</v-card-text>
+      <v-card-text v-else-if="date" class="pa-0 d-inline">{{
+        date + " — "
+      }}</v-card-text>
       <slot>
         <SignatureProjection
           v-if="projectionType === 'signature'"
@@ -42,7 +45,7 @@
     >
       <v-card>
         <v-toolbar dark color="primary">
-          <v-btn icon dark @click="dialog = false">
+          <v-btn class="close-dialog" icon dark @click="dialog = false">
             <v-icon>mdi-close</v-icon>
           </v-btn>
           <v-tooltip bottom>

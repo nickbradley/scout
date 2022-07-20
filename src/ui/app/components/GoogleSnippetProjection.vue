@@ -1,7 +1,7 @@
 <template>
   <v-card-text
     id="snippet"
-    class="pa-0"
+    class="pa-0 d-inline"
     v-html="embelishedSnippet"
   ></v-card-text>
 </template>
@@ -12,24 +12,15 @@ import { Vue, Component, Prop } from "vue-property-decorator";
 @Component()
 export default class GoogleSnippetProjection extends Vue {
   @Prop() readonly snippet!: string;
-  @Prop() readonly date!: string;
   @Prop() readonly snippetHighlightWords!: string[];
 
   get embelishedSnippet(): string {
-    let embelishedSnippet = this.date
-      ? this.date + " &mdash; " + this.snippet
-      : this.snippet;
-
     const highlightWords = [...new Set(this.snippetHighlightWords)];
-
+    let snippet = this.snippet;
     for (const word of highlightWords) {
-      embelishedSnippet = embelishedSnippet.replaceAll(
-        word,
-        "<b>" + word + "</b>"
-      );
+      snippet = snippet.replaceAll(word, `<b>${word}</b>`);
     }
-
-    return embelishedSnippet;
+    return snippet;
   }
 }
 </script>

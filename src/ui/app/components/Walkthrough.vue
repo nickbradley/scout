@@ -9,6 +9,7 @@
     :content-class="css"
     :value="value"
     :position-y="y"
+    z-index="1001"
   >
     <v-card-title>{{ title }}</v-card-title>
     <v-card-text class="text-left">

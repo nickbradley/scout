@@ -28,6 +28,7 @@ export default class SearchBar extends Vue {
   @Prop({ default: null }) readonly value!: string;
   @Prop({ default: {} }) readonly cache!: Record<string, Result[]>;
   @Prop({ default: false }) readonly demo!: boolean;
+  @Prop({ default: false }) readonly dedupResults!: boolean;
 
   input = null;
   isLoading = false;
@@ -59,18 +60,15 @@ export default class SearchBar extends Vue {
   public reset(): void {
     this.input = null;
   }
-
   private search(): void {
     // eslint-disable-next-line no-async-promise-executor
     const searchPromise = new Promise<Search>(async (resolve, reject) => {
       try {
         const search = this.demo
           ? new Search(
-              ["match", "passwords"],
-              new CodeContext([
-                { kind: "language", value: "javascript" },
-                { kind: "library", value: "bcrypt", docSites: [], typings: [] },
-              ])
+              ["sum", "property", "value", "in", "array", "of", "objects"],
+              // ["remove", "property", "from", "object"],
+              new CodeContext([{ kind: "language", value: "javascript" }])
             )
           : new Search(this.keywords, this.context);
         console.log("SEARCH", search.keywords, search.context, search.query);
@@ -82,17 +80,17 @@ export default class SearchBar extends Vue {
           await search.getResults(this.searchProvider, search.query);
         }
         // Remove duplicate Stack Overflow answers
-        const answerIds = {};
-        search.results = search.results.filter((item) => {
-          const id = item.url.match(
-            /https:\/\/stackoverflow.com\/questions\/(\d+)\//
-          )[0];
-          return Object.prototype.hasOwnProperty.call(answerIds, id)
-            ? false
-            : (answerIds[id] = item);
-        })
-        //.slice(0, 5);
-        console.log("RESULTS", search);
+        if (this.dedupResults) {
+          const answerIds = {};
+          search.results = search.results.filter((item) => {
+            const id = item.url.match(
+              /https:\/\/stackoverflow.com\/questions\/(\d+)\//
+            )[0];
+            return Object.prototype.hasOwnProperty.call(answerIds, id)
+              ? false
+              : (answerIds[id] = item);
+          });
+        }
         resolve(search);
       } catch (err) {
         reject(err);

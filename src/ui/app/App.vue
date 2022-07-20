@@ -13,7 +13,8 @@
         :loading="isSearchInProgress"
         :cache="searchCache"
         :value="searchValue"
-        :demo="!wtDisable && wtStep === 1"
+        :demo="!wtDisable && wtStep === 0"
+        :dedupResults="study.showSnippets"
         @search="onSearch"
       ></SearchBar>
       <v-spacer></v-spacer>
@@ -72,7 +73,7 @@
         <SearchResult
           v-bind="result"
           :projectionType="study.showSnippets ? 'signature' : 'snippet'"
-          @close="() => search.logEvent(result.url, 'page', 'close')"
+          @close="() => onResultClose(result)"
           @copy="
             (data) => search.logEvent(result.url, 'projection', 'copy', data)
           "
@@ -82,17 +83,9 @@
           @error="
             (err) => search.logEvent(result.url, 'projection', 'error', err)
           "
-          @expand="
-            (data) => search.logEvent(result.url, 'projection', 'expand', data)
-          "
-          @load="
-            (data) => search.logEvent(result.url, 'projection', 'load', data)
-          "
-          @open="
-            (data) => {
-              search.logEvent(result.url, 'projection', 'open', data);
-            }
-          "
+          @expand="(data) => onSearchResultExpand(result, data)"
+          @load="(data) => onResultLoaded(result, data)"
+          @open="(data) => onProjectionOpen(result, data)"
           @open-page="() => search.logEvent(result.url, 'page', 'open')"
           @scroll-page="
             (data) => search.logEvent(result.url, 'page', 'scroll', data)
@@ -109,7 +102,7 @@
     </v-main>
 
     <Walkthrough
-      v-if="!wtDisable && wtStep <= 4"
+      v-if="!wtDisable && wtStep <= 4 && wtShow"
       :value="wtShow"
       v-bind="walkthroughStep"
     ></Walkthrough>
@@ -186,7 +179,7 @@ export default class App extends Vue {
 
   wtShow = false;
   wtStep = 0;
-  wtDisable = true;
+  wtDisable = false;
 
   @Watch("log", { deep: true })
   async saveSearches(): Promise<void> {
@@ -225,7 +218,7 @@ export default class App extends Vue {
 
   get loadedResults(): Result[] {
     const res = this.results; //.filter((result) => result.page);
-    console.log("*************", res);
+    // console.log("*************", res);
     return res;
   }
 
@@ -244,40 +237,39 @@ export default class App extends Vue {
   get walkthroughStep(): WalkthroughStep {
     const steps = [
       {
-        attach: ".v-toolbar__extension",
-        title: "Context Terms",
-        text: "These terms are automatically identified in the code and are included in your search by default.",
-        action: 'Uncheck "mongodb" and click Apply.',
-      },
-      {
         attach: ".v-select__slot",
         title: "Search",
-        text: "Search Google for Stack Overflow results. Checked context terms are included with your search terms.",
-        action: 'Type "match passwords" and press Enter.',
-        progress: 25,
+        text: "Search Google for Stack Overflow results.",
+        action: 'Type "sum object property array" and press Enter.',
+        progress: 20,
       },
       {
-        attach: ".v-alert__content",
-        title: "Fragments",
-        text: "Scout extracts text fragments containing your search terms from each answer on the Stack Overflow page.",
-        action: "Click the fragment to open the page.",
-        progress: 50,
+        attach: ".v-expansion-panel-header",
+        title: "Call Signatures",
+        text: "Scout extracts call signatures from the Stack Overflow answers.",
+        action: "Click the signature to see usages.",
+        progress: 40,
       },
       {
-        attach: ".v-btn",
-        title: "Navigation",
-        text: "Scout uses popups to show each page scrolled to the answer fragment.",
-        action: "Click the close button to return to the search results.",
-        progress: 75,
-        point: false,
+        attach: ".code-example",
+        title: "Usage Examples",
+        text: "Scout shows example usages of the call signature from the Stack Overflow page.",
+        action: "Mouse over the code and click the Stack Overflow button.",
+        progress: 60,
       },
       {
-        attach: document.querySelectorAll(".v-alert__content")[6],
-        title: "Solution Fragments",
-        text: "The fragment below contains the solution we are looking for.",
-        action: "Walkthrough complete. Click Next in the task instructions.",
+        attach: ".close-dialog",
+        title: "Full Page View",
+        text: "The full Stack Overflow page is displayed scrolled to the answer containing the usage example (the bottom of the first code block).",
+        action: "Click the X or press Esc to close the page.",
+        progress: 80,
+      },
+      {
+        attach: ".code-example",
+        title: "You're all set!",
+        text: "You can use this example to complete the tutorial. Or explore the other signatures below.",
+        action: "Click Next in the Task Instructions pane on the right.",
         progress: 100,
-        top: true,
       },
     ];
     return steps[this.wtStep];
@@ -297,7 +289,7 @@ export default class App extends Vue {
       setTimeout(() => (this.pagesToLoad = 0), 12000);
       this.pagesToLoad = 1; // trigger loading indicator
       const search = await searchPromise;
-      this.pagesToLoad = 0;
+      this.pagesToLoad = search.results.length;
       this.resetResults = false;
       // this.pagesToLoad = search.results?.length ?? 0;
       this.searches.push(search);
@@ -356,18 +348,35 @@ export default class App extends Vue {
     this.pagesToLoad -= 1;
   }
 
-  onResultLoaded(
-    result: Result,
-    blocks: Array<{ text: string; html: string }>
-  ): void {
-    result["projections"] = blocks;
-    // Not sure if this is needed or not
-    this.saveSearches();
+  onResultLoaded(result: Result, data: unknown): void {
+    this.pagesToLoad--;
+    this.search.logEvent(result.url, "projection", "load", data);
     const resultIndex = this.results.findIndex((res) => res.url === result.url);
     if (resultIndex === 0) {
-      this.wtShow = true;
-      this.wtStep++;
+      setTimeout(() => {
+        this.wtShow = true;
+        this.wtStep++;
+      }, 250);
     }
+  }
+
+  onResultClose(result: Result): void {
+    this.search.logEvent(result.url, "page", "close");
+    this.wtStep++;
+  }
+
+  onSearchResultExpand(result: Result, data: unknown): void {
+    this.search.logEvent(result.url, "projection", "expand", data);
+    this.wtStep++;
+  }
+
+  onProjectionOpen(result: Result, data: unknown): void {
+    this.search.logEvent(result.url, "projection", "open", data);
+    this.wtShow = false;
+    setTimeout(() => {
+      this.wtStep++;
+      this.wtShow = true;
+    }, 1500);
   }
 
   onResultProjectionClick(result: Result, pageElement: HTMLElement): void {
@@ -426,34 +435,49 @@ export default class App extends Vue {
       }
       if (activeTaskId === "tutorial") {
         this.wtDisable = false;
+        this.wtShow = true;
       } else {
-        this.wtDisable = true;
+        this.wtDisable = false; // TODO
       }
       const treatment = toastData.tasks.find(
         (task) => task.id === activeTaskId
       );
       if (treatment) {
-        this.study.showSnippets = !treatment.enableFragments;
+        this.study.showSnippets = treatment.enableFragments;
       }
 
-      // TODO: For the first four tasks: set enableContext to false (which looks like it just uses an empty context object)
-      actualContext = await this.$host.getContext();
-      let context = new CodeContext();
-      if (treatment && !treatment.enableContext) {
-        isContextHidden = true;
-      } else {
-        if (actualContext.isEmpty()) {
-          // Use a hard-coded context just in case they make searches when the code is not focused.
-          // This also ensures that the context is comparable across all trials (even if participants do weird things in the code)
-          context = new CodeContext(treatment.contextOverride);
-        } else {
-          context = actualContext;
+      // If not the task where the participant needs to search using the plain Google version
+      if (
+        treatment.enableFragments ||
+        treatment.enableContext ||
+        treatment.provideSearchTerms
+      ) {
+        const hostContext =
+          new CodeContext(treatment.contextOverride) ??
+          (await this.$host.getContext());
+        if (!this.hostContext.isEqual(hostContext)) {
+          this.hostContext = hostContext;
+          this.selectedContext = hostContext;
         }
       }
-      if (!this.hostContext.isEqual(context)) {
-        this.hostContext = context;
-        this.selectedContext = context;
-      }
+      // // TODO: For the first four tasks: set enableContext to false (which looks like it just uses an empty context object)
+      // actualContext = await this.$host.getContext();
+      // let context = new CodeContext();
+      // if (treatment && !treatment.enableContext) {
+      //   isContextHidden = true;
+      // } else {
+      //   if (actualContext.isEmpty()) {
+      //     // Use a hard-coded context just in case they make searches when the code is not focused.
+      //     // This also ensures that the context is comparable across all trials (even if participants do weird things in the code)
+      //     context = new CodeContext(treatment.contextOverride);
+      //   } else {
+      //     context = actualContext;
+      //   }
+      // }
+      // if (!this.hostContext.isEqual(context)) {
+      //   this.hostContext = context;
+      //   this.selectedContext = context;
+      // }
 
       // TODO: Read the search value here
       // set this.searchValue to the search terms for the task
