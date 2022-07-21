@@ -18,7 +18,7 @@
         @search="onSearch"
       ></SearchBar>
       <v-spacer></v-spacer>
-      <!-- <template v-slot:extension>
+      <template v-if="study.showContext" v-slot:extension>
         <ContextList
           id="context"
           :context="hostContext"
@@ -26,7 +26,7 @@
           @changed="onSelectedContextChanged"
         >
         </ContextList>
-      </template> -->
+      </template>
     </v-app-bar>
 
     <v-main>
@@ -155,6 +155,7 @@ export default class App extends Vue {
     trialId: "",
     activeTask: "",
     showSnippets: true,
+    showContext: false,
   };
 
   appEvents: AppEvent[] = [];
@@ -411,7 +412,7 @@ export default class App extends Vue {
 
     let isNewTask = false;
     let isContextHidden = false;
-    let actualContext = new CodeContext();
+    let context = new CodeContext();
     let activeTaskId = "";
     try {
       // For the study
@@ -428,6 +429,8 @@ export default class App extends Vue {
         this.searches = [];
         this.appEvents = [];
         this.study.activeTask = activeTaskId;
+        this.hostContext = new CodeContext();
+        this.selectedContext = null;
         isNewTask = true;
       } else if (this.visibleResult) {
         // A full page result is open so don't do anything
@@ -437,51 +440,26 @@ export default class App extends Vue {
         this.wtDisable = false;
         this.wtShow = true;
       } else {
-        this.wtDisable = false; // TODO
+        this.wtDisable = true;
       }
       const treatment = toastData.tasks.find(
         (task) => task.id === activeTaskId
       );
       if (treatment) {
         this.study.showSnippets = treatment.enableFragments;
+        this.study.showContext = treatment.showContext;
       }
 
       // If not the task where the participant needs to search using the plain Google version
-      if (
-        treatment.enableFragments ||
-        treatment.enableContext ||
-        treatment.provideSearchTerms
-      ) {
-        const hostContext =
-          new CodeContext(treatment.contextOverride) ??
-          (await this.$host.getContext());
-        if (!this.hostContext.isEqual(hostContext)) {
-          this.hostContext = hostContext;
-          this.selectedContext = hostContext;
+      if (treatment?.enableContext) {
+        context = treatment?.contextOverride
+          ? new CodeContext(treatment.contextOverride)
+          : await this.$host.getContext();
+        if (!this.hostContext.isEqual(context)) {
+          this.hostContext = context;
+          this.selectedContext = context;
         }
       }
-      // // TODO: For the first four tasks: set enableContext to false (which looks like it just uses an empty context object)
-      // actualContext = await this.$host.getContext();
-      // let context = new CodeContext();
-      // if (treatment && !treatment.enableContext) {
-      //   isContextHidden = true;
-      // } else {
-      //   if (actualContext.isEmpty()) {
-      //     // Use a hard-coded context just in case they make searches when the code is not focused.
-      //     // This also ensures that the context is comparable across all trials (even if participants do weird things in the code)
-      //     context = new CodeContext(treatment.contextOverride);
-      //   } else {
-      //     context = actualContext;
-      //   }
-      // }
-      // if (!this.hostContext.isEqual(context)) {
-      //   this.hostContext = context;
-      //   this.selectedContext = context;
-      // }
-
-      // TODO: Read the search value here
-      // set this.searchValue to the search terms for the task
-      // set this.searchDisabled to true
 
       if (treatment && treatment.searchTerms) {
         this.searchValue = treatment.searchTerms;
@@ -505,10 +483,12 @@ export default class App extends Vue {
 
       const taskSourceFiles = {
         tutorial: "src/tutorial.js",
-        zip: "public/zipFiles.js",
-        get: "src/getPhotos.js",
-        patch: "src/patchPhoto.js",
-        submit: "public/submitPhoto.js",
+        currency: "src/currency.js",
+        sort: "src/sort.js",
+        clone: "src/clone.js",
+        find: "src/find.js",
+        recent: "src/recent.js",
+        scrape: "src/scrape.js",
       };
 
       this.appEvents.push({
@@ -522,7 +502,7 @@ export default class App extends Vue {
           isNewTask,
           isContextHidden,
           isShowingSnippets: this.study.showSnippets,
-          detectedContext: actualContext,
+          providedContext: context,
           sourceCode: await this.$host.getTokens(taskSourceFiles[activeTaskId]),
         },
       });

@@ -1,6 +1,12 @@
 <template>
   <v-container class="pa-0">
-    <v-card class="pa-1 pb-4" :elevation="0" ref="searchResult">
+    <v-card
+      class="pa-1 pb-4"
+      :elevation="0"
+      @mouseup="onMouseup"
+      @keydown.ctrl="onCopy"
+      @keydown.meta="onCopy"
+    >
       <v-card-subtitle class="pa-0 black--text text-truncate">{{
         displayLink
       }}</v-card-subtitle>
@@ -165,30 +171,20 @@ export default class SearchResult extends Vue {
     }
   }
 
-  mounted(): void {
-    document.addEventListener("mouseup", (event) => {
-      if (
-        // this.$refs.searchResult.$el === event.target ||
-        this.$refs.searchResult.$el.contains(event.target)
-      ) {
-        const selection = document.getSelection();
-        if (selection && !selection.isCollapsed) {
-          this.$emit("selectionchange", selection.toString());
-        }
+  onMouseup(): void {
+    const selection = document.getSelection();
+    if (selection && !selection.isCollapsed) {
+      this.$emit("selectionchange", selection.toString());
+    }
+  }
+
+  onCopy(event: KeyboardEvent): void {
+    if (event.key === "c") {
+      const selection = document.getSelection();
+      if (selection && !selection.isCollapsed) {
+        this.$emit("copy", selection.toString());
       }
-    });
-    document.addEventListener("keydown", (event) => {
-      if (event.key === "c" && (event.ctrlKey || event.metaKey)) {
-        const selection = document.getSelection();
-        if (
-          selection &&
-          !selection.isCollapsed &&
-          this.$refs.searchResult.$el.contains(selection.anchorNode)
-        ) {
-          this.$emit("copy", selection.toString());
-        }
-      }
-    });
+    }
   }
 }
 </script>

@@ -50,6 +50,10 @@ export default class ContextList extends Vue {
     this.$emit("changed", new CodeContext(this.selectedTokens));
     this.appliedTokenIndexes = this.selectedTokenIndexes;
   }
+
+  mounted(): void {
+    this.init();
+  }
 }
 </script>
 
