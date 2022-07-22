@@ -1,6 +1,6 @@
 // Generated Jul-18-2022
 export const resultsCache = {
-  "javascript sum property value in array of objects": [
+  "javascript sum property value in array of objects site:stackoverflow.com": [
     {
       title: "Better way to sum a property value in an array - Stack Overflow",
       url: "https://stackoverflow.com/questions/23247859/better-way-to-sum-a-property-value-in-an-array",
