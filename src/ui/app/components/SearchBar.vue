@@ -2,11 +2,13 @@
   <v-combobox
     placeholder="Search"
     prepend-inner-icon="mdi-magnify"
+    append-outer-icon="mdi-reload"
     :search-input.sync="input"
     :loading="loading"
     :disabled="disabled"
     :value="value"
     @keydown.enter="search"
+    @click:append-outer="reload"
   ></v-combobox>
 </template>
 
@@ -36,17 +38,17 @@ export default class SearchBar extends Vue {
   searchProvider = new SerpSearchProvider(this.$config.serpApiToken);
 
   @Watch("context")
-  async updateSearch(): Promise<void> {
+  updateSearch(): Promise<void> {
     if (this.input) {
-      await this.search();
+      this.search();
     }
   }
 
   @Watch("value")
-  async setInput(): Promise<void> {
+  setInput(): Promise<void> {
     this.input = this.value;
     if (this.input) {
-      await this.search();
+      this.search();
     }
   }
 
@@ -60,14 +62,21 @@ export default class SearchBar extends Vue {
   public reset(): void {
     this.input = null;
   }
+
+  public reload(): void {
+    if (this.input) {
+      this.$emit("reload");
+      this.search();
+    }
+  }
+
   private search(): void {
     // eslint-disable-next-line no-async-promise-executor
     const searchPromise = new Promise<Search>(async (resolve, reject) => {
       try {
         const search = this.demo
           ? new Search(
-              ["sum", "property", "value", "in", "array", "of", "objects"],
-              // ["remove", "property", "from", "object"],
+              ["sum", "object", "property", "array"],
               new CodeContext([{ kind: "language", value: "javascript" }])
             )
           : new Search(this.keywords, this.context);

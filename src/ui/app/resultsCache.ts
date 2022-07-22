@@ -1,6 +1,6 @@
 // Generated Jul-18-2022
 export const resultsCache = {
-  "javascript sum property value in array of objects site:stackoverflow.com": [
+  "javascript sum object property array site:stackoverflow.com": [
     {
       title: "Better way to sum a property value in an array - Stack Overflow",
       url: "https://stackoverflow.com/questions/23247859/better-way-to-sum-a-property-value-in-an-array",
@@ -35,78 +35,79 @@ export const resultsCache = {
         "this.arr = this.models.reduce((acc, item) => { let existItem = acc.find(({id}) ... Then use Object.values to create an array of the values.",
       snippetHighlightWords: ["item", "Object", "values", "array", "values"],
     },
-    {
-      title: "ES6 Sum by object property in an array - Stack Overflow",
-      url: "https://stackoverflow.com/questions/53754524/es6-sum-by-object-property-in-an-array",
-      displayLink: "https://stackoverflow.com › questions › es6-sum-by-obj...",
-      date: "Dec 13, 2018",
-      snippet:
-        "I have tried arr = results.map(x => x.unit).reduce((a,c) => a + c) but it only return a single value ...",
-      snippetHighlightWords: ["value"],
-    },
-    {
-      title:
-        "Sum all object items in array with dynamic property in JavaScript",
-      url: "https://stackoverflow.com/questions/67018145/sum-all-object-items-in-array-with-dynamic-property-in-javascript",
-      displayLink:
-        "https://stackoverflow.com › questions › sum-all-object-i...",
-      date: "Apr 9, 2021",
-      snippet:
-        "At each object , you sum the value of each properties by iteration the object due to dynamic property like this. for(const [key, value] of ...",
-      snippetHighlightWords: [
-        "object",
-        "sum",
-        "value",
-        "properties",
-        "object",
-        "property",
-        "value",
-      ],
-    },
-    {
-      title:
-        "SUM all values of an array of objects by array index of object ...",
-      url: "https://stackoverflow.com/questions/66529698/sum-all-values-of-an-array-of-objects-by-array-index-of-object-property-in-javas",
-      displayLink: "https://stackoverflow.com › questions › sum-all-values-...",
-      snippet:
-        "You could define an array of Ref values for those Vals that you want to include in the calculation and then use reduce and find to get the ...",
-      snippetHighlightWords: ["array", "values"],
-      extensions: ["Mar 8, 2021", "2 answers"],
-    },
-    {
-      title: "Sum values from objects stored in an array - Stack Overflow",
-      url: "https://stackoverflow.com/questions/60614945/sum-values-from-objects-stored-in-an-array",
-      displayLink: "https://stackoverflow.com › questions › sum-values-fro...",
-      date: "Mar 10, 2020",
-      snippet:
-        "console.log(totalNumberOfGrades(// I have to put here any of the three person objects... )); so ...",
-      snippetHighlightWords: ["objects"],
-    },
-    {
-      title: "Get sum of property values within array of objects",
-      url: "https://stackoverflow.com/questions/62306334/get-sum-of-property-values-within-array-of-objects",
-      displayLink: "https://stackoverflow.com › questions › get-sum-of-pro...",
-      date: "Jun 10, 2020",
-      snippet:
-        "Get sum of property values within array of objects ... I am trying to get an object as output using JavaScript reduce function. It's working, if I ...",
-      snippetHighlightWords: [
-        "sum",
-        "property values",
-        "array of objects",
-        "object",
-        "JavaScript",
-      ],
-    },
-    {
-      title:
-        "is it possible to sum up the properties of an array of objects ...",
-      url: "https://stackoverflow.com/questions/69838165/is-it-possible-to-sum-up-the-properties-of-an-array-of-objects-and-to-filter-it",
-      displayLink:
-        "https://stackoverflow.com › questions › is-it-possible-to...",
-      date: "Nov 4, 2021",
-      snippet: `We'd use Object.values() to get the final array required. const a = [{ "page": "Page 1", "date": "2021-10-05", "visitors": 10 }, { "page": ...`,
-      snippetHighlightWords: ["Object", "values", "array"],
-    },
+    /** Only show four results to make loading the tutorial faster */
+    // {
+    //   title: "ES6 Sum by object property in an array - Stack Overflow",
+    //   url: "https://stackoverflow.com/questions/53754524/es6-sum-by-object-property-in-an-array",
+    //   displayLink: "https://stackoverflow.com › questions › es6-sum-by-obj...",
+    //   date: "Dec 13, 2018",
+    //   snippet:
+    //     "I have tried arr = results.map(x => x.unit).reduce((a,c) => a + c) but it only return a single value ...",
+    //   snippetHighlightWords: ["value"],
+    // },
+    // {
+    //   title:
+    //     "Sum all object items in array with dynamic property in JavaScript",
+    //   url: "https://stackoverflow.com/questions/67018145/sum-all-object-items-in-array-with-dynamic-property-in-javascript",
+    //   displayLink:
+    //     "https://stackoverflow.com › questions › sum-all-object-i...",
+    //   date: "Apr 9, 2021",
+    //   snippet:
+    //     "At each object , you sum the value of each properties by iteration the object due to dynamic property like this. for(const [key, value] of ...",
+    //   snippetHighlightWords: [
+    //     "object",
+    //     "sum",
+    //     "value",
+    //     "properties",
+    //     "object",
+    //     "property",
+    //     "value",
+    //   ],
+    // },
+    // {
+    //   title:
+    //     "SUM all values of an array of objects by array index of object ...",
+    //   url: "https://stackoverflow.com/questions/66529698/sum-all-values-of-an-array-of-objects-by-array-index-of-object-property-in-javas",
+    //   displayLink: "https://stackoverflow.com › questions › sum-all-values-...",
+    //   snippet:
+    //     "You could define an array of Ref values for those Vals that you want to include in the calculation and then use reduce and find to get the ...",
+    //   snippetHighlightWords: ["array", "values"],
+    //   extensions: ["Mar 8, 2021", "2 answers"],
+    // },
+    // {
+    //   title: "Sum values from objects stored in an array - Stack Overflow",
+    //   url: "https://stackoverflow.com/questions/60614945/sum-values-from-objects-stored-in-an-array",
+    //   displayLink: "https://stackoverflow.com › questions › sum-values-fro...",
+    //   date: "Mar 10, 2020",
+    //   snippet:
+    //     "console.log(totalNumberOfGrades(// I have to put here any of the three person objects... )); so ...",
+    //   snippetHighlightWords: ["objects"],
+    // },
+    // {
+    //   title: "Get sum of property values within array of objects",
+    //   url: "https://stackoverflow.com/questions/62306334/get-sum-of-property-values-within-array-of-objects",
+    //   displayLink: "https://stackoverflow.com › questions › get-sum-of-pro...",
+    //   date: "Jun 10, 2020",
+    //   snippet:
+    //     "Get sum of property values within array of objects ... I am trying to get an object as output using JavaScript reduce function. It's working, if I ...",
+    //   snippetHighlightWords: [
+    //     "sum",
+    //     "property values",
+    //     "array of objects",
+    //     "object",
+    //     "JavaScript",
+    //   ],
+    // },
+    // {
+    //   title:
+    //     "is it possible to sum up the properties of an array of objects ...",
+    //   url: "https://stackoverflow.com/questions/69838165/is-it-possible-to-sum-up-the-properties-of-an-array-of-objects-and-to-filter-it",
+    //   displayLink:
+    //     "https://stackoverflow.com › questions › is-it-possible-to...",
+    //   date: "Nov 4, 2021",
+    //   snippet: `We'd use Object.values() to get the final array required. const a = [{ "page": "Page 1", "date": "2021-10-05", "visitors": 10 }, { "page": ...`,
+    //   snippetHighlightWords: ["Object", "values", "array"],
+    // },
   ],
   "javascript format currency site:stackoverflow.com": [
     {

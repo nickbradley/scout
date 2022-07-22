@@ -16,6 +16,7 @@
         :demo="!wtDisable && wtStep === 0"
         :dedupResults="study.showSnippets"
         @search="onSearch"
+        @reload="resetResults = true"
       ></SearchBar>
       <v-spacer></v-spacer>
       <template v-if="study.showContext" v-slot:extension>
