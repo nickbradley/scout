@@ -7,9 +7,7 @@
         ref="input"
         :history="searches"
         :context="context"
-        :disabled="
-          isSearchInProgress || visibleResult !== null || searchDisabled
-        "
+        :disabled="isSearchInProgress || searchDisabled"
         :loading="isSearchInProgress"
         :cache="searchCache"
         :value="searchValue"
@@ -23,7 +21,7 @@
         <ContextList
           id="context"
           :context="hostContext"
-          :disabled="isSearchInProgress || visibleResult !== null"
+          :disabled="isSearchInProgress"
           @changed="onSelectedContextChanged"
         >
         </ContextList>
@@ -43,33 +41,6 @@
         >
         <span v-else>Enter some terms above to make a search.</span>
       </v-container>
-      <!-- <SearchResult
-        v-for="result of loadedResults"
-        :key="result.url"
-        v-bind="result"
-        :snippet="study.showSnippets ? result.snippet : ''"
-        :keywords="[
-          ...search.keywords,
-          ...(search.context.libraryNames || []),
-          ...(search.context.callNames || []),
-        ]"
-        @open="() => openResult(result)"
-        @click="
-          (el, index) => {
-            search.logEvent(result.url, 'projection', 'click', {
-              projection: index,
-            });
-            onResultProjectionClick(result, el);
-          }
-        "
-        @select="
-          (data) => search.logEvent(result.url, 'projection', 'select', data)
-        "
-        @copy="
-          (data) => search.logEvent(result.url, 'projection', 'copy', data)
-        "
-        @load="(blocks) => onResultLoaded(result, blocks)"
-      ></SearchResult> -->
       <div v-for="result of results" :key="result.url">
         <SearchResult
           v-bind="result"
@@ -116,13 +87,9 @@ import SearchResult from "@/components/SearchResult.vue";
 import Walkthrough from "@/components/Walkthrough.vue";
 
 import Search, { Result } from "@/Search";
-import Page from "@/Page";
-import StackOverflowPage from "@/StackOverflowPage";
 import CodeContext from "@/CodeContext";
 import { AppConfig } from "../../common/types";
 import { resultsCache } from "./resultsCache";
-
-import WorkerPool from "@/WorkerPool";
 
 interface AppEvent {
   timestamp: Date;
@@ -149,7 +116,6 @@ interface WalkthroughStep {
   },
 })
 export default class App extends Vue {
-  workerPool: WorkerPool;
   study = {
     trialId: "",
     activeTask: "",
@@ -170,8 +136,6 @@ export default class App extends Vue {
 
   hostContext: CodeContext = new CodeContext();
   selectedContext: CodeContext | null = null;
-
-  visibleResult: Result | null = null;
 
   pagesToLoad = 0;
 
@@ -214,12 +178,6 @@ export default class App extends Vue {
     } else {
       return this.search?.results ?? [];
     }
-  }
-
-  get loadedResults(): Result[] {
-    const res = this.results; //.filter((result) => result.page);
-    // console.log("*************", res);
-    return res;
   }
 
   get context(): CodeContext {
@@ -307,47 +265,6 @@ export default class App extends Vue {
     }
   }
 
-  onPageLoaded(url: string, document: Document): void {
-    console.log("App::onPageLoaded", url);
-    const result = this.results?.find((r) => r.url === url);
-    if (result) {
-      const logger = (
-        action: string,
-        data?: string | Record<string, unknown>
-      ) => this.search.logEvent(url, "page", action, data);
-      let page: Page;
-      const hostname = new URL(url).hostname;
-      switch (hostname) {
-        case "stackoverflow.com": {
-          page = new StackOverflowPage(
-            document,
-            Page.WithCopyListener(logger),
-            Page.WithScrollListener(logger),
-            Page.WithSelectionListener(logger)
-          );
-          break;
-        }
-      }
-      // const page = new Page(
-      //   document,
-      //   Page.WithCopyListener(logger),
-      //   Page.WithScrollListener(logger),
-      //   Page.WithSelectionListener(logger)
-      // );
-      if (page) {
-        this.$set(result, "page", page);
-        this.search.logEvent(url, "page", "loaded");
-      }
-      this.pagesToLoad -= 1;
-    }
-  }
-
-  onPageError(url: string, message: string): void {
-    console.warn("App:onPageError", message);
-    this.search.logEvent(url, "page", "load-error", message);
-    this.pagesToLoad -= 1;
-  }
-
   onResultLoaded(result: Result, data: unknown): void {
     this.pagesToLoad--;
     this.search.logEvent(result.url, "projection", "load", data);
@@ -385,17 +302,6 @@ export default class App extends Vue {
     }, 1500);
   }
 
-  onResultProjectionClick(result: Result, pageElement: HTMLElement): void {
-    this.openResult(result);
-    result.page.activeElement = pageElement;
-    pageElement.scrollIntoView({ block: "center", inline: "center" });
-    // pageElement.classList.add("fade-in");
-    // setTimeout(() => pageElement.classList.remove("fade-in"), 1000);
-    result.page.highlightOnScroll();
-
-    this.wtStep++;
-  }
-
   onAppResize(): void {
     if (this.resizeTimeoutId) {
       clearTimeout(this.resizeTimeoutId);
@@ -426,10 +332,6 @@ export default class App extends Vue {
       this.study.trialId = toastData.id;
       activeTaskId = toastData.activeTaskId as string;
       if (activeTaskId !== this.study.activeTask) {
-        // reset UI
-        if (this.visibleResult) {
-          this.closeResult();
-        }
         this.$refs.input.reset();
         this.searches = [];
         this.appEvents = [];
@@ -437,9 +339,6 @@ export default class App extends Vue {
         this.hostContext = new CodeContext();
         this.selectedContext = null;
         isNewTask = true;
-      } else if (this.visibleResult) {
-        // A full page result is open so don't do anything
-        return;
       }
       if (activeTaskId === "tutorial") {
         this.wtDisable = false;
@@ -514,39 +413,9 @@ export default class App extends Vue {
     }
   }
 
-  onKeydown(e: KeyboardEvent): void {
-    if (e.key === "Escape") {
-      if (this.visibleResult) {
-        this.closeResult();
-      } else {
-        // unselect text in search box
-        window.getSelection().empty();
-      }
-      //   if (document.selection) {
-      //     document.selection.empty();
-      //   } else if (window.getSelection) {
-      //     window.getSelection().removeAllRanges();
-      //   } else if
-    }
-  }
-
-  openResult(result: Result): void {
-    this.visibleResult = result;
-    this.search.logEvent(this.visibleResult.url, "page", "open");
-  }
-
-  closeResult(): void {
-    this.visibleResult.page.dismissFragmentBlock();
-    this.search.logEvent(this.visibleResult.url, "page", "close");
-    this.visibleResult = null;
-
-    this.wtStep++;
-  }
-
   async created(): Promise<void> {
     window.addEventListener("focus", this.onAppFocus);
     window.addEventListener("resize", this.onAppResize);
-    window.addEventListener("keydown", this.onKeydown);
     window.addEventListener("message", async (event) => {
       const message = event.data as {
         sender: string;
