@@ -143,7 +143,7 @@ export default class SearchResult extends Vue {
   @Watch("dialog")
   closePage(): void {
     if (!this.dialog) {
-      this.$emit("close");
+      this.$emit("close", this.url);
       this.page?.clearHighlighOnScroll();
     }
   }

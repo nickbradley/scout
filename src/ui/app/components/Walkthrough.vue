@@ -24,7 +24,7 @@
         color="success"
         icon="mdi-rocket-launch"
       >
-      {{ action }}
+        {{ action }}
       </v-alert>
     </v-card-text>
     <v-progress-linear :value="progress" color="success"></v-progress-linear>

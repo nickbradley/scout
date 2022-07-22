@@ -45,7 +45,7 @@
         <SearchResult
           v-bind="result"
           :projectionType="study.showSnippets ? 'signature' : 'snippet'"
-          @close="() => onResultClose(result)"
+          @close="(url) => onResultClose(result, url)"
           @copy="
             (data) => search.logEvent(result.url, 'projection', 'copy', data)
           "
@@ -269,10 +269,10 @@ export default class App extends Vue {
     this.pagesToLoad--;
     this.search.logEvent(result.url, "projection", "load", data);
     const resultIndex = this.results.findIndex((res) => res.url === result.url);
-    if (resultIndex === 0) {
+    if (resultIndex === 0 && this.wtStep === 0) {
       setTimeout(() => {
-        this.wtShow = true;
         this.wtStep++;
+        this.wtShow = true;
       }, 250);
     }
   }
@@ -283,23 +283,39 @@ export default class App extends Vue {
     console.warn("Failed to get signatures from", this.url, ".", err);
   }
 
-  onResultClose(result: Result): void {
+  onResultClose(result: Result, url: string): void {
     this.search.logEvent(result.url, "page", "close");
-    this.wtStep++;
+    const resultIndex = this.results.findIndex(
+      (res) => res.url === result.url && res.url === url
+    );
+    if (resultIndex === 0 && this.wtStep === 3) {
+      this.wtStep++;
+    }
   }
 
-  onSearchResultExpand(result: Result, data: unknown): void {
+  onSearchResultExpand(result: Result, data: string): void {
     this.search.logEvent(result.url, "projection", "expand", data);
-    this.wtStep++;
+    const resultIndex = this.results.findIndex(
+      (res) =>
+        res.url === result.url && data === "number[].reduce(function): number"
+    );
+    if (resultIndex === 0 && this.wtStep === 1) {
+      this.wtStep++;
+    }
   }
 
   onProjectionOpen(result: Result, data: unknown): void {
     this.search.logEvent(result.url, "projection", "open", data);
-    this.wtShow = false;
-    setTimeout(() => {
-      this.wtStep++;
-      this.wtShow = true;
-    }, 1500);
+    const resultIndex = this.results.findIndex(
+      (res) => res.url === result.url && data === "43281805"
+    );
+    if (resultIndex === 0 && this.wtStep === 2) {
+      this.wtShow = false;
+      setTimeout(() => {
+        this.wtStep++;
+        this.wtShow = true;
+      }, 1500);
+    }
   }
 
   onAppResize(): void {
