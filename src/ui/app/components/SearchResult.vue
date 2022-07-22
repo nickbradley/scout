@@ -30,7 +30,7 @@
           @open="openPageToAnswer"
           @expand="(data) => $emit('expand', data)"
           @load="(data) => $emit('load', data)"
-          @error="(err) => $emit('error', err)"
+          @load-error="(err) => $emit('load-error', err)"
         >
         </SignatureProjection>
         <GoogleSnippetProjection

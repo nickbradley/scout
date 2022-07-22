@@ -126,7 +126,7 @@ import { StackOverflowCallSignature } from "../../common/types";
 @Component()
 export default class SignatureProjection extends Vue {
   @Prop() readonly url!: string;
-  @Prop({ default: 8000 }) readonly loadTimeout!: number;
+  @Prop({ default: 20000 }) readonly loadTimeout!: number;
 
   loading = true;
   signatures: StackOverflowCallSignature[] = [];
@@ -233,8 +233,7 @@ export default class SignatureProjection extends Vue {
       setTimeout(() => Prism.highlightAll(), 250);
       this.$emit("load", this.recommendations);
     } catch (err) {
-      console.warn("Failed to get signatures from", this.url, ".", err);
-      this.$emit("error", err);
+      this.$emit("load-error", err);
     } finally {
       this.loading = false;
       if (worker) {

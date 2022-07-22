@@ -80,9 +80,7 @@
           @copy-page="
             (data) => search.logEvent(result.url, 'page', 'copy', data)
           "
-          @error="
-            (err) => search.logEvent(result.url, 'projection', 'error', err)
-          "
+          @load-error="(err) => onResultLoadError(result, err)"
           @expand="(data) => onSearchResultExpand(result, data)"
           @load="(data) => onResultLoaded(result, data)"
           @open="(data) => onProjectionOpen(result, data)"
@@ -359,6 +357,12 @@ export default class App extends Vue {
         this.wtStep++;
       }, 250);
     }
+  }
+
+  onResultLoadError(result: Result, err: Error): void {
+    this.pagesToLoad--;
+    this.search.logEvent(result.url, "projection", "error", err);
+    console.warn("Failed to get signatures from", this.url, ".", err);
   }
 
   onResultClose(result: Result): void {
