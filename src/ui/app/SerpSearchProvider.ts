@@ -20,7 +20,7 @@ export default class SerpSearchProvider implements SearchProvider {
     private readonly apiKey: string,
     private readonly searchOptions?: SearchOptions
   ) {
-    this.resultCount = searchOptions?.resultCount ?? 5;
+    this.resultCount = searchOptions?.resultCount ?? 10;
   }
 
   public async fetch(query: string): Promise<Result[]> {
