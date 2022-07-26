@@ -28,10 +28,15 @@ export interface CancellationToken {
   cancel: () => void;
 }
 
+export interface Identifier {
+  name: string;
+  type?: string;
+}
+
 export interface CallSignature {
   readonly text: string;
   readonly name: string;
-  readonly parameters: string[];
+  readonly arguments: Array<{ name: string; type: string }>;
   readonly returnType: string;
   readonly parentType: string | undefined;
   readonly usage: string;

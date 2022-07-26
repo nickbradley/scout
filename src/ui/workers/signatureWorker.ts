@@ -1,5 +1,4 @@
 import { StackOverflowCallSignature } from "../../common/types";
-import { Signature } from "../app/CodeBlock";
 import ProxyRequest from "../app/ProxyRequest";
 import StackOverflowPage from "../app/StackOverflowPage2";
 
@@ -40,48 +39,9 @@ onmessage = async function (e) {
   const text = await response.text();
   const page = new StackOverflowPage(text);
   const answers = page.getAnswers();
-  // const latestAnswer = page.getLatestAnswer();
-  // const popularAnswer = page.getPopularAnswer();
-  // const result: { [sigStr: string]: Recommendation } = {};
   const signatures: StackOverflowCallSignature[] = answers.flatMap((ans) =>
     ans.getSignatures()
   );
 
-  // for (const [i, answer] of answers.entries()) {
-  //   for (const sig of signatures[i]) {
-  //     if (!Object.prototype.hasOwnProperty.call(result, sig.text)) {
-  //       result[sig.text] = {
-  //         text: sig.text,
-  //         name: sig.name,
-  //         parameters: sig.parameters,
-  //         returnType: sig.returnType,
-  //         parentType: sig.parentType,
-  //         examples: [],
-  //         metrics: {
-  //           occurrences: 0,
-  //           isFromAcceptedAnswer: false,
-  //           isFromPopularAnswer: false,
-  //           isFromLatestAnswer: false,
-  //         },
-  //       };
-  //     }
-  //     const s = result[sig.text];
-  //     s.examples.push({
-  //       answerId: answer.id,
-  //       answerURL: `https://stackoverflow.com/a/${answer.id}`,
-  //       call: sig.usage,
-  //       declaration: sig.definition,
-  //       text: (sig.definition ? sig.definition + "\n\n" : "") + sig.usage,
-  //     });
-  //     s.metrics.occurrences++;
-  //     s.metrics.isFromAcceptedAnswer =
-  //       s.metrics.isFromAcceptedAnswer || answer.isAccepted;
-  //     s.metrics.isFromPopularAnswer =
-  //       s.metrics.isFromPopularAnswer || popularAnswer?.id === answer.id;
-  //     s.metrics.isFromLatestAnswer =
-  //       s.metrics.isFromLatestAnswer || latestAnswer?.id === answer.id;
-  //   }
-  // }
-  // postMessage(Object.values(result));
   postMessage(signatures);
 };

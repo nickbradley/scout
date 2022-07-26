@@ -152,7 +152,7 @@ export default class SignatureProjection extends Vue {
         recommendations[key] = {
           text: sig.text,
           name: sig.name,
-          parameters: sig.parameters,
+          arguments: sig.arguments,
           returnType: sig.returnType,
           parentType: sig.parentType,
           examples: [],

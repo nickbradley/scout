@@ -12,7 +12,7 @@ import {
   findNodes,
   hasAttribute,
 } from "@web/parse5-utils";
-import { CodeBlock, Signature } from "./CodeBlock";
+import { CodeBlock } from "./CodeBlock";
 import { StackOverflowCallSignature } from "../../common/types";
 
 export default class StackOverflowPage {
