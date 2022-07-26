@@ -1,14 +1,21 @@
 <template>
   <v-combobox
+    clearable
     placeholder="Search"
     prepend-inner-icon="mdi-magnify"
-    append-outer-icon="mdi-reload"
+    :append-icon="
+      loading || !input
+        ? ''
+        : input === oldInput
+        ? 'mdi-reload'
+        : 'mdi-arrow-right'
+    "
     :search-input.sync="input"
     :loading="loading"
     :disabled="disabled"
     :value="value"
     @keydown.enter="search"
-    @click:append-outer="reload"
+    @click:append="reload"
   ></v-combobox>
 </template>
 
@@ -33,7 +40,7 @@ export default class SearchBar extends Vue {
   @Prop({ default: false }) readonly dedupResults!: boolean;
 
   input = null;
-  isLoading = false;
+  oldInput = null;
 
   searchProvider = new SerpSearchProvider(this.$config.serpApiToken);
 
@@ -105,9 +112,14 @@ export default class SearchBar extends Vue {
         reject(err);
       }
     });
+    this.oldInput = this.input;
     this.$emit("search", searchPromise);
   }
 }
 </script>
 
-<style scoped></style>
+<style>
+.notranslate {
+  transform: none !important;
+}
+</style>
