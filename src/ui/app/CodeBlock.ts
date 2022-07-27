@@ -195,6 +195,7 @@ export class CodeBlock implements IsCodeBlock {
         returnType: returnTypeText,
         usage,
         definition,
+        source: this.content,
       });
     }
 

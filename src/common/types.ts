@@ -41,6 +41,7 @@ export interface CallSignature {
   readonly parentType: string | undefined;
   readonly usage: string;
   readonly definition: string;
+  readonly source: string;
 }
 
 export type StackOverflowCallSignature = CallSignature & {

@@ -15,61 +15,27 @@
         @change="$emit('expand', rec.text)"
       >
         <v-expansion-panel-header class="pa-0" color="rgba(0, 0, 0, 0.05)">
-          <v-tooltip bottom open-delay="300">
-            <template v-slot:activator="{ on, attrs }">
-              <v-icon
-                v-if="rec.metrics.isFromAcceptedAnswer"
-                small
-                v-bind="attrs"
-                v-on="on"
-                class="flex-grow-0"
-                >mdi-check</v-icon
-              >
-            </template>
-            <span>Accepted Answer</span>
-          </v-tooltip>
-          <v-tooltip bottom open-delay="300">
-            <template v-slot:activator="{ on, attrs }">
-              <v-icon
-                v-if="rec.metrics.isFromPopularAnswer"
-                small
-                v-bind="attrs"
-                v-on="on"
-                class="flex-grow-0"
-                >mdi-trending-up</v-icon
-              >
-            </template>
-            <span>Popular Answer</span>
-          </v-tooltip>
-          <v-tooltip bottom open-delay="300">
-            <template v-slot:activator="{ on, attrs }">
-              <v-icon
-                v-if="rec.metrics.isFromLatestAnswer"
-                small
-                v-bind="attrs"
-                v-on="on"
-                class="flex-grow-0"
-                >mdi-update</v-icon
-              >
-            </template>
-            <span>Recent Answer</span>
-          </v-tooltip>
+          <SignatureStats
+            class="flex-nowrap flex-grow-0 flex-shrink-0"
+            :accepted="rec.metrics.isFromAcceptedAnswer"
+            :popular="rec.metrics.isFromPopularAnswer"
+            :latest="rec.metrics.isFromLatestAnswer"
+          ></SignatureStats>
 
           <v-tooltip top open-delay="500">
             <template v-slot:activator="{ on, attrs }">
-              <code
-                class="language-javascript pa-3 flex-grow-1 text-truncate"
-                style="background-color: transparent"
-                v-bind="attrs"
-                v-on="on"
-                >{{ rec.text }}
-              </code>
+              <div v-on="on" v-bind="attrs">
+                <PrettyCode
+                  class="pl-2 overflow-hidden"
+                  :text="rec.text"
+                ></PrettyCode>
+              </div>
             </template>
             <span>{{ rec.text }}</span>
           </v-tooltip>
         </v-expansion-panel-header>
 
-        <v-expansion-panel-content eager class="pa-0">
+        <v-expansion-panel-content class="pa-0">
           <v-list>
             <v-list-item
               v-for="ex of rec.examples
@@ -79,33 +45,14 @@
                 )
                 .slice(0, 5)"
               :key="ex.answerId"
-              eager
               show-arrows
-              class="code-example"
+              class="code-example pa-1"
             >
-              <v-hover v-slot="{ hover }">
-                <v-card class="flex-grow-1">
-                  <pre
-                    class="ma-0"
-                  ><code class="language-javascript">{{ex.text}}</code></pre>
-
-                  <v-btn
-                    v-show="hover"
-                    absolute
-                    top
-                    right
-                    icon
-                    :ripple="false"
-                    @click.stop="$emit('open', ex.answerId)"
-                    style="
-                      background-color: rgba(210, 210, 210, 0.8) !important;
-                      top: 5px !important;
-                    "
-                  >
-                    <v-icon>mdi-stack-overflow</v-icon>
-                  </v-btn>
-                </v-card>
-              </v-hover>
+              <SignatureExample
+                :text="ex.text"
+                :source="ex.source"
+                @open="$emit('open', ex.answerId)"
+              ></SignatureExample>
             </v-list-item>
           </v-list>
         </v-expansion-panel-content>
@@ -116,14 +63,14 @@
 
 <script lang="ts">
 import { Vue, Component, Prop } from "vue-property-decorator";
-import Prism from "prismjs";
-import "prismjs/themes/prism.css";
-import "prismjs/components/prism-javascript";
+import SignatureExample from "@/components/SignatureExample.vue";
+import PrettyCode from "@/components/PrettyCode.vue";
+import SignatureStats from "@/components/SignatureStats.vue";
 import { Recommendation } from "@/Page";
 import WebWorker from "../WebWorker";
 import { StackOverflowCallSignature } from "../../common/types";
 
-@Component()
+@Component({ components: { PrettyCode, SignatureExample, SignatureStats } })
 export default class SignatureProjection extends Vue {
   @Prop() readonly url!: string;
   @Prop({ default: 20000 }) readonly loadTimeout!: number;
@@ -184,6 +131,7 @@ export default class SignatureProjection extends Vue {
         call: sig.usage,
         declaration: sig.definition,
         text: (sig.definition ? sig.definition + "\n\n" : "") + sig.usage,
+        source: sig.source,
       });
     }
 
@@ -230,7 +178,6 @@ export default class SignatureProjection extends Vue {
       );
       this.signatures = await worker.run({ pageURL: this.url });
       clearTimeout(timerId);
-      setTimeout(() => Prism.highlightAll(), 250);
       this.$emit("load", this.recommendations);
     } catch (err) {
       this.$emit("load-error", err);
@@ -245,15 +192,6 @@ export default class SignatureProjection extends Vue {
 </script>
 
 <style scoped>
-.hidden {
-  position: fixed;
-  left: -200% !important;
-}
-
-.v-btn {
-  /* background-color: rgba(210, 210, 210, 0.8) !important; */
-}
-
 .v-progress-circular {
   display: block;
   width: 100px;
@@ -264,13 +202,6 @@ export default class SignatureProjection extends Vue {
   padding: 0 !important;
   padding-right: 4px !important;
   padding-left: 4px !important;
-}
-
-/* .v-expansion-panel-header > *:not(.v-expansion-panel-header__icon) */
-
-pre code {
-  background-color: transparent !important;
-  padding-right: 4px !important;
 }
 
 .code-example:not(:last-child) {
