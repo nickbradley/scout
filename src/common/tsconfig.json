@@ -6,8 +6,12 @@
         "outDir": "../../dist/common",
         "module": "CommonJS",
         "moduleResolution": "node",
-        "target": "es6",
+        "target": "ES2019",
         "skipLibCheck": true,
         "esModuleInterop": true,
+        "types": [
+            //   "webpack-env",
+            "jest"
+        ],
     }
 }

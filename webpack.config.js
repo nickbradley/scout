@@ -60,6 +60,10 @@ const webExtensionConfig = {
         ],
       },
       {
+        test: /node_modules[\\|/]code-block-writer[\\|/]umd[\\|/]/,
+        use: { loader: "umd-compat-loader" },
+      },
+      {
         test: /\.s(c|a)ss$/,
         use: [
           "vue-style-loader",
