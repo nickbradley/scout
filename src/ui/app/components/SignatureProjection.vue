@@ -14,7 +14,12 @@
         :key="i"
         @change="$emit('expand', rec.text)"
       >
-        <v-expansion-panel-header class="pa-0" color="rgba(0, 0, 0, 0.05)">
+        <v-expansion-panel-header
+          class="pa-0"
+          color="rgba(0, 0, 0, 0.05)"
+          @mouseover="$emit('mouseover', rec)"
+          @mouseout="$emit('mouseleave', rec)"
+        >
           <SignatureStats
             class="flex-nowrap flex-grow-0 flex-shrink-0"
             :accepted="rec.metrics.isFromAcceptedAnswer"
@@ -25,10 +30,13 @@
           <v-tooltip top open-delay="500">
             <template v-slot:activator="{ on, attrs }">
               <div v-on="on" v-bind="attrs">
-                <PrettyCode
+                <PrettyCodeSignature
                   class="pl-2 overflow-hidden"
                   :text="rec.text"
-                ></PrettyCode>
+                  :decorateScopeToken="rec.decorateParent"
+                  :decorateArgTokens="rec.arguments.map((arg) => arg.decorate)"
+                  :decorateReturnToken="rec.decorateReturn"
+                ></PrettyCodeSignature>
               </div>
             </template>
             <span>{{ rec.text }}</span>
@@ -65,12 +73,20 @@
 import { Vue, Component, Prop } from "vue-property-decorator";
 import SignatureExample from "@/components/SignatureExample.vue";
 import PrettyCode from "@/components/PrettyCode.vue";
+import PrettyCodeSignature from "@/components/PrettyCodeSignature.vue";
 import SignatureStats from "@/components/SignatureStats.vue";
 import { Recommendation } from "@/Page";
 import WebWorker from "../WebWorker";
 import { StackOverflowCallSignature } from "../../common/types";
 
-@Component({ components: { PrettyCode, SignatureExample, SignatureStats } })
+@Component({
+  components: {
+    PrettyCode,
+    PrettyCodeSignature,
+    SignatureExample,
+    SignatureStats,
+  },
+})
 export default class SignatureProjection extends Vue {
   @Prop() readonly url!: string;
   @Prop({ default: 20000 }) readonly loadTimeout!: number;
@@ -99,9 +115,11 @@ export default class SignatureProjection extends Vue {
         recommendations[key] = {
           text: sig.text,
           name: sig.name,
-          arguments: sig.arguments,
+          arguments: sig.arguments.map((arg) => ({ ...arg, decorate: false })),
           returnType: sig.returnType,
+          decorateReturn: false,
           parentType: sig.parentType,
+          decorateParent: false,
           examples: [],
           metrics: {
             occurrences:

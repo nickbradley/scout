@@ -1,5 +1,5 @@
 import * as vscode from "vscode";
-import { AppConfig, ContextToken } from "../common/types";
+import { AppConfig, CodeToken } from "../common/types";
 
 type MessageHandler<T, U> = (message: T) => Promise<U> | U;
 
@@ -7,9 +7,10 @@ interface MessageListeners {
   saveFile?: MessageHandler<SaveFileMessage, void>;
   readFile?: MessageHandler<ReadFileMessage, string>;
   getTokens?: MessageHandler<GetTokensMessage, {filename: string; tokens: string[]}>;
-  getContext?: MessageHandler<GetContextMessage, ContextToken[]>;
+  getContext?: MessageHandler<GetContextMessage, CodeToken[]>;
   getConfig?: MessageHandler<GetConfigMessage, AppConfig>;
   signal?: MessageHandler<SignalMessage, void>;
+  decorate?: MessageHandler<DecorateCodeTokensMessage, void>;
 }
 
 export interface WebAppMessage {
@@ -47,6 +48,13 @@ export interface GetConfigMessage extends WebAppMessage {
 export interface SignalMessage extends WebAppMessage {
   type: "signal";
   data: string;
+}
+
+export interface DecorateCodeTokensMessage extends WebAppMessage {
+  type: "decorate";
+  data: {
+    codeTokens: Array<CodeToken & { decorationOptions: vscode.DecorationRenderOptions }>;
+  }
 }
 
 interface HostMessage {
@@ -106,9 +114,17 @@ export default class WebAppView implements vscode.WebviewViewProvider {
   public set contextMessageListener(
     listener: (
       message: GetContextMessage
-    ) => Promise<ContextToken[]> | ContextToken[]
+    ) => Promise<CodeToken[]> | CodeToken[]
   ) {
     this.messageListeners["getContext"] = listener;
+  }
+
+  public set decorateCodeTokensMessageListener(
+    listener: (
+      message: DecorateCodeTokensMessage
+    ) => Promise<void> | void 
+  ) {
+    this.messageListeners["decorate"] = listener;
   }
 
   public set configMessageListener(

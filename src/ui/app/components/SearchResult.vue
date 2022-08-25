@@ -31,6 +31,8 @@
           @expand="(data) => $emit('expand', data)"
           @load="(data) => $emit('load', data)"
           @load-error="(err) => $emit('load-error', err)"
+          @mouseover="(recommendation) => $emit('mouseover', recommendation)"
+          @mouseleave="(recommendation) => $emit('mouseleave', recommendation)"
         >
         </SignatureProjection>
         <GoogleSnippetProjection
@@ -135,7 +137,7 @@ export default class SearchResult extends Vue {
 
   onPageError(url: string, message: string): void {
     // // TODO Handle this problem (maybe display a "no recommendations found" message)
-    // console.warn("App:onPageError", url, message);
+    console.warn("App:onPageError", url, message);
     // this.loadError = message;
     // this.loaded = true;
   }

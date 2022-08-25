@@ -1,21 +1,32 @@
-export interface LanguageToken {
-  kind: "language";
-  value: string;
+export enum TokenKind {
+  language,
+  library,
+  call,
+  type
 }
 
-export interface LibraryToken {
-  kind: "library";
+export interface ContextToken {
   value: string;
-  docSites: string[];
-  typings: string[];
+  kind: TokenKind;
+  position: TokenPosition;
 }
 
-export interface CallToken {
-  kind: "call";
-  value: string;
-}
+// export interface LanguageToken {
+//   kind: "language";
+//   value: string;
+// }
 
-export type ContextToken = LanguageToken | LibraryToken | CallToken;
+// export interface LibraryToken {
+//   kind: "library";
+//   value: string;
+// }
+
+// export interface CallToken {
+//   kind: "call";
+//   value: string;
+// }
+
+// export type ContextToken = LanguageToken | LibraryToken | CallToken;
 
 
 export interface AppConfig {
@@ -51,3 +62,30 @@ export type StackOverflowCallSignature = CallSignature & {
   isAccepted: boolean;
   lastModified?: Date;
 };
+
+export interface TokenPosition {
+  start: number;
+  end: number;
+}
+
+export interface CodeToken {
+  name: string;
+  position: TokenPosition | undefined;
+  source?: string;
+}
+
+export type VariableToken = CodeToken & { type: CodeToken };
+export type ImportToken = CodeToken & { module: CodeToken, references: Array<TokenPosition | undefined> };
+export type FunctionToken = CodeToken & {
+  returnType: string;
+  variables: VariableToken[];
+  parameters: VariableToken[];
+};
+
+export function isImportToken(token: CodeToken): token is ImportToken {
+  return typeof (token as any)["module"] === "object";
+}
+
+export function isFunctionToken(token: CodeToken): token is FunctionToken {
+  return typeof (token as any)["returnType"] === "string";
+}

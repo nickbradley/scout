@@ -1,12 +1,14 @@
 import * as vscode from "vscode";
-import ContextProvider from "./ContextProvider";
-import NodeModule from "./NodeModule";
-import WebAppView, { SaveFileMessage, ReadFileMessage, GetTokensMessage } from "./WebAppView";
-import { ContextToken, LibraryToken } from "../common/types";
+// import NodeModule from "./NodeModule";
+import WebAppView, { SaveFileMessage, ReadFileMessage, GetTokensMessage, DecorateCodeTokensMessage } from "./WebAppView";
+import { CodeToken, TokenPosition } from "../common/types";
 import Util from "./Util";
 import Lexer from "./Lexer";
+import { CodeBlock } from "../common/CodeBlock";
 
 export async function activate(context: vscode.ExtensionContext) {
+  const activeDecorations: vscode.TextEditorDecorationType[] = [];
+  
   // eslint-disable-next-line no-undef
   let searchApiToken = process.env.SEARCH_API_TOKEN;
   if (!searchApiToken) {
@@ -36,7 +38,6 @@ export async function activate(context: vscode.ExtensionContext) {
     if (msg.data?.filename) {
       filename = msg.data.filename;
       sourceText = await Util.readWorkspaceFile(filename);
-      // sourceText = (await vscode.workspace.fs.readFile(vscode.Uri.file(filename))).toString();
     } else {
       const editor = vscode.window.activeTextEditor;
       filename = editor?.document.uri.fsPath ?? "";
@@ -54,47 +55,96 @@ export async function activate(context: vscode.ExtensionContext) {
   };
 
   provider.contextMessageListener = async () => {
-    let contextTokens: ContextToken[] = [];
+    let filename: string;
+    const codeTokens: CodeToken[] = [];
     const editor = vscode.window.activeTextEditor;
     if (editor) {
+      filename = editor.document.fileName;
       const position = editor.selection.active;
-      const input = editor?.document.getText() || "";
-      try {
-        contextTokens = new ContextProvider().getContext(
-          input,
-          editor.document.offsetAt(position)
-        );
-        const libTokens = contextTokens.filter(
-          (token): token is LibraryToken => token.kind === "library"
-        );
-        for (const libToken of libTokens) {
-          libToken.docSites =
-            (await new NodeModule(libToken.value).getDocumentationSites()) ??
-            [];
-        }
-
-        // const libProps = await Promise.allSettled(
-        //   libTokens.map((token) =>
-        //     new NodeModule(token.value).getDocumentationSites()
-        //   )
-        // );
-        // libTokens.forEach((token, i) =>
-        //   Object.assign(token, {
-        //     docsUrl: Util.isFulfilled(libProps[i])
-        //       ? libProps[i].value
-        //       : [],
-        //   })
-        // );
-      } catch (err) {
-        // Parser failed (probably not a JS file)
-        console.warn(
-          "Failed to extract context tokens from",
-          editor.document.uri.fsPath,
-          err
-        );
+      const code = new CodeBlock(editor.document.getText(), filename);
+      // Get the function containing position
+      const activeFunction = code.getFunctions().find(fn => {
+        const startPosition = new vscode.Position(fn.getStartLineNumber(true), fn.getStartLinePos(true));
+        const endPosition = editor.document.positionAt(fn.getEnd());
+        const fnRange = new vscode.Range(startPosition, endPosition);
+        return fnRange.contains(position);
+      });
+      if (activeFunction) {
+        const imports = code.getImports();
+        // Only include external imports which are referenced in the active function
+        const importTokens = imports
+            .flatMap(imp => code.getImportTokens(imp))
+            .filter(token => !token.module.name.includes("/"))
+            .filter(token => token.references.some(ref => activeFunction.containsRange(ref?.start ?? -1 , ref?.end ?? -1)));
+            // .map(token => ({ ...token, source: filename }));
+        const functionTokens = code.getFunctionTypes(activeFunction); // { ...code.getFunctionTypes(activeFunction), source: filename };
+        codeTokens.push(...importTokens, functionTokens);
       }
     }
-    return contextTokens;
+    return codeTokens;
+  };
+
+  provider.decorateCodeTokensMessageListener = (message: DecorateCodeTokensMessage) => {
+    const tokens = message.data.codeTokens;
+
+    if (tokens === null) {
+      return activeDecorations.forEach((decoration) => decoration.dispose());
+    }
+
+    // partition by sources    
+    const sourceTokens: {[source: string]: Array<CodeToken & { decorationOptions: vscode.DecorationRenderOptions }>} = {};
+    for (const token of tokens) {
+      const source = token.source;
+      if (!source) {
+        continue;
+      }
+
+      if (!sourceTokens[source]) {
+        sourceTokens[source] = [];
+      }
+      sourceTokens[source].push(token);
+    }
+
+    for (const [source, tokens] of Object.entries(sourceTokens)) {
+      const editor = vscode.window.visibleTextEditors.find(editor => editor.document.fileName.endsWith(source));
+      if (!editor) {
+        continue;
+      }
+
+      const decorations: Array<{options: any, range: vscode.Range}> = [];
+      tokens
+      .filter((token): token is {name: string; position: TokenPosition; source: string, decorationOptions: vscode.DecorationRenderOptions } => token.position !== undefined)
+      .sort((a, b) => b.position.start - a.position.start)
+      .map(token => {
+        const startPos = editor.document.positionAt(token.position.start);
+        const endPos = editor.document.positionAt(token.position.end);
+
+        const range = new vscode.Range(startPos, endPos);
+        return {...token, range};
+      }).forEach((token) => {
+        const rangeDecoration = decorations.find((dec) => token.range.isEqual(dec.range));
+
+        if (rangeDecoration) {
+          const bkColor = (token as any).decorationOptions.backgroundColor;
+          const bkColorOption = rangeDecoration.options.backgroundColor;
+            if (bkColor !== bkColorOption) {
+              // update options for the range to use a linear gradient
+            }
+        } else {
+          decorations.push({
+            options: (token as any).decorationOptions,
+            range: token.range,
+          });
+        }
+      });
+
+      for (const decoration of decorations) {
+        const decorationType = vscode.window.createTextEditorDecorationType(decoration.options);
+        activeDecorations.push(decorationType);
+        const rangeOptions = [decoration.range];
+        editor.setDecorations(decorationType, rangeOptions);
+      }
+    }
   };
 
   provider.saveFileMessageListener = async (message: SaveFileMessage) => {
@@ -110,16 +160,8 @@ export async function activate(context: vscode.ExtensionContext) {
 
   provider.configMessageListener = async () => {
     // TODO check env for config values first
-    const config = {}; //JSON.parse(
-    // await Util.readWorkspaceFile("scout.config.json")
-    //);
+    const config = {};
     return Object.assign(config, { serpApiToken: searchApiToken as string });
-    // const keys = await import("../common/secrets");
-    // return {
-    //   bingApiToken: keys.bingApiToken,
-    //   serpApiToken: keys.serpApiToken,
-    //   studyMode: "treatment",
-    // };
   };
 
   const webAppDisposable = vscode.window.registerWebviewViewProvider(

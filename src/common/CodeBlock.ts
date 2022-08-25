@@ -5,7 +5,11 @@ import {
   SourceFile,
   CallExpression,
   Diagnostic,
+  FunctionDeclaration,
+  ImportDeclaration,
+  Identifier,
 } from "ts-morph";
+import { CodeToken, FunctionToken, ImportToken, TokenPosition } from "./types";
 // import { Signature } from "./Signature";
 
 export interface Signature {
@@ -73,7 +77,7 @@ export class CodeBlock implements IsCodeBlock {
   //     console.log(diagnostics[0]);
   // }
 
-  constructor(readonly content: string) {
+  constructor(readonly content: string, readonly source?: string) {
     // Using ts-morph constructor because (for some reason) it causes getSymbolAtLocation to actually return something
     this.project = new Project({
       useInMemoryFileSystem: true,
@@ -212,6 +216,99 @@ export class CodeBlock implements IsCodeBlock {
     return callsToReturn;
   }
 
+  getTokenFromIdentifier(identifier: Identifier): CodeToken {
+    return {
+      name: identifier.getText(),
+      position: { start: identifier.getPos(), end: identifier.getEnd() },
+      source: this.source,
+    };
+  }
+
+  getNodePosition(node: Node): TokenPosition | undefined {
+    if (!node) {
+      return;
+    }
+
+    return {
+      start: node.getPos() + node.getLeadingTriviaWidth(),
+      end: node.getEnd(),
+    };
+  }
+
+  public getFunctions(): FunctionDeclaration[] {
+    return this.sourceFile.getFunctions();
+  }
+
+  public getImports(): ImportDeclaration[] {
+    return this.sourceFile.getImportDeclarations();
+  }
+
+  public getFunctionTypes(functionDeclaration: FunctionDeclaration): FunctionToken {
+    return {
+      source: this.source,
+      name: functionDeclaration.getName() ?? "",
+      position: this.getNodePosition(functionDeclaration),
+      variables: functionDeclaration.getVariableDeclarations().map(vari => ({
+        source: this.source,
+        name: vari.getName(), 
+        position: this.getNodePosition(vari), 
+        type: {
+          name: vari.getType().getBaseTypeOfLiteralType().getText(),
+          position: this.getNodePosition(vari.getTypeNode()),
+        },
+      })),
+      parameters: functionDeclaration.getParameters().map(param => ({
+        source: this.source,
+        name: param.getName(),
+        position: this.getNodePosition(param),
+        type: {
+          name: param.getType().getBaseTypeOfLiteralType().getText(),
+          position: this.getNodePosition(param.getTypeNode()),
+        },
+      })),
+      returnType: functionDeclaration.getReturnType().getBaseTypeOfLiteralType().getText(),
+    };
+  }
+
+  public getExternalImports(): CodeToken[] {
+    const imports = this.sourceFile.getImportDeclarations();
+    return imports.flatMap(imp => this.getImportTokens(imp)).filter(token => !token.module.name.includes("/"));
+  }
+
+  public getImportTokens(importDeclaration: ImportDeclaration): ImportToken[] {
+    const importClause = importDeclaration.getImportClause();
+    const namedBindings = importClause?.getNamedBindings();
+    const moduleNode = importDeclaration.getModuleSpecifier();
+
+    const importNodes = [];
+    if (Node.isNamespaceImport(namedBindings)) {
+      // import * as c from 'foo'
+      const identifier = namedBindings.getNameNode();
+      importNodes.push(identifier);
+    } else if (Node.isNamedImports(namedBindings)) {
+      // import {} from 'foo'
+      const specifiers = namedBindings.getElements();
+      importNodes.push(...specifiers.map(s => s.getNameNode()));
+    } else {
+      // import x from 'foo'
+      const defaultImport = importClause?.getDefaultImport();
+      if (defaultImport) {
+        importNodes.push(defaultImport);
+      }
+    }
+
+    return importNodes.map(node => ({
+      source: this.source,
+      name: node.getText(),
+      position: this.getNodePosition(node),
+      module: {
+        name: moduleNode.getLiteralText(),
+        position: this.getNodePosition(moduleNode),
+      },
+      references: node.findReferencesAsNodes().filter((_, i) => i > 0).map(ref => this.getNodePosition(ref)),
+    }));
+  }
+
   public getPrettyDiagnostics(): string {
     return this.project.formatDiagnosticsWithColorAndContext(this.diagnostics);
   }
@@ -224,3 +321,5 @@ export class CodeBlock implements IsCodeBlock {
     }
   }
 }
+
+

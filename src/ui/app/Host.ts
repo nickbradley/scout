@@ -1,6 +1,6 @@
 import CodeContext from "@/CodeContext";
 import { WebviewApi } from "vscode-webview";
-import { AppConfig, ContextToken } from "../../common/types";
+import { AppConfig, CodeToken, ContextToken } from "../../common/types";
 
 export interface HostServiceProvider {
   saveFile: (filename: string, content: string) => Promise<void>;
@@ -11,6 +11,9 @@ export interface HostServiceProvider {
   ) => Promise<{ filename: string; tokens: string[] }>;
   getConfig: () => Promise<AppConfig>;
   signalReady: () => void;
+  decorate: (
+    codeTokens: Array<CodeToken & { decorationOptions: Record<string, string> }>
+  ) => Promise<void>;
 }
 
 interface VsCodeMessage {
@@ -106,6 +109,26 @@ export class VsCodeHost implements HostServiceProvider {
     return replyPromise;
   }
 
+  public async decorate(
+    codeTokens: Array<CodeToken & { decorationOptions: Record<string, string> }>
+  ): Promise<void> {
+    const listener = (resolve: () => void, reject: (error: Error) => void) => {
+      this.dispatchQueue.push({
+        messageType: "decorate",
+        resolve,
+        reject,
+      });
+    };
+    const replyPromise = new Promise<void>(listener);
+    const message: VsCodeMessage = {
+      sender: "scout",
+      type: "decorate",
+      data: { codeTokens },
+    };
+    this.vscode.postMessage(message);
+    return replyPromise;
+  }
+
   public async getTokens(
     filename?: string
   ): Promise<{ filename: string; tokens: string[] }> {
@@ -169,26 +192,34 @@ export class MockHost implements HostServiceProvider {
   }
 
   public async getContext(mockContext?: CodeContext): Promise<CodeContext> {
-    if (mockContext) {
-      return mockContext;
-    } else {
-      const task0: ContextToken[] = [
-        { value: "javascript", kind: "language" },
-        { value: "bcrypt", kind: "library", docSites: [], typings: [] },
-        {
-          value: "mongodb",
-          kind: "library",
-          docSites: ["docs.mongodb.com"],
-          typings: [],
-        },
-      ];
-      const task1: ContextToken[] = [
-        { value: "javascript", kind: "language" },
-        { value: "JSZip", kind: "library", docSites: [], typings: [] },
-      ];
+    return new CodeContext();
+    // if (mockContext) {
+    //   return mockContext;
+    // } else {
+    //   const task0: ContextToken[] = [
+    //     { value: "javascript", kind: "language" },
+    //     { value: "bcrypt", kind: "library", docSites: [], typings: [] },
+    //     {
+    //       value: "mongodb",
+    //       kind: "library",
+    //       docSites: ["docs.mongodb.com"],
+    //       typings: [],
+    //     },
+    //   ];
+    //   const task1: ContextToken[] = [
+    //     { value: "javascript", kind: "language" },
+    //     { value: "JSZip", kind: "library", docSites: [], typings: [] },
+    //   ];
 
-      return new CodeContext(task0);
-    }
+    //   return new CodeContext(task0);
+    // }
+  }
+
+  public async decorate(
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    codeTokens: Array<CodeToken & { decorationOptions: Record<string, string> }>
+  ): Promise<void> {
+    return;
   }
 
   public async getTokens(): Promise<{ filename: string; tokens: string[] }> {
