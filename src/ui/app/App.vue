@@ -364,7 +364,6 @@ export default class App extends Vue {
       return false;
     };
     const cxt = await this.$host.getContext();
-    console.log("CONTEXT", cxt);
     if (this.activeSignature !== sigId) {
       return;
     }
