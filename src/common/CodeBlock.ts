@@ -224,7 +224,7 @@ export class CodeBlock implements IsCodeBlock {
     };
   }
 
-  getNodePosition(node: Node): TokenPosition | undefined {
+  getNodePosition(node: Node | undefined): TokenPosition | undefined {
     if (!node) {
       return;
     }
