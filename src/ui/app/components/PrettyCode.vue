@@ -1,5 +1,7 @@
 <template>
-  <pre class="ma-0"><code class="pa-0 language-javascript">{{text}}</code></pre>
+  <pre
+    class="ma-0"
+  ><code class="pa-0 language-javascript" ref="code">{{text}}</code></pre>
 </template>
 
 <script lang="ts">
@@ -12,8 +14,13 @@ import "prismjs/components/prism-javascript";
 export default class PrettyCode extends Vue {
   @Prop() readonly text!: string;
 
+  created(): void {
+    window.Prism = window.Prism || {};
+    Prism.manual = true;
+  }
+
   mounted(): void {
-    Prism.highlightAll();
+    Prism.highlightElement(this.$refs.code);
   }
 }
 </script>
