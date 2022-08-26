@@ -8,6 +8,7 @@ import { CodeBlock } from "../common/CodeBlock";
 
 export async function activate(context: vscode.ExtensionContext) {
   const activeDecorations: vscode.TextEditorDecorationType[] = [];
+  const contextCache: Map<string, { version: number, tokens: CodeToken[]}> = new Map();
   
   // eslint-disable-next-line no-undef
   let searchApiToken = process.env.SEARCH_API_TOKEN;
@@ -70,6 +71,12 @@ export async function activate(context: vscode.ExtensionContext) {
         return fnRange.contains(position);
       });
       if (activeFunction) {
+        const fnId = `${filename} ${activeFunction.getStartLineNumber()}:${activeFunction.getStartLinePos()}-${activeFunction.getEnd()}`;
+        const cacheEntry = contextCache.get(fnId);
+        const documentVersion = editor.document.version;
+        if (cacheEntry && cacheEntry.version === documentVersion) {
+          return cacheEntry.tokens;
+        }
         const imports = code.getImports();
         // Only include external imports which are referenced in the active function
         const importTokens = imports
@@ -79,6 +86,7 @@ export async function activate(context: vscode.ExtensionContext) {
             // .map(token => ({ ...token, source: filename }));
         const functionTokens = code.getFunctionTypes(activeFunction); // { ...code.getFunctionTypes(activeFunction), source: filename };
         codeTokens.push(...importTokens, functionTokens);
+        contextCache.set(fnId, { version: documentVersion, tokens: codeTokens });
       }
     }
     return codeTokens;
