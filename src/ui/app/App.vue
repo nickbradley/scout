@@ -331,8 +331,7 @@ export default class App extends Vue {
     result: Result,
     recommendation: Recommendation
   ): Promise<void> {
-    const sigId = Math.floor(Math.random() * 10000);
-    this.activeSignature = sigId;
+    recommendation["abortDecoration"] = false;
     const compareType = (t1: string, t2: string): boolean => {
       // console.log("Comparing Types:", t1, t2);
       if (!t1 || !t2 || (t1 === "any" && t2 === "any")) {
@@ -364,7 +363,7 @@ export default class App extends Vue {
       return false;
     };
     const cxt = await this.$host.getContext();
-    if (this.activeSignature !== sigId) {
+    if (recommendation.abortDecoration) {
       return;
     }
 
@@ -429,29 +428,28 @@ export default class App extends Vue {
       }
     });
     await this.$host.decorate(tokensToDecorate);
-    // console.log("Active Sign", this.activeSignature, sigId);
-    // if (this.activeSignature !== sigId) {
-    //   console.log("Calling cleanup");
-    //   //await this.onProjectionMouseLeave(result, recommendation);
-    //       recommendation.decorateParent = false;
-    // recommendation.arguments.forEach(arg => arg.decorate = false);
-    // recommendation.decorateReturn = false;
-    // await this.$host.decorate('find.js', 2, null);
-    // } else {
-    //   this.activeSignature = null;
-    // }
+    if (recommendation.abortDecoration) {
+      delete recommendation.abortDecoration;
+      this.onProjectionMouseLeave(result, recommendation);
+    }
+    delete recommendation.abortDecoration;
   }
 
   async onProjectionMouseLeave(
     result: Result,
     recommendation: Recommendation
   ): Promise<void> {
-    // if (this.activeSignature === null) {
-    // console.log("CLening")
-    recommendation.decorateParent = false;
-    recommendation.arguments.forEach((arg) => (arg.decorate = false));
-    recommendation.decorateReturn = false;
-    await this.$host.decorate(null);
+    this.activeSignature = false;
+    if (
+      !Object.prototype.hasOwnProperty.call(recommendation, "abortDecoration")
+    ) {
+      recommendation.decorateParent = false;
+      recommendation.arguments.forEach((arg) => (arg.decorate = false));
+      recommendation.decorateReturn = false;
+      await this.$host.decorate(null);
+    } else {
+      recommendation.abortDecoration = true;
+    }
   }
 
   onAppResize(): void {
