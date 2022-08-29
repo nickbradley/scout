@@ -61,12 +61,6 @@
               <SignatureListProjection
                 :recommendations="getRecommendations(signatures).slice(0, 10)"
                 @expand="(data) => onSearchResultExpand(result, data)"
-                @mouseover="
-                  (recommendation) => onProjectionMouseOver(recommendation)
-                "
-                @mouseleave="
-                  (recommendation) => onProjectionMouseLeave(recommendation)
-                "
                 @open="(url, selector) => openPage(url, selector)"
               >
               </SignatureListProjection>
@@ -92,12 +86,6 @@
                   "
                   :loading="result.areSignaturesLoading"
                   @expand="(data) => onSearchResultExpand(result, data)"
-                  @mouseover="
-                    (recommendation) => onProjectionMouseOver(recommendation)
-                  "
-                  @mouseleave="
-                    (recommendation) => onProjectionMouseLeave(recommendation)
-                  "
                   @open="(url, selector) => openPage(url, selector)"
                 >
                 </SignatureListProjection>
@@ -543,125 +531,6 @@ export default class App extends Vue {
         this.wtStep++;
         this.wtShow = true;
       }, 1500);
-    }
-  }
-
-  async onProjectionMouseOver(recommendation: Recommendation): Promise<void> {
-    recommendation["abortDecoration"] = false;
-    const compareType = (t1: string, t2: string): boolean => {
-      // console.log("Comparing Types:", t1, t2);
-      if (!t1 || !t2 || (t1 === "any" && t2 === "any")) {
-        return false;
-      }
-
-      if (t1 === t2) {
-        return true;
-      }
-
-      const isT1Object = t1?.startsWith("{");
-      const isT2Object = t2?.startsWith("{");
-      if (isT1Object && isT1Object === isT2Object) {
-        return true;
-      }
-
-      const isT1Array = t1?.endsWith("[]");
-      const isT2Array = t2?.endsWith("[]");
-      if (isT1Array && isT1Array === isT2Array) {
-        return true;
-      }
-
-      const isT1Function = t1?.includes("=>");
-      const isT2Function = t2?.includes("=>");
-      if (isT1Function && isT1Function === isT2Function) {
-        return true;
-      }
-
-      return false;
-    };
-    const cxt = await this.$host.getContext();
-    if (recommendation.abortDecoration) {
-      return;
-    }
-
-    const parentDecoration = { backgroundColor: "rgba(39, 245, 185, 0.8)" };
-    const argumentDecoration = { backgroundColor: "rgba(39, 219, 245, 0.8)" };
-    // const returnDecoration = { backgroundColor: "rgba(245, 176, 39, 0.8)" };
-    const tokensToDecorate = [];
-
-    cxt.tokens.forEach((token) => {
-      if (
-        isImportToken(token) &&
-        token.references.includes(recommendation.parentType)
-      ) {
-        recommendation.decorateParent = true;
-        tokensToDecorate.push({
-          ...token,
-          decorationOptions: parentDecoration,
-        });
-      } else if (isFunctionToken(token)) {
-        const paramTokens = [];
-        for (const param of token.parameters) {
-          if (compareType(param.type.name, recommendation.parentType)) {
-            recommendation.decorateParent = true;
-            paramTokens.push({
-              ...param,
-              decorationOptions: parentDecoration,
-            });
-          }
-
-          for (const arg of recommendation.arguments) {
-            if (compareType(param.type.name, arg.type)) {
-              arg.decorate = true;
-              paramTokens.push({
-                ...param,
-                decorationOptions: argumentDecoration,
-              });
-            }
-          }
-        }
-
-        const varTokens = [];
-        for (const vari of token.variables) {
-          if (compareType(vari.type.name, recommendation.parentType)) {
-            recommendation.decorateParent = true;
-            varTokens.push({
-              ...vari,
-              decorationOptions: parentDecoration,
-            });
-          }
-
-          for (const arg of recommendation.arguments) {
-            if (compareType(vari.type.name, arg.type)) {
-              arg.decorate = true;
-              varTokens.push({
-                ...vari,
-                decorationOptions: argumentDecoration,
-              });
-            }
-          }
-        }
-        tokensToDecorate.push(...varTokens, ...paramTokens);
-      }
-    });
-    await this.$host.decorate(tokensToDecorate);
-    if (recommendation.abortDecoration) {
-      delete recommendation.abortDecoration;
-      this.onProjectionMouseLeave(recommendation);
-    }
-    delete recommendation.abortDecoration;
-  }
-
-  async onProjectionMouseLeave(recommendation: Recommendation): Promise<void> {
-    this.activeSignature = false;
-    if (
-      !Object.prototype.hasOwnProperty.call(recommendation, "abortDecoration")
-    ) {
-      recommendation.decorateParent = false;
-      recommendation.arguments.forEach((arg) => (arg.decorate = false));
-      recommendation.decorateReturn = false;
-      await this.$host.decorate(null);
-    } else {
-      recommendation.abortDecoration = true;
     }
   }
 

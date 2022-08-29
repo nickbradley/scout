@@ -28,13 +28,7 @@
           <v-tooltip top open-delay="500">
             <template v-slot:activator="{ on, attrs }">
               <div v-on="on" v-bind="attrs" class="text-truncate">
-                <PrettyCodeSignature
-                  class="pl-2"
-                  :text="rec.text"
-                  :decorateScopeToken="rec.decorateParent"
-                  :decorateArgTokens="rec.arguments.map((arg) => arg.decorate)"
-                  :decorateReturnToken="rec.decorateReturn"
-                ></PrettyCodeSignature>
+                <CallSignature v-bind="rec" class="pl-2"></CallSignature>
               </div>
             </template>
             <span>{{ rec.text }}</span>
@@ -69,16 +63,16 @@
 
 <script lang="ts">
 import { Vue, Component, Prop } from "vue-property-decorator";
+import CallSignature from "@/components/CallSignature.vue";
 import SignatureExample from "@/components/SignatureExample.vue";
 import PrettyCode from "@/components/PrettyCode.vue";
-import PrettyCodeSignature from "@/components/PrettyCodeSignature.vue";
 import SignatureStats from "@/components/SignatureStats.vue";
 import { Recommendation } from "@/Page";
 
 @Component({
   components: {
+    CallSignature,
     PrettyCode,
-    PrettyCodeSignature,
     SignatureExample,
     SignatureStats,
   },
