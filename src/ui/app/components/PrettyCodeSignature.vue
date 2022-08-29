@@ -1,5 +1,5 @@
 <template>
-  <PrettyCode ref="pre" :text="text" />
+  <PrettyCode ref="pre" :text="text" class="text-truncate" />
 </template>
 
 <script lang="ts">

@@ -17,7 +17,7 @@
         @reload="resetResults = true"
       ></SearchBar>
       <v-spacer></v-spacer>
-      <template v-if="study.showContext" v-slot:extension>
+      <template v-if="true || study.showContext" v-slot:extension>
         <ContextList
           id="context"
           :context="hostContext"
@@ -29,54 +29,127 @@
     </v-app-bar>
 
     <v-main>
-      <v-container
-        v-if="results.length === 0"
-        class="justify-center"
-        fluid
-        fill-height
-      >
-        <span v-if="search"
-          >No results. This might be caused by a network timeout. Try your
-          search again.</span
-        >
-        <span v-else>Enter some terms above to make a search.</span>
-      </v-container>
-      <div v-for="result of results" :key="result.url">
-        <SearchResult
-          v-bind="result"
-          :projectionType="study.showSnippets ? 'signature' : 'snippet'"
-          @close="(url) => onResultClose(result, url)"
-          @copy="
-            (data) => search.logEvent(result.url, 'projection', 'copy', data)
-          "
-          @copy-page="
-            (data) => search.logEvent(result.url, 'page', 'copy', data)
-          "
-          @load-error="(err) => onResultLoadError(result, err)"
-          @expand="(data) => onSearchResultExpand(result, data)"
-          @load="(data) => onResultLoaded(result, data)"
-          @mouseover="
-            (recommendation) => onProjectionMouseOver(result, recommendation)
-          "
-          @mouseleave="
-            (recommendation) => onProjectionMouseLeave(result, recommendation)
-          "
-          @open="(data) => onProjectionOpen(result, data)"
-          @open-page="() => search.logEvent(result.url, 'page', 'open')"
-          @scroll-page="
-            (data) => search.logEvent(result.url, 'page', 'scroll', data)
-          "
-          @selectionchange="
-            (data) =>
-              search.logEvent(result.url, 'projection', 'selection', data)
-          "
-          @selectionchange-page="
-            (data) => search.logEvent(result.url, 'page', 'selection', data)
-          "
-        ></SearchResult>
-      </div>
+      <template v-if="results.length === 0">
+        <v-container class="justify-center" fluid fill-height>
+          <span v-if="search"
+            >No results. This might be caused by a network timeout. Try your
+            search again.</span
+          >
+          <span v-else>Enter some terms above to make a search.</span>
+        </v-container>
+      </template>
+
+      <template v-else>
+        <template v-if="study.showSnippets === 'snippet'">
+          <SearchResult
+            v-for="result of results"
+            :key="result.url"
+            v-bind="result"
+          >
+            <GoogleSnippetProjection
+              :date="result.date"
+              :snippet="result.snippet"
+              :snippetHighlightWords="result.snippetHighlightWords"
+              @load="(data) => $emit('load', data)"
+            ></GoogleSnippetProjection>
+          </SearchResult>
+        </template>
+
+        <template v-else>
+          <v-sheet class="mb-6 mx-1">
+            <template v-if="display === 'list'">
+              <SignatureListProjection
+                :recommendations="getRecommendations(signatures).slice(0, 10)"
+                @expand="(data) => onSearchResultExpand(result, data)"
+                @mouseover="
+                  (recommendation) => onProjectionMouseOver(recommendation)
+                "
+                @mouseleave="
+                  (recommendation) => onProjectionMouseLeave(recommendation)
+                "
+                @open="(url, selector) => openPage(url, selector)"
+              >
+              </SignatureListProjection>
+            </template>
+
+            <template v-else>
+              <SearchResult
+                v-for="result of results"
+                :key="result.url"
+                v-bind="result"
+                @copy="
+                  (data) =>
+                    search.logEvent(result.url, 'projection', 'copy', data)
+                "
+                @selectionchange="
+                  (data) =>
+                    search.logEvent(result.url, 'projection', 'selection', data)
+                "
+              >
+                <SignatureListProjection
+                  :recommendations="
+                    getRecommendations(result.signatures).slice(0, 3)
+                  "
+                  :loading="result.areSignaturesLoading"
+                  @expand="(data) => onSearchResultExpand(result, data)"
+                  @mouseover="
+                    (recommendation) => onProjectionMouseOver(recommendation)
+                  "
+                  @mouseleave="
+                    (recommendation) => onProjectionMouseLeave(recommendation)
+                  "
+                  @open="(url, selector) => openPage(url, selector)"
+                >
+                </SignatureListProjection>
+              </SearchResult>
+            </template>
+          </v-sheet>
+          <v-footer fixed padless outlined>
+            <v-toolbar v-show="results.length > 0" dense>
+              <v-spacer></v-spacer>
+              <v-btn
+                icon
+                :disabled="display === 'page' || isSearchInProgress"
+                @click="display = 'page'"
+              >
+                <v-icon>mdi-select-group</v-icon>
+              </v-btn>
+              <v-btn
+                icon
+                :disabled="display === 'list' || isSearchInProgress"
+                @click="display = 'list'"
+              >
+                <v-icon>mdi-view-list</v-icon>
+              </v-btn>
+            </v-toolbar>
+          </v-footer>
+        </template>
+      </template>
     </v-main>
 
+    <v-dialog
+      v-model="dialog"
+      fullscreen
+      hide-overlay
+      transition="slide-x-transition"
+      :eager="false"
+    >
+      <!-- HACK: Use "if" here to force element to rerender (and load the correct URL) -->
+      <PageViewer
+        v-if="dialog"
+        :url="displayUrl"
+        :title="displayTitle"
+        :focusedElement="displayFocusedElement"
+        @close="closePage()"
+        @copy="(data) => search.logEvent(result.url, 'page', 'copy', data)"
+        @load="(data) => onResultLoaded(result, data)"
+        @load-error="(err) => onResultLoadError(result, err)"
+        @scroll="(data) => search.logEvent(result.url, 'page', 'scroll', data)"
+        @selectionchange="
+          (data) => search.logEvent(result.url, 'page', 'selection', data)
+        "
+      ></PageViewer>
+    </v-dialog>
     <Walkthrough
       v-if="!wtDisable && wtStep <= 4 && wtShow"
       :value="wtShow"
@@ -91,10 +164,13 @@ import SearchBar from "@/components/SearchBar.vue";
 import ContextList from "@/components/ContextList.vue";
 import SearchResult from "@/components/SearchResult.vue";
 import Walkthrough from "@/components/Walkthrough.vue";
+import SignatureListProjection from "@/components/SignatureListProjection.vue";
+import PageViewer from "@/components/PageViewer.vue";
 
 import Search, { Result } from "@/Search";
 import CodeContext from "@/CodeContext";
 import { Recommendation } from "@/Page";
+import WebWorker from "@/WebWorker";
 import { AppConfig, isImportToken, isFunctionToken } from "../../common/types";
 import { resultsCache } from "./resultsCache";
 
@@ -120,6 +196,8 @@ interface WalkthroughStep {
     SearchBar,
     SearchResult,
     Walkthrough,
+    SignatureListProjection,
+    PageViewer,
   },
 })
 export default class App extends Vue {
@@ -152,7 +230,13 @@ export default class App extends Vue {
   wtStep = 0;
   wtDisable = false;
 
-  activeSignature = null;
+  dialog = false;
+  displayUrl = "";
+  displayTitle = "";
+  displayFocusedElement = "";
+
+  display = "page";
+  signatures = [];
 
   @Watch("log", { deep: true })
   async saveSearches(): Promise<void> {
@@ -241,6 +325,99 @@ export default class App extends Vue {
     ];
     return steps[this.wtStep];
   }
+
+  openPage(url: string, selector: string): void {
+    this.displayUrl = url;
+    this.displayFocusedElement = selector;
+    this.dialog = true;
+  }
+
+  closePage(): void {
+    this.dialog = false;
+    this.displayUrl = "";
+    this.displayFocusedElement = "";
+  }
+
+  getRecommendations(readonly signatures: any[]): Recommendation[] {
+    const recommendations = {};
+    const maxVotes = Math.max(...signatures.map((s) => s.voteCount));
+    const latestAnswer = new Date(
+      Math.max(...signatures.map((s) => s.lastModified))
+    );
+
+    // Compute metrics for the signatures:
+    // - Count matching signatures only once for each answer (but record all instances as examples)
+    // - Mark signatures from accepted, latest, and most upvoted answers
+    for (const sig of signatures) {
+      const key = `${sig.text}`;
+      if (!Object.prototype.hasOwnProperty.call(recommendations, key)) {
+        recommendations[key] = {
+          text: sig.text,
+          name: sig.name,
+          arguments: sig.arguments.map((arg) => ({ ...arg, decorate: false })),
+          returnType: sig.returnType,
+          decorateReturn: false,
+          parentType: sig.parentType,
+          decorateParent: false,
+          examples: [],
+          metrics: {
+            occurrences:
+              // hack to show tutorial result in nice order for screenshot
+              sig.text === "number[].reduce(function): number" ? 1000 : 0,
+            isFromAcceptedAnswer: false,
+            isFromPopularAnswer: false,
+            isFromLatestAnswer: false,
+          },
+        };
+      }
+      const rec = recommendations[key];
+      if (rec.examples.findIndex((ex) => ex.answerId === sig.answerId) === -1) {
+        // this is the first time seeing the call signature in the answer
+        rec.metrics.occurrences++;
+        rec.metrics.isFromAcceptedAnswer =
+          rec.metrics.isFromAcceptedAnswer || sig.isAccepted;
+        rec.metrics.isFromPopularAnswer =
+          rec.metrics.isFromPopularAnswer || sig.voteCount === maxVotes;
+        rec.metrics.isFromLatestAnswer =
+          rec.metrics.isFromLatestAnswer ||
+          sig.lastModified?.getTime() === latestAnswer.getTime();
+      }
+      rec.examples.push({
+        answerId: sig.answerId,
+        answerUrl: sig.answerUrl,
+        postUrl: sig.postUrl,
+        call: sig.usage,
+        declaration: sig.definition,
+        text: (sig.definition ? sig.definition + "\n\n" : "") + sig.usage,
+        source: sig.source,
+      });
+    }
+
+    return Object.values(recommendations).sort((a, b) => {
+      if (a.metrics.occurrences === b.metrics.occurrences) {
+        if (a.metrics.isFromAcceptedAnswer) {
+          return -1;
+        } else if (b.metrics.isFromAcceptedAnswer) {
+          return 1;
+        }
+
+        if (a.metrics.isFromPopularAnswer) {
+          return -1;
+        } else if (b.metrics.isFromPopularAnswer) {
+          return 1;
+        }
+
+        if (a.metrics.isFromLatestAnswer) {
+          return -1;
+        } else if (b.metrics.isFromLatestAnswer) {
+          return 1;
+        }
+      }
+
+      return b.metrics.occurrences - a.metrics.occurrences;
+    });
+  }
+
   onSelectedContextChanged(selectedContext: CodeContext): void {
     this.wtStep++;
 
@@ -250,6 +427,7 @@ export default class App extends Vue {
 
   async onSearch(searchPromise: Promise<Search>): Promise<void> {
     this.wtShow = false;
+    const loadTimeout = 20000;
 
     try {
       this.resetResults = true;
@@ -258,9 +436,48 @@ export default class App extends Vue {
       const search = await searchPromise;
       this.pagesToLoad = search.results.length;
       this.resetResults = false;
-      // this.pagesToLoad = search.results?.length ?? 0;
+
+      search.results = search.results.map((result) => ({
+        signatures: [],
+        areSignaturesLoading: true,
+        ...result,
+      }));
+
       this.searches.push(search);
+
+      for (const result of search.results) {
+        const token = {};
+        let worker: WebWorker;
+        let timerId: number = setTimeout(() => token.cancel(), loadTimeout);
+        let startTime = new Date().getTime();
+
+        this.$workerPool
+          .acquireWorker(token)
+          .then((wkr) => {
+            worker = wkr;
+            clearTimeout(timerId);
+            timerId = setTimeout(
+              () => worker.cancel(),
+              loadTimeout - (new Date().getTime() - startTime)
+            );
+            return worker.run({ pageURL: result.url });
+          })
+          .then((signatures) => {
+            result.signatures = signatures;
+            this.signatures.push(...signatures);
+            clearTimeout(timerId);
+          })
+          .catch((err) => console.warn("Error retrieving signatures", err))
+          .finally(() => {
+            this.pagesToLoad--;
+            result.areSignaturesLoading = false;
+            if (worker) {
+              this.$workerPool.releaseWorker(worker);
+            }
+          });
+      }
     } catch (err) {
+      console.warn(err);
       this.appEvents.push({
         timestamp: new Date(),
         name: "search-error",
@@ -276,6 +493,7 @@ export default class App extends Vue {
 
   onResultLoaded(result: Result, data: unknown): void {
     this.pagesToLoad--;
+    this.signatures.push(...data);
     this.search.logEvent(result.url, "projection", "load", data);
     const resultIndex = this.results.findIndex((res) => res.url === result.url);
     if (resultIndex === 0 && this.wtStep === 0) {
@@ -313,10 +531,11 @@ export default class App extends Vue {
     }
   }
 
-  onProjectionOpen(result: Result, data: unknown): void {
-    this.search.logEvent(result.url, "projection", "open", data);
+  onProjectionOpen(result: Result, url: string, selector: string): void {
+    this.openPage(url, selector);
+    this.search.logEvent(result.url, "projection", "open", url, selector);
     const resultIndex = this.results.findIndex(
-      (res) => res.url === result.url && data === "43281805"
+      (res) => res.url === result.url && selector === "#answer-43281805"
     );
     if (resultIndex === 0 && this.wtStep === 2) {
       this.wtShow = false;
@@ -327,10 +546,7 @@ export default class App extends Vue {
     }
   }
 
-  async onProjectionMouseOver(
-    result: Result,
-    recommendation: Recommendation
-  ): Promise<void> {
+  async onProjectionMouseOver(recommendation: Recommendation): Promise<void> {
     recommendation["abortDecoration"] = false;
     const compareType = (t1: string, t2: string): boolean => {
       // console.log("Comparing Types:", t1, t2);
@@ -430,15 +646,12 @@ export default class App extends Vue {
     await this.$host.decorate(tokensToDecorate);
     if (recommendation.abortDecoration) {
       delete recommendation.abortDecoration;
-      this.onProjectionMouseLeave(result, recommendation);
+      this.onProjectionMouseLeave(recommendation);
     }
     delete recommendation.abortDecoration;
   }
 
-  async onProjectionMouseLeave(
-    result: Result,
-    recommendation: Recommendation
-  ): Promise<void> {
+  async onProjectionMouseLeave(recommendation: Recommendation): Promise<void> {
     this.activeSignature = false;
     if (
       !Object.prototype.hasOwnProperty.call(recommendation, "abortDecoration")
@@ -611,6 +824,7 @@ export default class App extends Vue {
   color: #2c3e50;
   /* margin-top: 60px; */
   height: 100vh;
+  overflow-x: scroll;
 }
 .hidden {
   position: fixed;
