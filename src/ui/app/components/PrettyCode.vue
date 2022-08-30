@@ -1,6 +1,7 @@
 <template>
   <pre
     class="ma-0"
+    @mouseup="onMouseup"
   ><code class="pa-0 language-javascript" ref="code">{{text}}</code></pre>
 </template>
 
@@ -13,6 +14,13 @@ import "prismjs/components/prism-javascript";
 @Component()
 export default class PrettyCode extends Vue {
   @Prop() readonly text!: string;
+
+  onMouseup(): void {
+    const selection = document.getSelection();
+    if (selection && !selection.isCollapsed) {
+      this.$emit("selectionchange", selection);
+    }
+  }
 
   created(): void {
     window.Prism = window.Prism || {};

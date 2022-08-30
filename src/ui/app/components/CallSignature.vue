@@ -1,8 +1,9 @@
 <template>
   <div
     class="mx-0 py-3 text-truncate"
-    @mouseover="onMouseOver"
+    @mouseenter="onMouseOver"
     @mouseleave="onMouseLeave"
+    @mouseup.capture="onMouseUp"
   >
     <code class="pa-0">
       <span
@@ -133,6 +134,16 @@ export default class CallSignature extends Vue {
 
     return false;
   };
+
+  onMouseUp(event: Event): void {
+    const selection = document.getSelection();
+    if (selection && !selection.isCollapsed) {
+      console.log("CANCEL EVENT");
+      event.stopPropagation();
+      event.preventDefault();
+      this.$emit("selectionchange", selection);
+    }
+  }
 
   async onMouseOver(): Promise<void> {
     this.abortDecoration = false;

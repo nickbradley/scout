@@ -45,12 +45,26 @@
             v-for="result of results"
             :key="result.url"
             v-bind="result"
+            @mouseenter="
+              () => search.logEvent(result.url, 'projection', 'mouseenter')
+            "
+            @mouseleave="
+              () => search.logEvent(result.url, 'projection', 'mouseleave')
+            "
+            @open="(url) => openPage(url)"
           >
             <GoogleSnippetProjection
               :date="result.date"
               :snippet="result.snippet"
               :snippetHighlightWords="result.snippetHighlightWords"
-              @load="(data) => $emit('load', data)"
+              @copy="
+                (data) =>
+                  search.logEvent(result.url, 'projection', 'copy', data)
+              "
+              @selectionchange="
+                (data) =>
+                  search.logEvent(result.url, 'projection', 'selection', data)
+              "
             ></GoogleSnippetProjection>
           </SearchResult>
         </template>
@@ -60,8 +74,31 @@
             <template v-if="display === 'list'">
               <SignatureListProjection
                 :recommendations="getRecommendations(signatures).slice(0, 10)"
-                @expand="(data) => onSearchResultExpand(result, data)"
+                :loading="isSearchInProgress"
+                @copy="
+                  (rec, text) =>
+                    search.logEvent('', 'projection', 'copy', {
+                      sig: rec.text,
+                      selection: text,
+                    })
+                "
+                @expand="(sigText) => onSignatureExpand(undefined, sigText)"
+                @mouseenter="
+                  (rec) =>
+                    search.logEvent('', 'projection', 'mouseenter', rec.text)
+                "
+                @mouseleave="
+                  (rec) =>
+                    search.logEvent('', 'projection', 'mouseleave', rec.text)
+                "
                 @open="(url, selector) => openPage(url, selector)"
+                @selectionchange="
+                  (rec, text) =>
+                    search.logEvent('', 'projection', 'selection', {
+                      sig: rec.text,
+                      selection: text,
+                    })
+                "
               >
               </SignatureListProjection>
             </template>
@@ -71,22 +108,43 @@
                 v-for="result of results"
                 :key="result.url"
                 v-bind="result"
-                @copy="
-                  (data) =>
-                    search.logEvent(result.url, 'projection', 'copy', data)
+                @mouseenter="
+                  () => search.logEvent(result.url, 'projection', 'mouseenter')
                 "
-                @selectionchange="
-                  (data) =>
-                    search.logEvent(result.url, 'projection', 'selection', data)
+                @mouseleave="
+                  () => search.logEvent(result.url, 'projection', 'mouseleave')
                 "
+                @open="(url) => openPage(url)"
               >
                 <SignatureListProjection
                   :recommendations="
                     getRecommendations(result.signatures).slice(0, 3)
                   "
                   :loading="result.areSignaturesLoading"
-                  @expand="(data) => onSearchResultExpand(result, data)"
+                  @copy="
+                    (rec, text) =>
+                      search.logEvent(result.url, 'projection', 'copy', {
+                        sig: rec.text,
+                        selection: text,
+                      })
+                  "
+                  @expand="(sigText) => onSignatureExpand(result, sigText)"
+                  @mouseenter="
+                    (rec) =>
+                      search.logEvent('', 'projection', 'mouseenter', rec.text)
+                  "
+                  @mouseleave="
+                    (rec) =>
+                      search.logEvent('', 'projection', 'mouseleave', rec.text)
+                  "
                   @open="(url, selector) => openPage(url, selector)"
+                  @selectionchange="
+                    (rec, text) =>
+                      search.logEvent(result.url, 'projection', 'selection', {
+                        sig: rec.text,
+                        selection: text,
+                      })
+                  "
                 >
                 </SignatureListProjection>
               </SearchResult>
@@ -98,14 +156,14 @@
               <v-btn
                 icon
                 :disabled="display === 'page' || isSearchInProgress"
-                @click="display = 'page'"
+                @click="() => changeResultLayout('page')"
               >
                 <v-icon>mdi-select-group</v-icon>
               </v-btn>
               <v-btn
                 icon
                 :disabled="display === 'list' || isSearchInProgress"
-                @click="display = 'list'"
+                @click="() => changeResultLayout('list')"
               >
                 <v-icon>mdi-view-list</v-icon>
               </v-btn>
@@ -122,19 +180,21 @@
       transition="slide-x-transition"
       :eager="false"
     >
-      <!-- HACK: Use "if" here to force element to rerender (and load the correct URL) -->
+      <!-- HACK: Use "v-if" here to force element to rerender (and load the correct URL) -->
       <PageViewer
         v-if="dialog"
         :url="displayUrl"
         :title="displayTitle"
         :focusedElement="displayFocusedElement"
         @close="closePage()"
-        @copy="(data) => search.logEvent(result.url, 'page', 'copy', data)"
-        @load="(data) => onResultLoaded(result, data)"
-        @load-error="(err) => onResultLoadError(result, err)"
-        @scroll="(data) => search.logEvent(result.url, 'page', 'scroll', data)"
+        @copy="(text) => search.logEvent(displayUrl, 'page', 'copy', text)"
+        @load="
+          (url, doc, selector) => search.logEvent(url, 'page', 'load', selector)
+        "
+        @error="(url, err) => search.logEvent(url, 'page', 'error', err)"
+        @scroll="(data) => search.logEvent(displayUrl, 'page', 'scroll', data)"
         @selectionchange="
-          (data) => search.logEvent(result.url, 'page', 'selection', data)
+          (text) => search.logEvent(displayUrl, 'page', 'selection', text)
         "
       ></PageViewer>
     </v-dialog>
@@ -315,15 +375,28 @@ export default class App extends Vue {
   }
 
   openPage(url: string, selector: string): void {
+    this.search.logEvent(url, "page", "open", selector);
     this.displayUrl = url;
     this.displayFocusedElement = selector;
     this.dialog = true;
   }
 
   closePage(): void {
+    this.search.logEvent(this.displayUrl, "page", "close");
     this.dialog = false;
     this.displayUrl = "";
     this.displayFocusedElement = "";
+  }
+
+  changeResultLayout(layout: string): void {
+    this.appEvents.push({
+      timestamp: new Date(),
+      name: "layout",
+      data: {
+        to: layout,
+      },
+    });
+    this.display = layout;
   }
 
   getRecommendations(readonly signatures: any[]): Recommendation[] {
@@ -508,14 +581,17 @@ export default class App extends Vue {
     }
   }
 
-  onSearchResultExpand(result: Result, data: string): void {
-    this.search.logEvent(result.url, "projection", "expand", data);
-    const resultIndex = this.results.findIndex(
-      (res) =>
-        res.url === result.url && data === "number[].reduce(function): number"
-    );
-    if (resultIndex === 0 && this.wtStep === 1) {
-      this.wtStep++;
+  onSignatureExpand(result: Result, sigText: string): void {
+    this.search.logEvent(result?.url || "", "projection", "expand", sigText);
+    if (result) {
+      const resultIndex = this.results.findIndex(
+        (res) =>
+          res.url === result.url &&
+          sigText === "number[].reduce(function): number"
+      );
+      if (resultIndex === 0 && this.wtStep === 1) {
+        this.wtStep++;
+      }
     }
   }
 

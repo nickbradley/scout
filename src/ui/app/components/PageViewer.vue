@@ -55,7 +55,7 @@ export default class SearchResult extends Vue {
     document.querySelector(".js-consent-banner")?.remove(); // cookie consent
     document.querySelector(".js-launch-popover-toggle")?.remove(); // remove sort option popover
     const emitter = (action: string, data?: string | Record<string, unknown>) =>
-      this.$emit(action + "-page", data);
+      this.$emit(action, data);
     this.page = new StackOverflowPage(
       document,
       Page.WithCopyListener(emitter),
@@ -63,10 +63,11 @@ export default class SearchResult extends Vue {
       Page.WithSelectionListener(emitter)
     );
     this.scrollToElement();
+    this.$emit("load", url, document, this.focusedElement);
   }
 
   onPageError(url: string, message: string): void {
-    console.warn("App:onPageError", url, message);
+    this.$emit("error", url, message);
   }
 
   closePage(): void {

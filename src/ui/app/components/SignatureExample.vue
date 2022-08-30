@@ -6,7 +6,12 @@
         <v-tab>Code</v-tab>
       </v-tabs>
       <v-spacer></v-spacer>
-      <v-btn icon :ripple="false" @click.stop="$emit('open')">
+      <v-btn
+        icon
+        :ripple="false"
+        retain-focus-on-click
+        @click.stop="$emit('open')"
+      >
         <v-icon>mdi-open-in-new</v-icon>
       </v-btn>
     </v-toolbar>
@@ -14,12 +19,22 @@
     <v-tabs-items v-model="tab">
       <v-tab-item>
         <v-card class="flex-grow-1" flat>
-          <PrettyCode :text="text"></PrettyCode>
+          <PrettyCode
+            :text="text"
+            @selectionchange="
+              (selection) => $emit('selectionchange', selection)
+            "
+          ></PrettyCode>
         </v-card>
       </v-tab-item>
       <v-tab-item>
         <v-card class="flex-grow-1" flat>
-          <PrettyCode :text="source"></PrettyCode>
+          <PrettyCode
+            :text="source"
+            @selectionchange="
+              (selection) => $emit('selectionchange', selection)
+            "
+          ></PrettyCode>
         </v-card>
       </v-tab-item>
     </v-tabs-items>

@@ -3,6 +3,9 @@
     id="snippet"
     class="pa-0 d-inline"
     v-html="embelishedSnippet"
+    @mouseup="onMouseup"
+    @keydown.ctrl="onCopy"
+    @keydown.meta="onCopy"
   ></v-card-text>
 </template>
 
@@ -23,8 +26,20 @@ export default class GoogleSnippetProjection extends Vue {
     return snippet;
   }
 
-  created(): void {
-    this.$emit("load", this.snippet);
+  onMouseup(): void {
+    const selection = document.getSelection();
+    if (selection && !selection.isCollapsed) {
+      this.$emit("selectionchange", selection.toString());
+    }
+  }
+
+  onCopy(event: KeyboardEvent): void {
+    if (event.key === "c") {
+      const selection = document.getSelection();
+      if (selection && !selection.isCollapsed) {
+        this.$emit("copy", selection.toString());
+      }
+    }
   }
 }
 </script>

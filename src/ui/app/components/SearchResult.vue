@@ -3,9 +3,8 @@
     <v-card
       class="pa-1 pb-4"
       :elevation="0"
-      @mouseup="onMouseup"
-      @keydown.ctrl="onCopy"
-      @keydown.meta="onCopy"
+      @mouseenter="$emit('mouseenter')"
+      @mouseleave="$emit('mouseleave')"
     >
       <v-card-subtitle class="pa-0 black--text text-truncate">{{
         displayLink
@@ -14,7 +13,7 @@
       <v-card-title
         class="pa-0 d-block text-truncate"
         tag="a"
-        @click="$emit('open-page', url)"
+        @click="$emit('open', url)"
         >{{ title }}</v-card-title
       >
       <v-card-text v-if="extensions" class="pa-0">{{
@@ -38,22 +37,6 @@ export default class SearchResult extends Vue {
   @Prop() readonly displayLink!: string;
   @Prop() readonly date!: string;
   @Prop() readonly extensions!: string[];
-
-  onMouseup(): void {
-    const selection = document.getSelection();
-    if (selection && !selection.isCollapsed) {
-      this.$emit("selectionchange", selection.toString());
-    }
-  }
-
-  onCopy(event: KeyboardEvent): void {
-    if (event.key === "c") {
-      const selection = document.getSelection();
-      if (selection && !selection.isCollapsed) {
-        this.$emit("copy", selection.toString());
-      }
-    }
-  }
 }
 </script>
 
