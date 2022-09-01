@@ -17,7 +17,7 @@
         @reload="resetResults = true"
       ></SearchBar>
       <v-spacer></v-spacer>
-      <template v-if="true || study.showContext" v-slot:extension>
+      <template v-if="study.showContext" v-slot:extension>
         <ContextList
           id="context"
           :context="hostContext"
@@ -40,7 +40,7 @@
       </template>
 
       <template v-else>
-        <template v-if="study.showSnippets === 'snippet'">
+        <template v-if="!study.showSnippets">
           <SearchResult
             v-for="result of results"
             :key="result.url"
@@ -137,7 +137,7 @@
                     (rec) =>
                       search.logEvent('', 'projection', 'mouseleave', rec.text)
                   "
-                  @open="(url, selector) => openPage(url, selector)"
+                  @open="(url, selector) => openPage(result.url, selector)"
                   @selectionchange="
                     (rec, text) =>
                       search.logEvent(result.url, 'projection', 'selection', {
@@ -179,6 +179,11 @@
       hide-overlay
       transition="slide-x-transition"
       :eager="false"
+      @input="
+        (open) => {
+          if (!open) closePage();
+        }
+      "
     >
       <!-- HACK: Use "v-if" here to force element to rerender (and load the correct URL) -->
       <PageViewer
@@ -212,6 +217,7 @@ import SearchBar from "@/components/SearchBar.vue";
 import ContextList from "@/components/ContextList.vue";
 import SearchResult from "@/components/SearchResult.vue";
 import Walkthrough from "@/components/Walkthrough.vue";
+import GoogleSnippetProjection from "@/components/GoogleSnippetProjection.vue";
 import SignatureListProjection from "@/components/SignatureListProjection.vue";
 import PageViewer from "@/components/PageViewer.vue";
 
@@ -219,7 +225,12 @@ import Search, { Result } from "@/Search";
 import CodeContext from "@/CodeContext";
 import { Recommendation } from "@/Page";
 import WebWorker from "@/WebWorker";
-import { AppConfig, isImportToken, isFunctionToken } from "../../common/types";
+import {
+  AppConfig,
+  isImportToken,
+  isFunctionToken,
+  CodeToken,
+} from "../../common/types";
 import { resultsCache } from "./resultsCache";
 
 interface AppEvent {
@@ -244,6 +255,7 @@ interface WalkthroughStep {
     SearchBar,
     SearchResult,
     Walkthrough,
+    GoogleSnippetProjection,
     SignatureListProjection,
     PageViewer,
   },
@@ -254,6 +266,7 @@ export default class App extends Vue {
     activeTask: "",
     showSnippets: true,
     showContext: false,
+    contextOverride: [],
   };
 
   appEvents: AppEvent[] = [];
@@ -267,7 +280,8 @@ export default class App extends Vue {
   searchDisabled = false;
   resetResults = false;
 
-  hostContext: CodeContext = new CodeContext();
+  codeTokens: CodeToken[] = [];
+  // hostContext: CodeContext = new CodeContext();
   selectedContext: CodeContext | null = null;
 
   pagesToLoad = 0;
@@ -333,6 +347,25 @@ export default class App extends Vue {
     return this.$refs.input.$el.querySelector<HTMLInputElement>("input");
   }
 
+  get hostContext(): CodeContext {
+    console.log("HOST CONTEXT CALLED");
+    let context;
+    if (this.study.contextOverride) {
+      context = new CodeContext(this.study.contextOverride);
+    } else {
+      context = this.codeTokens.map((t) => {
+        if (isImportToken(t)) {
+          return { kind: "library", value: t.module.name };
+        } else if (isFunctionToken(t)) {
+          return { kind: "call", value: t.name };
+        }
+      });
+      context.push({ kind: "language", value: "javascript" });
+    }
+
+    return context;
+  }
+
   get walkthroughStep(): WalkthroughStep {
     const steps = [
       {
@@ -345,15 +378,17 @@ export default class App extends Vue {
       {
         attach: ".v-expansion-panel-header",
         title: "Call Signatures",
-        text: "Scout extracts call signatures from the Stack Overflow answers.",
-        action: "Click the signature to see usages.",
+        text: "Scout extracts call signatures from each Stack Overflow page.",
+        action: "Click the signature to see examples.",
         progress: 40,
       },
       {
-        attach: ".code-example",
+        attach: ".mdi-open-in-new",
+        // attach: Array.from(document.querySelectorAll("pre.language-javascript"))[1],
         title: "Usage Examples",
-        text: "Scout shows example usages of the call signature from the Stack Overflow page.",
-        action: "Mouse over the code and click the Stack Overflow button.",
+        text: "Scout shows several example usages of the call signature from the Stack Overflow page.",
+        action: "Click the button on the right to open the full page.",
+        top: true,
         progress: 60,
       },
       {
@@ -379,6 +414,16 @@ export default class App extends Vue {
     this.displayUrl = url;
     this.displayFocusedElement = selector;
     this.dialog = true;
+    const resultIndex = this.results.findIndex(
+      (res) => res.url === url && selector === "#answer-43281805"
+    );
+    if (resultIndex === 0 && this.wtStep === 2) {
+      this.wtShow = false;
+      setTimeout(() => {
+        this.wtStep++;
+        this.wtShow = true;
+      }, 1500);
+    }
   }
 
   closePage(): void {
@@ -386,6 +431,10 @@ export default class App extends Vue {
     this.dialog = false;
     this.displayUrl = "";
     this.displayFocusedElement = "";
+
+    if (this.wtStep === 3) {
+      this.wtStep++;
+    }
   }
 
   changeResultLayout(layout: string): void {
@@ -424,7 +473,8 @@ export default class App extends Vue {
           metrics: {
             occurrences:
               // hack to show tutorial result in nice order for screenshot
-              sig.text === "number[].reduce(function): number" ? 1000 : 0,
+              sig.text === "T[].reduce(function): T" ? 1000 : 0,
+            keywordDensity: sig.answerKeywords.length / sig.answerWordCount,
             isFromAcceptedAnswer: false,
             isFromPopularAnswer: false,
             isFromLatestAnswer: false,
@@ -488,6 +538,7 @@ export default class App extends Vue {
 
   async onSearch(searchPromise: Promise<Search>): Promise<void> {
     this.wtShow = false;
+    this.signatures = [];
     const loadTimeout = 20000;
 
     try {
@@ -506,36 +557,53 @@ export default class App extends Vue {
 
       this.searches.push(search);
 
-      for (const result of search.results) {
-        const token = {};
-        let worker: WebWorker;
-        let timerId: number = setTimeout(() => token.cancel(), loadTimeout);
-        let startTime = new Date().getTime();
+      if (this.study.showSnippets) {
+        for (const result of search.results) {
+          const token = {};
+          let worker: WebWorker;
+          let timerId: number = setTimeout(() => token.cancel(), loadTimeout);
+          let startTime = new Date().getTime();
 
-        this.$workerPool
-          .acquireWorker(token)
-          .then((wkr) => {
-            worker = wkr;
-            clearTimeout(timerId);
-            timerId = setTimeout(
-              () => worker.cancel(),
-              loadTimeout - (new Date().getTime() - startTime)
-            );
-            return worker.run({ pageURL: result.url });
-          })
-          .then((signatures) => {
-            result.signatures = signatures;
-            this.signatures.push(...signatures);
-            clearTimeout(timerId);
-          })
-          .catch((err) => console.warn("Error retrieving signatures", err))
-          .finally(() => {
-            this.pagesToLoad--;
-            result.areSignaturesLoading = false;
-            if (worker) {
-              this.$workerPool.releaseWorker(worker);
-            }
-          });
+          this.$workerPool
+            .acquireWorker(token)
+            .then((wkr) => {
+              worker = wkr;
+              clearTimeout(timerId);
+              timerId = setTimeout(
+                () => worker.cancel(),
+                loadTimeout - (new Date().getTime() - startTime)
+              );
+              return worker.run({
+                pageURL: result.url,
+                searchTerms: search.query.split(" "),
+              });
+            })
+            .then((signatures) => {
+              result.signatures = signatures;
+              this.signatures.push(...signatures);
+              clearTimeout(timerId);
+            })
+            .catch((err) => console.warn("Error retrieving signatures", err))
+            .finally(() => {
+              this.pagesToLoad--;
+              result.areSignaturesLoading = false;
+              if (worker) {
+                this.$workerPool.releaseWorker(worker);
+              }
+
+              const resultIndex = this.results.findIndex(
+                (res) => res.url === result.url
+              );
+              if (resultIndex === 0 && this.wtStep === 0) {
+                setTimeout(() => {
+                  this.wtStep++;
+                  this.wtShow = true;
+                }, 250);
+              }
+            });
+        }
+      } else {
+        setTimeout(() => (this.pagesToLoad = 0), 1200); // just for effect
       }
     } catch (err) {
       console.warn(err);
@@ -552,6 +620,7 @@ export default class App extends Vue {
     }
   }
 
+  // TODO remove
   onResultLoaded(result: Result, data: unknown): void {
     this.pagesToLoad--;
     this.signatures.push(...data);
@@ -585,16 +654,14 @@ export default class App extends Vue {
     this.search.logEvent(result?.url || "", "projection", "expand", sigText);
     if (result) {
       const resultIndex = this.results.findIndex(
-        (res) =>
-          res.url === result.url &&
-          sigText === "number[].reduce(function): number"
+        (res) => res.url === result.url && sigText === "T[].reduce(function): T"
       );
       if (resultIndex === 0 && this.wtStep === 1) {
         this.wtStep++;
       }
     }
   }
-
+  // TODO remove me
   onProjectionOpen(result: Result, url: string, selector: string): void {
     this.openPage(url, selector);
     this.search.logEvent(result.url, "projection", "open", url, selector);
@@ -644,7 +711,8 @@ export default class App extends Vue {
         this.searches = [];
         this.appEvents = [];
         this.study.activeTask = activeTaskId;
-        this.hostContext = new CodeContext();
+        this.codeTokens = [];
+        // this.hostContext = new CodeContext();
         this.selectedContext = null;
         isNewTask = true;
       }
@@ -660,23 +728,62 @@ export default class App extends Vue {
       if (treatment) {
         this.study.showSnippets = treatment.enableFragments;
         this.study.showContext = treatment.showContext;
+        if (
+          JSON.stringify(this.study.contextOverride) !==
+          JSON.stringify(treatment.contextOverride)
+        ) {
+          this.study.contextOverride = treatment.contextOverride;
+        }
       }
 
       // TODO Remove me (just for testing)
-      const cxt = await this.$host.getContext();
-      console.log("Requesting decoration", cxt);
+      // const context = await this.$host.getContext();
+      // const context = new CodeContext(cxt);
       // await this.$host.decorate("find.js", 1, [{name: "foo", position: {start: 0, end: 10}}]);
       // setTimeout(async () => await this.$host.decorate("find.js", 2, [{name: "bar", position: {start: 30, end: 50}}]), 3000);
       // setTimeout(async () => await this.$host.decorate("find.js", 1, []), 4000)
       // If not the task where the participant needs to search using the plain Google version
+      /*
       if (treatment?.enableContext) {
-        context = treatment?.contextOverride
-          ? new CodeContext(treatment.contextOverride)
-          : await this.$host.getContext();
+        let context;
+        if (treatment?.contextOverride) {
+          context = new CodeContext(treatment.contextOverride);
+        } else {
+          const codeTokens = await this.$host.getContext();
+          context = codeTokens.map((t) => {
+            if (isImportToken(t)) {
+              return { kind: "library", value: t.module.name };
+            } else if (isFunctionToken(t)) {
+              return { kind: "call", value: t.name };
+            }
+          });
+          context.push({ kind: "language", value: "javascript" });
+        }
+        // const context = treatment?.contextOverride
+        //   ? new CodeContext(treatment.contextOverride)
+        //   : await this.$host.getContext();
         if (!this.hostContext.isEqual(context)) {
           this.hostContext = context;
           this.selectedContext = context;
         }
+      }
+      */
+
+      /*
+              const contextTokens = codeTokens.map((t) => {
+          if (isImportToken(t)) {
+            return { kind: "library", value: t.module.name };
+          } else if (isFunctionToken(t)) {
+            return { kind: "call", value: t.name };
+          }
+        });
+        contextTokens.push({ kind: "language", value: "javascript" });
+        */
+
+      const tokens = (await this.$host.getContext()).tokens;
+      if (JSON.stringify(tokens) !== JSON.stringify(this.codeTokens)) {
+        console.log("UPDATES TOKENS NOW", tokens, this.codeTokens);
+        // this.codeTokens = tokens;
       }
 
       if (treatment && treatment.searchTerms) {

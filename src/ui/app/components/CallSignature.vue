@@ -25,12 +25,16 @@
           :key="`${arg}-${i}-b`"
           v-if="i < args.length - 1"
           class="token punctuation"
-          >,</span
-        >
+          >,
+        </span>
       </template>
       <span class="token punctuation">)</span>
       <span v-if="returnKind" class="token punctuation">: </span>
-      <span v-html="returnKind"></span>
+      <span
+        v-html="returnKind"
+        class="return"
+        :class="{ highlight: decorateReturn }"
+      ></span>
     </code>
   </div>
 </template>
@@ -41,6 +45,7 @@ import Prism from "prismjs";
 import "prismjs/themes/prism.css";
 import "prismjs/components/prism-javascript";
 import { isImportToken, isFunctionToken } from "../../../common/types";
+import Signature from "../Signature";
 
 @Component()
 export default class CallSignature extends Vue {
@@ -49,13 +54,25 @@ export default class CallSignature extends Vue {
   @Prop() readonly arguments!: Array<{ name: string; type: string }>;
   @Prop() readonly returnType!: string;
 
+  get signature(): Signature {
+    return new Signature(
+      this.name,
+      this.arguments,
+      this.returnType,
+      this.parentType
+    );
+  }
   abortDecoration = null;
   decorateScope = false;
   decorateArgs = Array(10).fill(false);
   decorateReturn = false;
 
   get scope(): string {
-    if (this.parentType === "any" || this.parentType === "unknown") {
+    if (
+      this.parentType === undefined ||
+      this.parentType === "any" ||
+      this.parentType === "unknown"
+    ) {
       return "";
     }
 
@@ -77,7 +94,11 @@ export default class CallSignature extends Vue {
   }
 
   get returnKind(): string {
-    if (this.returnType === "any" || this.returnType === "unknown") {
+    if (
+      this.returnType === undefined ||
+      this.returnType === "any" ||
+      this.returnType === "unknown"
+    ) {
       return "";
     }
 
@@ -90,7 +111,7 @@ export default class CallSignature extends Vue {
 
   prettyPrintType(type: string | undefined): string {
     if (type === undefined || type === "any") {
-      return ""; // "unknown"
+      return "unknown";
     } else if (type === "RegExp") {
       return "regex";
     } else if (type?.endsWith("}[]")) {
@@ -110,8 +131,12 @@ export default class CallSignature extends Vue {
       return false;
     }
 
-    if (t1 === t2) {
+    if (t1.toLowerCase() === t2.toLowerCase()) {
       return true;
+    }
+
+    if (t2.includes("|")) {
+      return t2.split("|").some((t) => this.compareTypes(t1, t.trim()));
     }
 
     const isT1Object = t1?.startsWith("{");
@@ -138,9 +163,9 @@ export default class CallSignature extends Vue {
   onMouseUp(event: Event): void {
     const selection = document.getSelection();
     if (selection && !selection.isCollapsed) {
-      console.log("CANCEL EVENT");
-      event.stopPropagation();
-      event.preventDefault();
+      // console.log("CANCEL EVENT");
+      // event.stopPropagation();
+      // event.preventDefault();
       this.$emit("selectionchange", selection);
     }
   }
@@ -154,9 +179,34 @@ export default class CallSignature extends Vue {
 
     const parentDecoration = { backgroundColor: "rgba(39, 245, 185, 0.8)" };
     const argumentDecoration = { backgroundColor: "rgba(39, 219, 245, 0.8)" };
-    // const returnDecoration = { backgroundColor: "rgba(245, 176, 39, 0.8)" };
+    const returnDecoration = { backgroundColor: "rgba(245, 176, 39, 0.8)" };
     const tokensToDecorate = [];
 
+    /*
+    console.log("CXT", cxt);
+
+    // For each cxt token: [t, f, f, f, t] (parentType, params, returnType)
+    const overlap = this.signature.getContextOverlap(cxt.tokens);
+    // cxt.filter((token, idx) => overlap[idx].some(t => t === true)).map
+
+
+    cxt.tokens.forEach((token, idx) => {
+      if (overlap[idx][0]) {
+        this.decorateScope = true;
+        tokensToDecorate.push({...token, decorationOptions: { backgroundColor: "rgba(39, 245, 185, 0.8)"  }});
+      }
+      for (let i = 1; i < overlap[idx].length - 1; i++) {
+        if (overlap[idx][i]) {
+          this.decorateArgs.splice(i - 1, 1, true);
+          tokensToDecorate.push({...token, decorationOptions: { backgroundColor: "rgba(39, 219, 245, 0.8)" }});
+        }
+      }
+      if (overlap[idx][overlap[idx].length - 1]) {
+        this.decorateReturn = true;
+        // tokensToDecorate.push({...token, backgroundColor: "rgba(245, 176, 39, 0.8)" });
+      }
+    });
+    */
     cxt.tokens.forEach((token) => {
       if (isImportToken(token) && token.references.includes(this.parentType)) {
         this.decorateScope = true;
@@ -207,8 +257,17 @@ export default class CallSignature extends Vue {
           });
         }
         tokensToDecorate.push(...varTokens, ...paramTokens);
+
+        if (this.compareTypes(token.returnType, this.returnType)) {
+          this.decorateReturn = true;
+          // tokensToDecorate.push({
+          //   ...token,
+          //   decorationOptions: returnDecoration,
+          // });
+        }
       }
     });
+
     await this.$host.decorate(tokensToDecorate);
     if (this.abortDecoration) {
       this.abortDecoration = null;

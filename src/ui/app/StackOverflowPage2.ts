@@ -170,6 +170,16 @@ export class StackOverflowAnswer {
       .join("\n");
   }
 
+  getKeywords(keywords: string[]): string[] {
+    const text = this.getTextContent(this.element);
+    const regex = new RegExp(keywords.join("|"), "g");
+    return text.match(regex) ?? [];
+  }
+
+  getWords(): string[] {
+    return this.getTextContent(this.element).split(" ");
+  }
+
   private getTextContent(node: Node): string {
     if (isCommentNode(node)) {
       return node.data || "";

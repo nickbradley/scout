@@ -100,7 +100,6 @@ export default class SignatureListProjection extends Vue {
   panel = -1;
 
   onClickHeader(event: Event, recommendation: Recommendation): void {
-    console.log("EVENT", event);
     const selection = document.getSelection();
     if (selection && !selection.isCollapsed) {
       if (event.target.contains(selection.anchorNode)) {

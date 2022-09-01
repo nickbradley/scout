@@ -35,12 +35,17 @@ self.addEventListener("unhandledrejection", (event) => {
 
 onmessage = async function (e) {
   const url = e.data.pageURL;
+  const searchTerms = e.data.searchTerms ?? [];
   const response = await ProxyRequest.fetch(url);
   const text = await response.text();
   const page = new StackOverflowPage(text);
   const answers = page.getAnswers();
   const signatures: StackOverflowCallSignature[] = answers.flatMap((ans) =>
-    ans.getSignatures()
+    ans.getSignatures().map((sig) => ({
+      answerKeywords: ans.getKeywords(searchTerms),
+      answerWordCount: ans.getWords().length,
+      ...sig,
+    }))
   );
 
   postMessage(signatures);

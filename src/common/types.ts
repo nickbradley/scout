@@ -11,20 +11,20 @@ export interface ContextToken {
   position: TokenPosition;
 }
 
-// export interface LanguageToken {
-//   kind: "language";
-//   value: string;
-// }
+export interface LanguageToken {
+  kind: "language";
+  value: string;
+}
 
-// export interface LibraryToken {
-//   kind: "library";
-//   value: string;
-// }
+export interface LibraryToken {
+  kind: "library";
+  value: string;
+}
 
-// export interface CallToken {
-//   kind: "call";
-//   value: string;
-// }
+export interface CallToken {
+  kind: "call";
+  value: string;
+}
 
 // export type ContextToken = LanguageToken | LibraryToken | CallToken;
 
