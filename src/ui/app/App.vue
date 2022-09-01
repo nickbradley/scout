@@ -707,6 +707,7 @@ export default class App extends Vue {
       this.study.trialId = toastData.id;
       activeTaskId = toastData.activeTaskId as string;
       if (activeTaskId !== this.study.activeTask) {
+        this.dialog = false;
         this.$refs.input.reset();
         this.searches = [];
         this.appEvents = [];
@@ -782,8 +783,7 @@ export default class App extends Vue {
 
       const tokens = (await this.$host.getContext()).tokens;
       if (JSON.stringify(tokens) !== JSON.stringify(this.codeTokens)) {
-        console.log("UPDATES TOKENS NOW", tokens, this.codeTokens);
-        // this.codeTokens = tokens;
+        this.codeTokens = tokens;
       }
 
       if (treatment && treatment.searchTerms) {
