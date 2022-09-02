@@ -1,6 +1,11 @@
-import CodeContext from "@/CodeContext";
+import CodeContext from "./CodeContext";
 import { WebviewApi } from "vscode-webview";
-import { AppConfig, CodeToken, ContextToken } from "../../common/types";
+import {
+  AppConfig,
+  CodeToken,
+  ContextToken,
+  StackOverflowCallSignature,
+} from "../../common/types";
 
 export interface HostServiceProvider {
   saveFile: (filename: string, content: string) => Promise<void>;
@@ -16,16 +21,21 @@ export interface HostServiceProvider {
   ) => Promise<void>;
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type MessageData = any;
+
 interface VsCodeMessage {
   sender: "vscode" | "scout";
   type: string;
+  messageId?: string;
   data?: unknown;
   error?: Error;
 }
 
 interface DispatchListener {
   messageType: string;
-  resolve: (data?: any) => void;
+  messageId?: string;
+  resolve: (data?: MessageData) => void;
   reject: (error: Error) => void;
 }
 
@@ -37,7 +47,9 @@ export class VsCodeHost implements HostServiceProvider {
       const message = event.data as VsCodeMessage;
       if (message.sender === "vscode") {
         const listenerIndex = this.dispatchQueue.findIndex(
-          (listener) => listener.messageType === message.type
+          (listener) =>
+            message.messageId === listener.messageId &&
+            listener.messageType === message.type
         );
         if (listenerIndex >= 0) {
           const listener = this.dispatchQueue.splice(listenerIndex, 1)[0];
@@ -52,22 +64,37 @@ export class VsCodeHost implements HostServiceProvider {
     });
   }
 
+  private sendMessage(
+    type: string,
+    responseHandler: (data?: MessageData) => void,
+    errorHandler: (error: Error) => void,
+    data?: MessageData
+  ) {
+    const messageId = Math.round(Math.random() * 100000).toString();
+    this.dispatchQueue.push({
+      messageType: type,
+      messageId,
+      resolve: responseHandler,
+      reject: errorHandler,
+    });
+    const message: VsCodeMessage = {
+      sender: "scout",
+      messageId,
+      type,
+      data,
+    };
+    this.vscode.postMessage(message);
+  }
+
   public signalReady(): void {
     this.vscode.postMessage({ sender: "scout", type: "signal", data: "ready" });
   }
 
   public async saveFile(filename: string, content: string): Promise<void> {
     const listener = (resolve: () => void, reject: (error: Error) => void) => {
-      this.dispatchQueue.push({ messageType: "saveFile", resolve, reject });
+      this.sendMessage("saveFile", resolve, reject, { filename, content });
     };
-    const replyPromise = new Promise<void>(listener);
-    const message: VsCodeMessage = {
-      sender: "scout",
-      type: "saveFile",
-      data: { filename, content },
-    };
-    this.vscode.postMessage(message);
-    return replyPromise;
+    return new Promise<void>(listener);
   }
 
   public async readFile(filename: string): Promise<string> {
@@ -75,16 +102,11 @@ export class VsCodeHost implements HostServiceProvider {
       resolve: (data: string) => void,
       reject: (error: Error) => void
     ) => {
-      this.dispatchQueue.push({ messageType: "readFile", resolve, reject });
+      this.sendMessage("readFile", resolve, reject, {
+        filename,
+      });
     };
-    const replyPromise = new Promise<string>(listener);
-    const message: VsCodeMessage = {
-      sender: "scout",
-      type: "readFile",
-      data: { filename },
-    };
-    this.vscode.postMessage(message);
-    return replyPromise;
+    return new Promise<string>(listener);
   }
 
   public async getContext(): Promise<CodeContext> {
@@ -94,39 +116,42 @@ export class VsCodeHost implements HostServiceProvider {
     ) => {
       const mapper = (contextTokens: ContextToken[]) =>
         resolve(new CodeContext(contextTokens));
-      this.dispatchQueue.push({
-        messageType: "getContext",
-        resolve: mapper,
-        reject,
-      });
+      this.sendMessage("getContext", mapper, reject);
     };
-    const replyPromise = new Promise<CodeContext>(listener);
-    const message: VsCodeMessage = {
-      sender: "scout",
-      type: "getContext",
-    };
-    this.vscode.postMessage(message);
-    return replyPromise;
+    return new Promise<CodeContext>(listener);
   }
 
   public async decorate(
     codeTokens: Array<CodeToken & { decorationOptions: Record<string, string> }>
   ): Promise<void> {
     const listener = (resolve: () => void, reject: (error: Error) => void) => {
-      this.dispatchQueue.push({
-        messageType: "decorate",
-        resolve,
-        reject,
-      });
+      this.sendMessage("decorate", resolve, reject, { codeTokens });
     };
-    const replyPromise = new Promise<void>(listener);
-    const message: VsCodeMessage = {
-      sender: "scout",
-      type: "decorate",
-      data: { codeTokens },
+    return new Promise<void>(listener);
+  }
+
+  public async getSignatures(
+    url: string,
+    keywords: string[]
+  ): Promise<StackOverflowCallSignature[]> {
+    const listener = (
+      resolve: (signature: StackOverflowCallSignature[]) => void,
+      reject: (error: Error) => void
+    ) => {
+      const mapper = (signatures: StackOverflowCallSignature[]) =>
+        resolve(
+          signatures.map((sig) => {
+            if (sig.lastModified) {
+              return { ...sig, lastModified: new Date(sig.lastModified) };
+            } else {
+              return sig;
+            }
+          })
+        );
+
+      this.sendMessage("getSignatures", mapper, reject, { url, keywords });
     };
-    this.vscode.postMessage(message);
-    return replyPromise;
+    return new Promise<StackOverflowCallSignature[]>(listener);
   }
 
   public async getTokens(
@@ -159,15 +184,9 @@ export class VsCodeHost implements HostServiceProvider {
       resolve: (data: AppConfig) => void,
       reject: (error: Error) => void
     ) => {
-      this.dispatchQueue.push({ messageType: "getConfig", resolve, reject });
+      this.sendMessage("getConfig", resolve, reject);
     };
-    const replyPromise = new Promise<AppConfig>(listener);
-    const message: VsCodeMessage = {
-      sender: "scout",
-      type: "getConfig",
-    };
-    this.vscode.postMessage(message);
-    return replyPromise;
+    return new Promise<AppConfig>(listener);
   }
 }
 
@@ -192,27 +211,10 @@ export class MockHost implements HostServiceProvider {
   }
 
   public async getContext(mockContext?: CodeContext): Promise<CodeContext> {
+    if (mockContext) {
+      return mockContext;
+    }
     return new CodeContext();
-    // if (mockContext) {
-    //   return mockContext;
-    // } else {
-    //   const task0: ContextToken[] = [
-    //     { value: "javascript", kind: "language" },
-    //     { value: "bcrypt", kind: "library", docSites: [], typings: [] },
-    //     {
-    //       value: "mongodb",
-    //       kind: "library",
-    //       docSites: ["docs.mongodb.com"],
-    //       typings: [],
-    //     },
-    //   ];
-    //   const task1: ContextToken[] = [
-    //     { value: "javascript", kind: "language" },
-    //     { value: "JSZip", kind: "library", docSites: [], typings: [] },
-    //   ];
-
-    //   return new CodeContext(task0);
-    // }
   }
 
   public async decorate(

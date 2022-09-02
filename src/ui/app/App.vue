@@ -225,9 +225,7 @@ import PageViewer from "@/components/PageViewer.vue";
 
 import Search, { Result } from "@/Search";
 import CodeContext from "@/CodeContext";
-import Signature from "@/Signature";
-import { Recommendation } from "@/Page";
-import WebWorker from "@/WebWorker";
+
 import {
   AppConfig,
   isImportToken,
@@ -250,6 +248,13 @@ interface WalkthroughStep {
   text: string;
   action: string;
   progress: number;
+}
+
+interface TaskLogEntry {
+  taskId: string;
+  trialId: string;
+  appEvents: AppEvent[];
+  searches: Search[];
 }
 
 @Component({
@@ -317,7 +322,7 @@ export default class App extends Vue {
     }
   }
 
-  get log(): any {
+  get log(): TaskLogEntry {
     return {
       trialId: this.study.trialId,
       taskId: this.study.activeTask,
@@ -386,7 +391,6 @@ export default class App extends Vue {
       },
       {
         attach: ".mdi-open-in-new",
-        // attach: Array.from(document.querySelectorAll("pre.language-javascript"))[1],
         title: "Usage Examples",
         text: "Scout shows several example usages of the call signature from the Stack Overflow page.",
         action: "Click the button on the right to open the full page.",
@@ -460,7 +464,6 @@ export default class App extends Vue {
   async onSearch(searchPromise: Promise<Search>): Promise<void> {
     this.wtShow = false;
     this.signatures = [];
-    const loadTimeout = 20000;
 
     try {
       this.resetResults = true;
@@ -480,38 +483,16 @@ export default class App extends Vue {
 
       if (this.study.showSnippets) {
         for (const result of search.results) {
-          const token = {};
-          let worker: WebWorker;
-          let timerId: number = setTimeout(() => token.cancel(), loadTimeout);
-          let startTime = new Date().getTime();
-
-          this.$workerPool
-            .acquireWorker(token)
-            .then((wkr) => {
-              worker = wkr;
-              clearTimeout(timerId);
-              timerId = setTimeout(
-                () => worker.cancel(),
-                loadTimeout - (new Date().getTime() - startTime)
-              );
-              return worker.run({
-                pageURL: result.url,
-                searchTerms: search.query.split(" "),
-              });
-            })
+          this.$host
+            .getSignatures(result.url, search.query.split(" "))
             .then((signatures) => {
               result.signatures = signatures;
               this.signatures.push(...signatures);
-              clearTimeout(timerId);
             })
             .catch((err) => console.warn("Error retrieving signatures", err))
             .finally(() => {
               this.pagesToLoad--;
               result.areSignaturesLoading = false;
-              if (worker) {
-                this.$workerPool.releaseWorker(worker);
-              }
-
               const resultIndex = this.results.findIndex(
                 (res) => res.url === result.url
               );

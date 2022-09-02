@@ -1,13 +1,13 @@
 enum Status {
-  Idle,
-  Active,
-  Disposed,
+  idle,
+  active,
+  disposed,
 }
 
 export default class WebWorker<T, U> {
-  private _status: Status;
-  private _worker: Worker;
-  private _abortController: AbortController;
+  private _status!: Status;
+  private _worker!: Worker;
+  private _abortController!: AbortController;
 
   constructor(readonly scriptURL: string) {
     this.init();
@@ -18,18 +18,18 @@ export default class WebWorker<T, U> {
   }
 
   public get isActive(): boolean {
-    return this._status === Status.Active;
+    return this._status === Status.active;
   }
 
   public get isIdle(): boolean {
-    return this._status === Status.Idle;
+    return this._status === Status.idle;
   }
 
   public async run(data: T): Promise<U> {
-    if (this._status !== Status.Idle) {
+    if (this._status !== Status.idle) {
       throw new Error("Worker is not available.");
     }
-    this._status = Status.Active;
+    this._status = Status.active;
     return new Promise<U>((resolve, reject) => {
       const onAbort = () => {
         reject(new Error("Worker canceled by user."));
@@ -38,7 +38,7 @@ export default class WebWorker<T, U> {
         once: true,
       });
 
-      this._status = Status.Idle;
+      this._status = Status.idle;
       this._worker.onerror = (e) => {
         this._abortController.signal.removeEventListener("abort", onAbort);
         e.preventDefault();
@@ -62,7 +62,7 @@ export default class WebWorker<T, U> {
   }
 
   public destroy(): void {
-    this._status = Status.Disposed;
+    this._status = Status.disposed;
     this._worker.terminate();
   }
 
@@ -75,6 +75,6 @@ export default class WebWorker<T, U> {
   private init(): void {
     this._worker = new Worker(this.scriptURL);
     this._abortController = new AbortController();
-    this._status = Status.Idle;
+    this._status = Status.idle;
   }
 }

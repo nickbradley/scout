@@ -1,10 +1,11 @@
 import * as vscode from "vscode";
 // import NodeModule from "./NodeModule";
-import WebAppView, { SaveFileMessage, ReadFileMessage, GetTokensMessage, DecorateCodeTokensMessage } from "./WebAppView";
-import { CodeToken, TokenPosition } from "../common/types";
+import WebAppView, { SaveFileMessage, ReadFileMessage, GetTokensMessage, DecorateCodeTokensMessage, SignatureWorkerMessage } from "./WebAppView";
+import { CancellationToken, CodeToken, StackOverflowCallSignature, TokenPosition } from "../common/types";
 import Util from "./Util";
 import Lexer from "./Lexer";
-import { CodeBlock } from "../common/CodeBlock";
+import { CodeBlock } from "../common/CodeBlock2";
+import WorkerPool, { PoolWorker } from "../common/WorkerPool";
 
 export async function activate(context: vscode.ExtensionContext) {
   const activeDecorations: vscode.TextEditorDecorationType[] = [];
@@ -28,6 +29,16 @@ export async function activate(context: vscode.ExtensionContext) {
   } else {
     await context.secrets.store("SEARCH_API_TOKEN", searchApiToken);
   }
+  
+  const scriptUrl = vscode.Uri.joinPath(context.extensionUri, "dist", "common", "/signatureWorker.js");
+  const response = await fetch(scriptUrl.fsPath);
+  if (!response.ok) {
+    throw new Error(`Failed to load worker script from ${scriptUrl}`);
+  }
+  const blob = await response.blob();
+  const scriptURL = URL.createObjectURL(blob);
+  const pool = new WorkerPool<{pageURL: string, searchTerms: string[]}, StackOverflowCallSignature[]>(scriptURL);
+
 
   const provider = new WebAppView(context.extensionUri);
 
@@ -155,6 +166,33 @@ export async function activate(context: vscode.ExtensionContext) {
     }
   };
 
+  provider.signatureWorkerMessageListener = async (message: SignatureWorkerMessage) => {
+    const url = message.data.url;
+    const keywords = message.data.keywords;
+    const loadTimeout = 20000;
+
+    let signatures: StackOverflowCallSignature[] | undefined = [];
+    const token: CancellationToken = { cancel: () => {}};
+    let worker: PoolWorker<{pageURL: string, searchTerms: string[]}, StackOverflowCallSignature[]> | undefined = undefined;
+    let startTime = new Date().getTime();
+  
+    try {
+      let timerId = setTimeout(() => token.cancel(), loadTimeout);
+      worker = await pool.acquireWorker(token);
+      clearTimeout(timerId);
+      
+      timerId = setTimeout(() => worker?.cancel(), loadTimeout - (new Date().getTime() - startTime));
+      signatures = await worker?.run({ pageURL: url, searchTerms: keywords });
+      clearTimeout(timerId);
+    } finally {
+      if (worker) {
+        pool.releaseWorker(worker);
+      }
+    }
+
+    return signatures ?? [];
+  };
+
   provider.saveFileMessageListener = async (message: SaveFileMessage) => {
     const filename = message.data.filename;
     const content = message.data.content;
@@ -185,7 +223,7 @@ export async function activate(context: vscode.ExtensionContext) {
     "scout.search",
     async (searchQuery: string) => {
       if (searchQuery) {
-        provider.sendMessage("search", searchQuery);
+        provider.sendMessage("search", "", searchQuery);
       }
       await vscode.commands.executeCommand("workbench.view.extension.scout");
     }

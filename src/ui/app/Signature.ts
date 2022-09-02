@@ -107,7 +107,7 @@ export default class Signature {
     }
 
     if (t2.includes("|")) {
-      return t2.split("|").some((t) => this.compareTypes(t1, t.trim()));
+      return t2.split("|").some((t) => Signature.compareTypes(t1, t.trim()));
     }
 
     const isT1Object = t1?.startsWith("{");

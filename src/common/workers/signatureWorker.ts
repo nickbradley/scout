@@ -1,6 +1,6 @@
-import { StackOverflowCallSignature } from "../../common/types";
-import ProxyRequest from "../app/ProxyRequest";
-import StackOverflowPage from "../app/StackOverflowPage2";
+import { StackOverflowCallSignature } from "../types";
+import ProxyRequest from "../ProxyRequest";
+import StackOverflowPage from "../StackOverflowPage2";
 
 export interface Recommendation {
   readonly text: string;

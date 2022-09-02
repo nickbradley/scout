@@ -1,5 +1,5 @@
 import * as vscode from "vscode";
-import { AppConfig, CodeToken } from "../common/types";
+import { AppConfig, CodeToken, StackOverflowCallSignature } from "../common/types";
 
 type MessageHandler<T, U> = (message: T) => Promise<U> | U;
 
@@ -11,6 +11,7 @@ interface MessageListeners {
   getConfig?: MessageHandler<GetConfigMessage, AppConfig>;
   signal?: MessageHandler<SignalMessage, void>;
   decorate?: MessageHandler<DecorateCodeTokensMessage, void>;
+  getSignatures?: MessageHandler<SignatureWorkerMessage, StackOverflowCallSignature[]>;
 }
 
 export interface WebAppMessage {
@@ -57,8 +58,17 @@ export interface DecorateCodeTokensMessage extends WebAppMessage {
   }
 }
 
+export interface SignatureWorkerMessage extends WebAppMessage {
+  type: "getSignatures";
+  data: {
+    url: string;
+    keywords: string[];
+  }
+}
+
 interface HostMessage {
   sender: "vscode";
+  id?: string;
   type: string; // keyof MessageListeners;
   data: any;
 }
@@ -89,16 +99,17 @@ export default class WebAppView implements vscode.WebviewViewProvider {
 
     webviewView.webview.onDidReceiveMessage(async (message) => {
       const msgType = message.type as keyof MessageListeners;
+      const id = message.messageId || "";
       if (msgType === "signal" && message.data === "ready") {
         this.isClientReady = true;
         this.messageQueue.forEach((message) =>
-          this.sendMessage(message.type, message.data)
+          this.sendMessage(message.type, id, message.data)
         );
       }
       const listener = this.messageListeners[msgType];
       if (listener) {
         const data = await listener(message);
-        this.sendMessage(msgType, data);
+        this.sendMessage(msgType, id, data);
       }
     });
 
@@ -145,9 +156,15 @@ export default class WebAppView implements vscode.WebviewViewProvider {
     this.messageListeners["readFile"] = listener;
   }
 
-  public sendMessage(type: string, data: any): void {
+  public set signatureWorkerMessageListener(
+    listener: (message: SignatureWorkerMessage) => Promise<StackOverflowCallSignature[]>
+  ) {
+    this.messageListeners["getSignatures"] = listener;
+  }
+
+  public sendMessage(type: string, id: string, data: any): void {
     const sender = "vscode" as "vscode";
-    const message = { sender, type, data };
+    const message = { sender, messageId: id, type, data };
     if (
       !Object.keys(this.messageListeners).includes(type) &&
       !this.isClientReady

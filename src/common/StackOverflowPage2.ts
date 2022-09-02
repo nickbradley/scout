@@ -12,7 +12,8 @@ import {
   findNodes,
   hasAttribute,
 } from "@web/parse5-utils";
-import { CodeBlock, Signature } from "./CodeBlock";
+import { CodeBlock } from "./CodeBlock2";
+import { StackOverflowCallSignature } from "../common/types";
 
 export default class StackOverflowPage {
   public readonly answers: StackOverflowAnswer[];
@@ -138,16 +139,25 @@ export class StackOverflowAnswer {
   /**
    * Get all unique top-level call signatures in the answer.
    */
-  getSignatures(): Signature[] {
-    const uniqSigs: { [sigStr: string]: Signature } = {};
+  getSignatures(): StackOverflowCallSignature[] {
+    // const uniqSigs: { [sigStr: string]: Signature } = {};
     const content = this.getCodeContent();
     const block = new CodeBlock(content);
-    block.getSignatures().filter((signature: Signature) => {
-      return Object.prototype.hasOwnProperty.call(uniqSigs, signature.text)
-        ? false
-        : (uniqSigs[signature.text] = signature);
-    });
-    return Object.values(uniqSigs);
+    return block.getSignatures().map((sig) =>
+      Object.assign(sig, {
+        answerId: this.getId(),
+        answerUrl: `https://stackoverflow.com/a/${this.getId()}`,
+        voteCount: this.voteCount,
+        isAccepted: this.isAccepted,
+        lastModified: this.modified ?? this.created,
+      })
+    );
+    // block.getSignatures().filter((signature: Signature) => {
+    //   return Object.prototype.hasOwnProperty.call(uniqSigs, signature.text)
+    //     ? false
+    //     : (uniqSigs[signature.text] = signature);
+    // });
+    // return Object.values(uniqSigs);
   }
 
   /**
@@ -158,6 +168,16 @@ export class StackOverflowAnswer {
     return findElements(this.element, (e) => getTagName(e) === "pre")
       .map((e) => this.getTextContent(e))
       .join("\n");
+  }
+
+  getKeywords(keywords: string[]): string[] {
+    const text = this.getTextContent(this.element);
+    const regex = new RegExp(keywords.join("|"), "g");
+    return text.match(regex) ?? [];
+  }
+
+  getWords(): string[] {
+    return this.getTextContent(this.element).split(" ");
   }
 
   private getTextContent(node: Node): string {
