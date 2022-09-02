@@ -32,8 +32,8 @@
 <script lang="ts">
 import { Vue, Component, Prop } from "vue-property-decorator";
 import XFrame from "@/components/XFrame.vue";
-import Page from "@/Page";
-import StackOverflowPage from "@/StackOverflowPage";
+import Page from "../../../common/Page";
+import StackOverflowPage from "../../../common/StackOverflowPage";
 
 @Component({
   components: { XFrame },

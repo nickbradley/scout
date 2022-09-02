@@ -1,14 +1,7 @@
-export enum TokenKind {
-  language,
-  library,
-  call,
-  type
-}
-
 export interface ContextToken {
   value: string;
-  kind: TokenKind;
-  position: TokenPosition;
+  kind: "language" | "library" | "call";
+  position?: TokenPosition;
 }
 
 export interface LanguageToken {

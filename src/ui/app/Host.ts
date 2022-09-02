@@ -1,4 +1,4 @@
-import CodeContext from "./CodeContext";
+import CodeContext from "../../common/CodeContext";
 import { WebviewApi } from "vscode-webview";
 import {
   AppConfig,

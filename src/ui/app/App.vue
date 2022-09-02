@@ -224,7 +224,7 @@ import SignatureListProjection from "@/components/SignatureListProjection.vue";
 import PageViewer from "@/components/PageViewer.vue";
 
 import Search, { Result } from "@/Search";
-import CodeContext from "@/CodeContext";
+import CodeContext from "../../common/CodeContext";
 
 import {
   AppConfig,

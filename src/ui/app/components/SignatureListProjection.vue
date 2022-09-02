@@ -87,7 +87,7 @@ import PrettyCode from "@/components/PrettyCode.vue";
 import SignatureStats from "@/components/SignatureStats.vue";
 import { Recommendation } from "@/Page";
 import { CodeToken, StackOverflowCallSignature } from "../../../common/types";
-import Signature from "@/Signature";
+import Signature from "../../../common/Signature";
 
 @Component({
   components: {

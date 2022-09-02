@@ -1,5 +1,5 @@
-import Page, { Fragment, PageOption } from "@/Page";
-import Block from "@/Block";
+import Page, { Fragment, PageOption } from "./Page";
+import Block from "./Block";
 import { StackOverflowAnswer } from "./StackOverflowAnswer";
 
 export default class StackOverflowPage extends Page {

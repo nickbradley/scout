@@ -1,5 +1,5 @@
-import ProxyRequest from "@/ProxyRequest";
-import { Result, SearchOptions, SearchProvider } from "@/Search";
+import ProxyRequest from "../../common/ProxyRequest";
+import { Result, SearchOptions, SearchProvider } from "./Search";
 
 interface GoogleOrganicResult {
   position: number;

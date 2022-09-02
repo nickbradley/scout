@@ -10,7 +10,7 @@ import {
   JSDocParameterTag,
   Type,
 } from "ts-morph";
-import { CallSignature } from "../../common/types";
+import { CallSignature } from "./types";
 
 export interface IsCodeAnnotation {
   value: string;

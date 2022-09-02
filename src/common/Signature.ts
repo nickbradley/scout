@@ -1,4 +1,4 @@
-import { isImportToken, isFunctionToken, CodeToken } from "../../common/types";
+import { isImportToken, isFunctionToken, CodeToken } from "./types";
 
 export interface IntegrationContext {
   parentTypes: CodeToken[];
