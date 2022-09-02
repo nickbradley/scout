@@ -73,7 +73,9 @@
           <v-sheet class="mb-6 mx-1">
             <template v-if="display === 'list'">
               <SignatureListProjection
-                :recommendations="getRecommendations(signatures).slice(0, 10)"
+                :signatures="signatures"
+                :codeTokens="codeTokens"
+                :count="10"
                 :loading="isSearchInProgress"
                 @copy="
                   (rec, text) =>
@@ -117,9 +119,9 @@
                 @open="(url) => openPage(url)"
               >
                 <SignatureListProjection
-                  :recommendations="
-                    getRecommendations(result.signatures).slice(0, 3)
-                  "
+                  :signatures="result.signatures"
+                  :codeTokens="codeTokens"
+                  :count="3"
                   :loading="result.areSignaturesLoading"
                   @copy="
                     (rec, text) =>
@@ -223,6 +225,7 @@ import PageViewer from "@/components/PageViewer.vue";
 
 import Search, { Result } from "@/Search";
 import CodeContext from "@/CodeContext";
+import Signature from "@/Signature";
 import { Recommendation } from "@/Page";
 import WebWorker from "@/WebWorker";
 import {
@@ -348,7 +351,6 @@ export default class App extends Vue {
   }
 
   get hostContext(): CodeContext {
-    console.log("HOST CONTEXT CALLED");
     let context;
     if (this.study.contextOverride) {
       context = new CodeContext(this.study.contextOverride);
@@ -448,87 +450,6 @@ export default class App extends Vue {
     this.display = layout;
   }
 
-  getRecommendations(readonly signatures: any[]): Recommendation[] {
-    const recommendations = {};
-    const maxVotes = Math.max(...signatures.map((s) => s.voteCount));
-    const latestAnswer = new Date(
-      Math.max(...signatures.map((s) => s.lastModified))
-    );
-
-    // Compute metrics for the signatures:
-    // - Count matching signatures only once for each answer (but record all instances as examples)
-    // - Mark signatures from accepted, latest, and most upvoted answers
-    for (const sig of signatures) {
-      const key = `${sig.text}`;
-      if (!Object.prototype.hasOwnProperty.call(recommendations, key)) {
-        recommendations[key] = {
-          text: sig.text,
-          name: sig.name,
-          arguments: sig.arguments.map((arg) => ({ ...arg, decorate: false })),
-          returnType: sig.returnType,
-          decorateReturn: false,
-          parentType: sig.parentType,
-          decorateParent: false,
-          examples: [],
-          metrics: {
-            occurrences:
-              // hack to show tutorial result in nice order for screenshot
-              sig.text === "T[].reduce(function): T" ? 1000 : 0,
-            keywordDensity: sig.answerKeywords.length / sig.answerWordCount,
-            isFromAcceptedAnswer: false,
-            isFromPopularAnswer: false,
-            isFromLatestAnswer: false,
-          },
-        };
-      }
-      const rec = recommendations[key];
-      if (rec.examples.findIndex((ex) => ex.answerId === sig.answerId) === -1) {
-        // this is the first time seeing the call signature in the answer
-        rec.metrics.occurrences++;
-        rec.metrics.isFromAcceptedAnswer =
-          rec.metrics.isFromAcceptedAnswer || sig.isAccepted;
-        rec.metrics.isFromPopularAnswer =
-          rec.metrics.isFromPopularAnswer || sig.voteCount === maxVotes;
-        rec.metrics.isFromLatestAnswer =
-          rec.metrics.isFromLatestAnswer ||
-          sig.lastModified?.getTime() === latestAnswer.getTime();
-      }
-      rec.examples.push({
-        answerId: sig.answerId,
-        answerUrl: sig.answerUrl,
-        postUrl: sig.postUrl,
-        call: sig.usage,
-        declaration: sig.definition,
-        text: (sig.definition ? sig.definition + "\n\n" : "") + sig.usage,
-        source: sig.source,
-      });
-    }
-
-    return Object.values(recommendations).sort((a, b) => {
-      if (a.metrics.occurrences === b.metrics.occurrences) {
-        if (a.metrics.isFromAcceptedAnswer) {
-          return -1;
-        } else if (b.metrics.isFromAcceptedAnswer) {
-          return 1;
-        }
-
-        if (a.metrics.isFromPopularAnswer) {
-          return -1;
-        } else if (b.metrics.isFromPopularAnswer) {
-          return 1;
-        }
-
-        if (a.metrics.isFromLatestAnswer) {
-          return -1;
-        } else if (b.metrics.isFromLatestAnswer) {
-          return 1;
-        }
-      }
-
-      return b.metrics.occurrences - a.metrics.occurrences;
-    });
-  }
-
   onSelectedContextChanged(selectedContext: CodeContext): void {
     this.wtStep++;
 
@@ -620,36 +541,6 @@ export default class App extends Vue {
     }
   }
 
-  // TODO remove
-  onResultLoaded(result: Result, data: unknown): void {
-    this.pagesToLoad--;
-    this.signatures.push(...data);
-    this.search.logEvent(result.url, "projection", "load", data);
-    const resultIndex = this.results.findIndex((res) => res.url === result.url);
-    if (resultIndex === 0 && this.wtStep === 0) {
-      setTimeout(() => {
-        this.wtStep++;
-        this.wtShow = true;
-      }, 250);
-    }
-  }
-
-  onResultLoadError(result: Result, err: Error): void {
-    this.pagesToLoad--;
-    this.search.logEvent(result.url, "projection", "error", err);
-    console.warn("Failed to get signatures from", this.url, ".", err);
-  }
-
-  onResultClose(result: Result, url: string): void {
-    this.search.logEvent(result.url, "page", "close");
-    const resultIndex = this.results.findIndex(
-      (res) => res.url === result.url && res.url === url
-    );
-    if (resultIndex === 0 && this.wtStep === 3) {
-      this.wtStep++;
-    }
-  }
-
   onSignatureExpand(result: Result, sigText: string): void {
     this.search.logEvent(result?.url || "", "projection", "expand", sigText);
     if (result) {
@@ -659,21 +550,6 @@ export default class App extends Vue {
       if (resultIndex === 0 && this.wtStep === 1) {
         this.wtStep++;
       }
-    }
-  }
-  // TODO remove me
-  onProjectionOpen(result: Result, url: string, selector: string): void {
-    this.openPage(url, selector);
-    this.search.logEvent(result.url, "projection", "open", url, selector);
-    const resultIndex = this.results.findIndex(
-      (res) => res.url === result.url && selector === "#answer-43281805"
-    );
-    if (resultIndex === 0 && this.wtStep === 2) {
-      this.wtShow = false;
-      setTimeout(() => {
-        this.wtStep++;
-        this.wtShow = true;
-      }, 1500);
     }
   }
 
@@ -736,50 +612,6 @@ export default class App extends Vue {
           this.study.contextOverride = treatment.contextOverride;
         }
       }
-
-      // TODO Remove me (just for testing)
-      // const context = await this.$host.getContext();
-      // const context = new CodeContext(cxt);
-      // await this.$host.decorate("find.js", 1, [{name: "foo", position: {start: 0, end: 10}}]);
-      // setTimeout(async () => await this.$host.decorate("find.js", 2, [{name: "bar", position: {start: 30, end: 50}}]), 3000);
-      // setTimeout(async () => await this.$host.decorate("find.js", 1, []), 4000)
-      // If not the task where the participant needs to search using the plain Google version
-      /*
-      if (treatment?.enableContext) {
-        let context;
-        if (treatment?.contextOverride) {
-          context = new CodeContext(treatment.contextOverride);
-        } else {
-          const codeTokens = await this.$host.getContext();
-          context = codeTokens.map((t) => {
-            if (isImportToken(t)) {
-              return { kind: "library", value: t.module.name };
-            } else if (isFunctionToken(t)) {
-              return { kind: "call", value: t.name };
-            }
-          });
-          context.push({ kind: "language", value: "javascript" });
-        }
-        // const context = treatment?.contextOverride
-        //   ? new CodeContext(treatment.contextOverride)
-        //   : await this.$host.getContext();
-        if (!this.hostContext.isEqual(context)) {
-          this.hostContext = context;
-          this.selectedContext = context;
-        }
-      }
-      */
-
-      /*
-              const contextTokens = codeTokens.map((t) => {
-          if (isImportToken(t)) {
-            return { kind: "library", value: t.module.name };
-          } else if (isFunctionToken(t)) {
-            return { kind: "call", value: t.name };
-          }
-        });
-        contextTokens.push({ kind: "language", value: "javascript" });
-        */
 
       const tokens = (await this.$host.getContext()).tokens;
       if (JSON.stringify(tokens) !== JSON.stringify(this.codeTokens)) {

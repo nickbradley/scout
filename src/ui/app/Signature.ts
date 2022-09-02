@@ -1,5 +1,11 @@
 import { isImportToken, isFunctionToken, CodeToken } from "../../common/types";
 
+export interface IntegrationContext {
+  parentTypes: CodeToken[];
+  parameterTypes: Array<CodeToken[]>;
+  returnTypes: CodeToken[];
+}
+
 export interface Parameter {
   name: string;
   type: string;
@@ -28,42 +34,50 @@ export default class Signature {
       .join(", ")}): ${this.returnType}`;
   }
 
-  public getContextOverlap(tokens: CodeToken[]): boolean[][] {
-    return tokens.map((token) => {
-      const matches = Array(this.parameters.length + 2).fill(false);
+  public getIntegrationContext(tokens: CodeToken[]): IntegrationContext {
+    const support = {
+      parentTypes: [] as CodeToken[],
+      parameterTypes: Array(this.parameters.length)
+        .fill(null)
+        .map(() => [] as CodeToken[]),
+      returnTypes: [] as CodeToken[],
+    };
+
+    tokens.forEach((token) => {
       if (isImportToken(token) && token.name === this.parentType) {
-        matches[0] = true;
+        support.parentTypes.push(token);
       } else if (isFunctionToken(token)) {
         for (const param of token.parameters) {
           if (Signature.compareTypes(param.type.name, this.parentType)) {
-            matches[0] = true;
+            support.parentTypes.push(param);
           }
 
           this.parameters.forEach((arg, i) => {
             if (Signature.compareTypes(param.type.name, arg.type)) {
-              matches[i + 1] = true;
+              support.parameterTypes[i].push(param);
             }
           });
         }
 
         for (const vari of token.variables) {
           if (Signature.compareTypes(vari.type.name, this.parentType)) {
-            matches[0] = true;
+            support.parentTypes.push(vari);
           }
 
           this.parameters.forEach((arg, i) => {
             if (Signature.compareTypes(vari.type.name, arg.type)) {
-              matches[i + 1] = true;
+              support.parameterTypes[i].push(vari);
             }
           });
         }
 
         if (Signature.compareTypes(token.returnType, this.returnType)) {
-          matches[matches.length - 1] = true;
+          support.returnTypes.push(token);
         }
       }
-      return matches;
     });
+
+    return support;
   }
 
   static prettyPrintType(type: string | undefined): string {
