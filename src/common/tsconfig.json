@@ -9,9 +9,9 @@
         "target": "ES2019",
         "skipLibCheck": true,
         "esModuleInterop": true,
-        "types": [
-            //   "webpack-env",
-            "jest"
-        ],
+        // "types": [
+        //     //   "webpack-env",
+        //     "jest"
+        // ],
     }
 }

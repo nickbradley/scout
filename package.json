@@ -58,7 +58,8 @@
 		"vscode:prepublish": "yarn run package-web",
 		"compile-web": "webpack",
 		"watch-web": "webpack --watch",
-		"package-web": "yarn run build-ui && webpack --mode production --devtool hidden-source-map",
+		"package-web": "yarn run build-ui && webpack",
+		"package-web2": "yarn run build-ui && webpack --mode production --devtool hidden-source-map",
 		"lint": "eslint src --ext ts",
 		"run-in-browser": "vscode-test-web --browserType=chromium --extensionDevelopmentPath=. .",
 		"serve": "vue-cli-service serve",
@@ -72,7 +73,7 @@
 	"devDependencies": {
 		"@types/jest": "^27.0.3",
 		"@types/mocha": "^9.0.0",
-		"@types/node": "^18.0.4",
+		"@types/node": "^18.7.16",
 		"@types/parse5": "^6.0.3",
 		"@types/vscode": "^1.59.0",
 		"@types/vscode-webview": "^1.57.0",
@@ -125,6 +126,7 @@
 		"vue": "^2.6.11",
 		"vue-class-component": "^7.2.3",
 		"vue-property-decorator": "^9.1.2",
-		"vuetify": "^2.6.0"
+		"vuetify": "^2.6.0",
+		"web-worker": "^1.2.0"
 	}
 }

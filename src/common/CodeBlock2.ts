@@ -1,6 +1,5 @@
 import {
   Project,
-  ts,
   Node,
   SourceFile,
   CallExpression,
@@ -11,7 +10,9 @@ import {
   Type,
   Identifier,
   FunctionDeclaration,
-  ImportDeclaration
+  ImportDeclaration,
+  ScriptTarget,
+  SyntaxKind,
 } from "ts-morph";
 import { CallSignature, CodeToken, FunctionToken, ImportToken, TokenPosition } from "./types";
 
@@ -33,7 +34,7 @@ export class CodeBlock implements IsCodeBlock {
       useInMemoryFileSystem: true,
       compilerOptions: {
         allowJs: true,
-        target: ts.ScriptTarget.ES2021,
+        target: ScriptTarget.ES2021,
         noEmit: true,
       },
     });
@@ -53,7 +54,7 @@ export class CodeBlock implements IsCodeBlock {
       definition = valueDeclaration?.getText();
       if (
         valueDeclaration &&
-        valueDeclaration.isKind(ts.SyntaxKind.VariableDeclaration)
+        valueDeclaration.isKind(SyntaxKind.VariableDeclaration)
       ) {
         const valueStatement = valueDeclaration?.getVariableStatement();
         definition = valueStatement?.getText();
@@ -64,14 +65,14 @@ export class CodeBlock implements IsCodeBlock {
 
   public getJsDocParams(
     jsDocs: JSDoc[]
-  ): { name: string; type: Type<ts.Type> | undefined }[] {
-    const paramTags: { name: string; type: Type<ts.Type> | undefined }[] = [];
+  ): { name: string; type: Type | undefined }[] {
+    const paramTags: { name: string; type: Type | undefined }[] = [];
     jsDocs.forEach((jsDoc: JSDoc) => {
       // const description = jsDoc.getDescription();
       // const comment = jsDoc.getCommentText();
       const tags = jsDoc.getTags();
 
-      tags?.forEach((tag: JSDocTag<ts.JSDocTag>) => {
+      tags?.forEach((tag: JSDocTag) => {
         const tagName = tag.getTagName();
         // const tagcomment = tag.getCommentText();
         // const tagText = tag.getText();
@@ -207,7 +208,7 @@ export class CodeBlock implements IsCodeBlock {
 
   public getCallExpressions(): CallExpression[] {
     const nodes: CallExpression[] = [];
-    const matcher = (node: Node<ts.Node>) => {
+    const matcher = (node: Node) => {
       if (Node.isCallExpression(node)) {
         nodes.push(node);
       }

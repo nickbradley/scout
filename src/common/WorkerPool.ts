@@ -10,7 +10,7 @@ export default class WorkerPool<T, U> {
   >;
 
   constructor(readonly scriptURL: string, readonly maxWorkers?: number) {
-    const logicalCores = navigator.hardwareConcurrency;
+    const logicalCores = 7; // navigator.hardwareConcurrency;
     if (maxWorkers && maxWorkers > logicalCores) {
       console.warn(
         "Number of workers exceeds hardware cores. This could negaitively affect performance."

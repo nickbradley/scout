@@ -30,7 +30,7 @@ export default class ProxyRequest {
       signal: controller.signal,
     };
     if (options.userAgent) {
-      init.headers = { "user-agent": options.userAgent };
+      init.headers = { "user-agent": options.userAgent, "x-requested-with": "XMLHttpRequest" };
     }
     const res = await fetch(`${proxyUrl}/${url}`, init);
     clearTimeout(timerId);

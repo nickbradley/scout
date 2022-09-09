@@ -1,3 +1,5 @@
+import {Worker} from "worker_threads";
+
 enum Status {
   idle,
   active,
@@ -26,6 +28,7 @@ export default class WebWorker<T, U> {
   }
 
   public async run(data: T): Promise<U> {
+    console.log("[**] Running web worker", data);
     if (this._status !== Status.idle) {
       throw new Error("Worker is not available.");
     }
@@ -39,20 +42,18 @@ export default class WebWorker<T, U> {
       });
 
       this._status = Status.idle;
-      this._worker.onerror = (e) => {
+      this._worker.on("error", (e) => {
         this._abortController.signal.removeEventListener("abort", onAbort);
-        e.preventDefault();
-        reject(e.message);
-      };
-      this._worker.onmessageerror = (e) => {
-        this._abortController.signal.removeEventListener("abort", onAbort);
-        e.preventDefault();
         reject(e);
-      };
-      this._worker.onmessage = (e) => {
+      });
+      this._worker.on("messageerror", (e) => {
         this._abortController.signal.removeEventListener("abort", onAbort);
-        resolve(e.data);
-      };
+        reject(e);
+      });
+      this._worker.on("message", (e) => {
+        this._abortController.signal.removeEventListener("abort", onAbort);
+        resolve(e);
+      });
       this._worker.postMessage(data);
     });
   }
