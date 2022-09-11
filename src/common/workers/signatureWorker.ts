@@ -42,7 +42,7 @@ parentPort.on("message", async function (message) {
   console.log("[**] HELLO FROM Worker", message);
   const url = message.pageURL;
   const searchTerms = message.searchTerms ?? [];
-  const response = await ProxyRequest.fetch(url);
+  const response = await ProxyRequest.fetch(url, { requestedWith: "XMLHttpRequest" });
   const text = await response.text();
   const page = new StackOverflowPage(text);
   const answers = page.getAnswers();
