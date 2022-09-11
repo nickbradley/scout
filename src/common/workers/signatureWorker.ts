@@ -39,7 +39,6 @@ if (!parentPort) {
   throw new Error("parentPort is not defined");
 }
 parentPort.on("message", async function (message) {
-  console.log("[**] HELLO FROM Worker", message);
   const url = message.pageURL;
   const searchTerms = message.searchTerms ?? [];
   const response = await ProxyRequest.fetch(url, { requestedWith: "XMLHttpRequest" });
@@ -53,6 +52,5 @@ parentPort.on("message", async function (message) {
       ...sig,
     }))
   );
-  console.log("[**] Posting from worker", signatures);
   parentPort.postMessage(signatures);
 });
