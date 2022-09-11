@@ -1,6 +1,8 @@
 import { StackOverflowCallSignature } from "../../common/types";
-import ProxyRequest from "../app/ProxyRequest";
-import StackOverflowPage from "../app/StackOverflowPage2";
+import ProxyRequest from "../ProxyRequest";
+import StackOverflowPage from "..//StackOverflowPage2";
+
+import { parentPort } from "worker_threads";
 
 export interface Recommendation {
   readonly text: string;
@@ -22,7 +24,7 @@ export interface Recommendation {
     isFromLatestAnswer: boolean;
   };
 }
-
+/*
 // Handle promises that reject (https://stackoverflow.com/questions/67092919)
 self.addEventListener("unhandledrejection", (event) => {
   // Prevent this being reported (Firefox doesn't currently respect this)
@@ -32,11 +34,15 @@ self.addEventListener("unhandledrejection", (event) => {
   // isn't `async` code and nothing handles it
   throw event.reason;
 });
-
-onmessage = async function (e) {
-  const url = e.data.pageURL;
-  const searchTerms = e.data.searchTerms ?? [];
-  const response = await ProxyRequest.fetch(url);
+*/
+if (!parentPort) {
+  throw new Error("parentPort is not defined");
+}
+parentPort.on("message", async function (message) {
+  console.log("[**] HELLO FROM Worker", message);
+  const url = message.pageURL;
+  const searchTerms = message.searchTerms ?? [];
+  const response = await ProxyRequest.fetch(url, { requestedWith: "XMLHttpRequest" });
   const text = await response.text();
   const page = new StackOverflowPage(text);
   const answers = page.getAnswers();
@@ -47,6 +53,6 @@ onmessage = async function (e) {
       ...sig,
     }))
   );
-
-  postMessage(signatures);
-};
+  console.log("[**] Posting from worker", signatures);
+  parentPort.postMessage(signatures);
+});

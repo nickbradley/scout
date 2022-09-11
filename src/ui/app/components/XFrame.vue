@@ -10,7 +10,7 @@
 /* eslint-disable no-useless-escape */
 
 import { Vue, Component, Prop } from "vue-property-decorator";
-import ProxyRequest, { FetchOptions } from "@/ProxyRequest";
+import ProxyRequest, { FetchOptions } from "../../../common/ProxyRequest";
 
 interface FetchAndLoadOptions extends FetchOptions {
   loadTimeout: number;

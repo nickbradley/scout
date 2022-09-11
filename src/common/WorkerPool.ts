@@ -1,16 +1,16 @@
-import WebWorker from "@/WebWorker";
-import { CancellationToken } from "../../common/types";
+import WebWorker from "./WebWorker";
+import { CancellationToken } from "./types";
 
-type Worker<T, U> = WebWorker<T, U> & { isAcquired: boolean; destroy: never };
+export type PoolWorker<T, U> = WebWorker<T, U> & { isAcquired: boolean; };
 
 export default class WorkerPool<T, U> {
-  private readonly workers: Worker<T, U>[];
+  private readonly workers: PoolWorker<T, U>[];
   private readonly queue: Array<
-    (value: Worker<T, U> | PromiseLike<Worker<T, U>>) => void
+    (value: PoolWorker<T, U> | PromiseLike<PoolWorker<T, U>>) => void
   >;
 
   constructor(readonly scriptURL: string, readonly maxWorkers?: number) {
-    const logicalCores = navigator.hardwareConcurrency;
+    const logicalCores = 7; // navigator.hardwareConcurrency;
     if (maxWorkers && maxWorkers > logicalCores) {
       console.warn(
         "Number of workers exceeds hardware cores. This could negaitively affect performance."
@@ -33,13 +33,13 @@ export default class WorkerPool<T, U> {
     return this.maxWorkers || 0;
   }
 
-  public async acquireWorker(token: CancellationToken): Promise<Worker<T, U>> {
+  public async acquireWorker(token: CancellationToken): Promise<PoolWorker<T, U>> {
     const acquiredWorker = this.workers.find((worker) => !worker.isAcquired);
     if (acquiredWorker) {
       acquiredWorker.isAcquired = true;
       return acquiredWorker;
     } else {
-      return new Promise<Worker<T, U>>((resolve, reject) => {
+      return new Promise<PoolWorker<T, U>>((resolve, reject) => {
         this.queue.push(resolve);
         token.cancel = () => {
           const idx = this.queue.findIndex((resolver) => resolver === resolve);
@@ -52,7 +52,7 @@ export default class WorkerPool<T, U> {
     }
   }
 
-  public releaseWorker(worker: Worker<T, U>): void {
+  public releaseWorker(worker: PoolWorker<T, U>): void {
     const resolve = this.queue.shift();
     if (!worker.isIdle) {
       worker.reinit();

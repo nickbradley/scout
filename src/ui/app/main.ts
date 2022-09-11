@@ -1,8 +1,8 @@
 import Vue from "vue";
 import App from "./App.vue";
 import vuetify from "./plugins/vuetify";
-import { MockHost, VsCodeHost } from "@/Host";
-import WorkerPool from "@/WorkerPool";
+import { MockHost, VsCodeHost } from "./Host";
+
 import { WebviewApi } from "vscode-webview";
 
 declare global {
@@ -31,17 +31,6 @@ declare global {
   );
   Vue.prototype.$config = await Vue.prototype.$host.getConfig();
   clearTimeout(timer);
-
-  const scriptUrl = window.workerURL + "/signatureWorker.js";
-  const response = await fetch(scriptUrl);
-  if (!response.ok) {
-    throw new Error(`Failed to load worker script from ${scriptUrl}`);
-  }
-  const blob = await response.blob();
-  const scriptURL = URL.createObjectURL(blob);
-  const pool = new WorkerPool(scriptURL);
-  Vue.prototype.$workerPool = pool;
-  console.info("Using", pool.maxWorkerCount, "workers.");
 
   new Vue({
     vuetify,

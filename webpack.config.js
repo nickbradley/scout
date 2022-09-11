@@ -18,7 +18,7 @@ const webpack = require("webpack");
 /** @type WebpackConfig */
 const webExtensionConfig = {
   mode: "none", // this leaves the source code as close as possible to the original (when packaging we set this to 'production')
-  target: "webworker", // extensions run in a webworker context
+  target: "node", // extensions run in a webworker context
   entry: {
     extension: "./src/host/extension.ts",
     "test/suite/index": "./src/host/test/suite/index.ts",
@@ -30,7 +30,7 @@ const webExtensionConfig = {
     devtoolModuleFilenameTemplate: "../../[resource-path]",
   },
   resolve: {
-    mainFields: ["browser", "module", "main"], // look for `browser` entry point in imported node modules
+    mainFields: ["main", "module", "browser"], // look for `browser` entry point in imported node modules
     extensions: [".ts", ".js"], // support ts-files and js-files
     alias: {
       // provides alternate implementation for node module and source files
@@ -104,9 +104,10 @@ const webExtensionConfig = {
 // To bundle ts-morph, needed to add these settings https://github.com/dsherret/ts-morph/issues/171#issuecomment-1107867732
 const webWorkerConfig = {
   mode: "none",
-  target: 'webworker',
+  target: 'node',
   entry: {
-    page: { import: './src/ui/workers/signatureWorker.ts', filename: "./ui/signatureWorker.js" },
+    page: { import: './src/common/workers/signatureWorker.ts', filename: "./common/signatureWorker.js" },
+    code: { import: './src/common/workers/contextWorker.ts', filename: "./common/contextWorker.js"},
   },
   output: {
     library: {

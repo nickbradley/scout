@@ -1,7 +1,7 @@
-import { Snapshooter, CSSStringifier } from "@/Snapshooter";
-import Block from "@/Block";
-import { Signature } from "./Signature";
-import { CodeBlock } from "./CodeBlock";
+import { Snapshooter, CSSStringifier } from "./Snapshooter";
+import Block from "./Block";
+import  Signature from "./Signature";
+import { CodeBlock } from "./CodeBlock3";
 
 export interface KeywordMatch {
   /** The keyword that was matched */

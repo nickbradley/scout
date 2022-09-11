@@ -1,6 +1,6 @@
 import { ts } from "ts-morph";
-import { CodeBlock } from "./CodeBlock";
-import { Signature } from "./Signature";
+import { CodeBlock } from "./CodeBlock3";
+
 export interface IsAnswer {
   voteCount: number;
   isAccepted: boolean;
@@ -75,31 +75,30 @@ export class StackOverflowAnswer implements IsAnswer {
     return [];
   }
 
-  getSignatures(): Array<{ signature: Signature; sourceCodeBlock: CodeBlock }> {
-    if (!this.codeBlock) {
-      return [];
-    }
+  // getSignatures(): Array<{ signature: Signature; sourceCodeBlock: CodeBlock }> {
+  //   if (!this.codeBlock) {
+  //     return [];
+  //   }
 
-    const results: {
-      [sig: string]: { signature: Signature; sourceCodeBlock: CodeBlock };
-    } = {};
+  //   const results: {
+  //     [sig: string]: { signature: Signature; sourceCodeBlock: CodeBlock };
+  //   } = {};
 
-    const signatures = this.codeBlock.getSignatures();
-    for (const signature of signatures) {
-      const sigString = signature.toString();
-      if (!Object.prototype.hasOwnProperty.call(results, sigString)) {
-        results[sigString] = {
-          // @ts-expect-error still working on finalizing the design
-          signature,
-          sourceCodeBlock: this.codeBlock,
-        };
-      }
-    }
+  //   const signatures = this.codeBlock.getSignatures();
+  //   for (const signature of signatures) {
+  //     const sigString = signature.toString();
+  //     if (!Object.prototype.hasOwnProperty.call(results, sigString)) {
+  //       results[sigString] = {
+  //         signature,
+  //         sourceCodeBlock: this.codeBlock,
+  //       };
+  //     }
+  //   }
 
-    return Object.values(results);
-    // Use a set since answers often make multiple calls to the same method as examples
-    // return [...new Set(this.codeBlock.getSignatures().map(sig => sig.toString()))];
-  }
+  //   return Object.values(results);
+  //   // Use a set since answers often make multiple calls to the same method as examples
+  //   // return [...new Set(this.codeBlock.getSignatures().map(sig => sig.toString()))];
+  // }
 
   getAnnotations(terms: string[]): string[] {
     return this.find(terms)

@@ -3,7 +3,6 @@
     class="mx-0 py-3 text-truncate"
     @mouseenter="onMouseOver"
     @mouseleave="onMouseLeave"
-    @mouseup.capture="onMouseUp"
   >
     <code class="pa-0">
       <span
@@ -44,38 +43,53 @@ import { Vue, Component, Prop } from "vue-property-decorator";
 import Prism from "prismjs";
 import "prismjs/themes/prism.css";
 import "prismjs/components/prism-javascript";
-import { isImportToken, isFunctionToken } from "../../../common/types";
-import Signature from "../Signature";
+
+import Signature, {
+  Parameter,
+  IntegrationContext,
+} from "../../../common/Signature";
 
 @Component()
 export default class CallSignature extends Vue {
-  @Prop() readonly parentType!: string;
-  @Prop() readonly name!: string;
-  @Prop() readonly arguments!: Array<{ name: string; type: string }>;
-  @Prop() readonly returnType!: string;
+  @Prop() readonly signature!: Signature;
+  @Prop() readonly integrationContext!: IntegrationContext;
 
-  get signature(): Signature {
-    return new Signature(
-      this.name,
-      this.arguments,
-      this.returnType,
-      this.parentType
-    );
-  }
   abortDecoration = null;
   decorateScope = false;
   decorateArgs = Array(10).fill(false);
   decorateReturn = false;
 
-  get scope(): string {
+  get name(): string {
+    return this.signature.name;
+  }
+
+  get parentType(): string {
     if (
-      this.parentType === undefined ||
-      this.parentType === "any" ||
-      this.parentType === "unknown"
+      this.signature.parentType === undefined ||
+      this.signature.parentType === "any" ||
+      this.signature.parentType === "unknown"
     ) {
       return "";
     }
+    return this.signature.parentType;
+  }
 
+  get arguments(): Parameter[] {
+    return this.signature.parameters;
+  }
+
+  get returnType(): string {
+    if (
+      this.signature.returnType === undefined ||
+      this.signature.returnType === "any" ||
+      this.signature.returnType === "unknown"
+    ) {
+      return "";
+    }
+    return this.signature.returnType;
+  }
+
+  get scope(): string {
     return Prism.highlight(
       this.parentType,
       Prism.languages.javascript,
@@ -86,7 +100,7 @@ export default class CallSignature extends Vue {
   get args(): string[] {
     return this.arguments.map((arg) =>
       Prism.highlight(
-        this.prettyPrintType(arg.type),
+        Signature.prettyPrintType(arg.type),
         Prism.languages.javascript,
         "javascript"
       )
@@ -94,14 +108,6 @@ export default class CallSignature extends Vue {
   }
 
   get returnKind(): string {
-    if (
-      this.returnType === undefined ||
-      this.returnType === "any" ||
-      this.returnType === "unknown"
-    ) {
-      return "";
-    }
-
     return Prism.highlight(
       this.returnType,
       Prism.languages.javascript,
@@ -109,164 +115,40 @@ export default class CallSignature extends Vue {
     );
   }
 
-  prettyPrintType(type: string | undefined): string {
-    if (type === undefined || type === "any") {
-      return "unknown";
-    } else if (type === "RegExp") {
-      return "regex";
-    } else if (type?.endsWith("}[]")) {
-      return "object[]";
-    } else if (type?.endsWith("[]") && type?.includes("=>")) {
-      return "function[]";
-    } else if (type?.startsWith("{")) {
-      return "object";
-    } else if (type?.startsWith("(")) {
-      return "function";
-    }
-    return type;
-  }
-
-  compareTypes = (t1: string, t2: string): boolean => {
-    if (!t1 || !t2 || (t1 === "any" && t2 === "any")) {
-      return false;
-    }
-
-    if (t1.toLowerCase() === t2.toLowerCase()) {
-      return true;
-    }
-
-    if (t2.includes("|")) {
-      return t2.split("|").some((t) => this.compareTypes(t1, t.trim()));
-    }
-
-    const isT1Object = t1?.startsWith("{");
-    const isT2Object = t2?.startsWith("{");
-    if (isT1Object && isT1Object === isT2Object) {
-      return true;
-    }
-
-    const isT1Array = t1?.endsWith("[]");
-    const isT2Array = t2?.endsWith("[]");
-    if (isT1Array && isT1Array === isT2Array) {
-      return true;
-    }
-
-    const isT1Function = t1?.includes("=>");
-    const isT2Function = t2?.includes("=>");
-    if (isT1Function && isT1Function === isT2Function) {
-      return true;
-    }
-
-    return false;
-  };
-
-  onMouseUp(event: Event): void {
-    const selection = document.getSelection();
-    if (selection && !selection.isCollapsed) {
-      // console.log("CANCEL EVENT");
-      // event.stopPropagation();
-      // event.preventDefault();
-      this.$emit("selectionchange", selection);
-    }
-  }
-
   async onMouseOver(): Promise<void> {
     this.abortDecoration = false;
-    const cxt = await this.$host.getContext();
-    if (this.abortDecoration) {
-      return;
-    }
-
-    const parentDecoration = { backgroundColor: "rgba(39, 245, 185, 0.8)" };
-    const argumentDecoration = { backgroundColor: "rgba(39, 219, 245, 0.8)" };
-    const returnDecoration = { backgroundColor: "rgba(245, 176, 39, 0.8)" };
     const tokensToDecorate = [];
 
-    /*
-    console.log("CXT", cxt);
-
-    // For each cxt token: [t, f, f, f, t] (parentType, params, returnType)
-    const overlap = this.signature.getContextOverlap(cxt.tokens);
-    // cxt.filter((token, idx) => overlap[idx].some(t => t === true)).map
-
-
-    cxt.tokens.forEach((token, idx) => {
-      if (overlap[idx][0]) {
-        this.decorateScope = true;
-        tokensToDecorate.push({...token, decorationOptions: { backgroundColor: "rgba(39, 245, 185, 0.8)"  }});
-      }
-      for (let i = 1; i < overlap[idx].length - 1; i++) {
-        if (overlap[idx][i]) {
-          this.decorateArgs.splice(i - 1, 1, true);
-          tokensToDecorate.push({...token, decorationOptions: { backgroundColor: "rgba(39, 219, 245, 0.8)" }});
-        }
-      }
-      if (overlap[idx][overlap[idx].length - 1]) {
-        this.decorateReturn = true;
-        // tokensToDecorate.push({...token, backgroundColor: "rgba(245, 176, 39, 0.8)" });
+    const support = this.integrationContext;
+    if (support.parentTypes.length > 0) {
+      this.decorateScope = true;
+      tokensToDecorate.push(
+        ...support.parentTypes.map((t) => ({
+          ...t,
+          decorationOptions: { backgroundColor: "rgba(39, 245, 185, 0.8)" },
+        }))
+      );
+    }
+    support.parameterTypes.forEach((p, i) => {
+      if (p.length > 0) {
+        this.decorateArgs.splice(i, 1, true);
+        tokensToDecorate.push(
+          ...p.map((t) => ({
+            ...t,
+            decorationOptions: { backgroundColor: "rgba(39, 219, 245, 0.8)" },
+          }))
+        );
       }
     });
-    */
-    cxt.tokens.forEach((token) => {
-      if (isImportToken(token) && token.references.includes(this.parentType)) {
-        this.decorateScope = true;
-        tokensToDecorate.push({
-          ...token,
-          decorationOptions: parentDecoration,
-        });
-      } else if (isFunctionToken(token)) {
-        const paramTokens = [];
-        for (const param of token.parameters) {
-          if (this.compareTypes(param.type.name, this.parentType)) {
-            this.decorateScope = true;
-            paramTokens.push({
-              ...param,
-              decorationOptions: parentDecoration,
-            });
-          }
-
-          this.arguments.forEach((arg, i) => {
-            if (this.compareTypes(param.type.name, arg.type)) {
-              this.decorateArgs.splice(i, 1, true);
-              paramTokens.push({
-                ...param,
-                decorationOptions: argumentDecoration,
-              });
-            }
-          });
-        }
-
-        const varTokens = [];
-        for (const vari of token.variables) {
-          if (this.compareTypes(vari.type.name, this.parentType)) {
-            this.decorateScope = true;
-            varTokens.push({
-              ...vari,
-              decorationOptions: parentDecoration,
-            });
-          }
-
-          this.arguments.forEach((arg, i) => {
-            if (this.compareTypes(vari.type.name, arg.type)) {
-              this.decorateArgs.splice(i, 1, true);
-              varTokens.push({
-                ...vari,
-                decorationOptions: argumentDecoration,
-              });
-            }
-          });
-        }
-        tokensToDecorate.push(...varTokens, ...paramTokens);
-
-        if (this.compareTypes(token.returnType, this.returnType)) {
-          this.decorateReturn = true;
-          // tokensToDecorate.push({
-          //   ...token,
-          //   decorationOptions: returnDecoration,
-          // });
-        }
-      }
-    });
+    if (support.returnTypes.length > 0) {
+      this.decorateReturn = true;
+      // tokensToDecorate.push(
+      //   ...support.returnTypes.map((t) => ({
+      //     ...t,
+      //     decorationOptions: { backgroundColor: "rgba(245, 176, 39, 0.8)" },
+      //   }))
+      // );
+    }
 
     await this.$host.decorate(tokensToDecorate);
     if (this.abortDecoration) {

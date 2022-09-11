@@ -1,12 +1,15 @@
 import * as vscode from "vscode";
 // import NodeModule from "./NodeModule";
-import WebAppView, { SaveFileMessage, ReadFileMessage, GetTokensMessage, DecorateCodeTokensMessage } from "./WebAppView";
-import { CodeToken, TokenPosition } from "../common/types";
+import WebAppView, { SaveFileMessage, ReadFileMessage, GetTokensMessage, DecorateCodeTokensMessage, SignatureWorkerMessage } from "./WebAppView";
+import { CancellationToken, CodeToken, StackOverflowCallSignature, TokenPosition } from "../common/types";
 import Util from "./Util";
 import Lexer from "./Lexer";
-import { CodeBlock } from "../common/CodeBlock";
+import { CodeBlock } from "../common/CodeBlock2";
+import WorkerPool, { PoolWorker } from "../common/WorkerPool";
+import WebWorker from "../common/WebWorker";
 
 export async function activate(context: vscode.ExtensionContext) {
+  console.log("[**] ACTIVATING SCOUT");
   const activeDecorations: vscode.TextEditorDecorationType[] = [];
   const contextCache: Map<string, { version: number, tokens: CodeToken[]}> = new Map();
   
@@ -28,6 +31,16 @@ export async function activate(context: vscode.ExtensionContext) {
   } else {
     await context.secrets.store("SEARCH_API_TOKEN", searchApiToken);
   }
+  
+  const scriptUrl = vscode.Uri.joinPath(context.extensionUri, "dist", "common", "signatureWorker.js");
+  // const response = await fetch(scriptUrl.fsPath);
+  // if (!response.ok) {
+  //   throw new Error(`Failed to load worker script from ${scriptUrl}`);
+  // }
+  // const blob = await response.blob();
+  // const scriptURL = URL.createObjectURL(blob);
+  const pool = new WorkerPool<{pageURL: string, searchTerms: string[]}, StackOverflowCallSignature[]>(scriptUrl.fsPath);
+
 
   const provider = new WebAppView(context.extensionUri);
 
@@ -55,6 +68,44 @@ export async function activate(context: vscode.ExtensionContext) {
     return { filename, tokens };
   };
 
+  // provider.contextMessageListener = async () => {
+  //   let filename: string;
+  //   const codeTokens: CodeToken[] = [];
+  //   const editor = vscode.window.activeTextEditor;
+  //   if (editor) {
+  //     filename = editor.document.fileName;
+  //     const position = editor.selection.active;
+  //     const code = new CodeBlock(editor.document.getText(), filename);
+  //     // Get the function containing position
+  //     const activeFunction = code.getFunctions().find(fn => {
+  //       const startPosition = new vscode.Position(fn.getStartLineNumber(true), fn.getStartLinePos(true));
+  //       const endPosition = editor.document.positionAt(fn.getEnd());
+  //       const fnRange = new vscode.Range(startPosition, endPosition);
+  //       return fnRange.contains(position);
+  //     });
+  //     if (activeFunction) {
+  //       const fnId = `${filename} ${activeFunction.getStartLineNumber()}:${activeFunction.getStartLinePos()}-${activeFunction.getEnd()}`;
+  //       const cacheEntry = contextCache.get(fnId);
+  //       const documentVersion = editor.document.version;
+  //       if (cacheEntry && cacheEntry.version === documentVersion) {
+  //         return cacheEntry.tokens;
+  //       }
+  //       const imports = code.getImports();
+  //       // Only include external imports which are referenced in the active function
+  //       const importTokens = imports
+  //           .flatMap(imp => code.getImportTokens(imp))
+  //           .filter(token => !token.module.name.includes("/"))
+  //           .filter(token => token.references.some(ref => activeFunction.containsRange(ref?.start ?? -1 , ref?.end ?? -1)));
+  //           // .map(token => ({ ...token, source: filename }));
+  //       const functionTokens = code.getFunctionTypes(activeFunction); // { ...code.getFunctionTypes(activeFunction), source: filename };
+  //       codeTokens.push(...importTokens, functionTokens);
+  //       contextCache.set(fnId, { version: documentVersion, tokens: codeTokens });
+  //     }
+  //   }
+  //   return codeTokens;
+  // };
+
+
   provider.contextMessageListener = async () => {
     let filename: string;
     const codeTokens: CodeToken[] = [];
@@ -62,30 +113,21 @@ export async function activate(context: vscode.ExtensionContext) {
     if (editor) {
       filename = editor.document.fileName;
       const position = editor.selection.active;
-      const code = new CodeBlock(editor.document.getText(), filename);
-      // Get the function containing position
-      const activeFunction = code.getFunctions().find(fn => {
-        const startPosition = new vscode.Position(fn.getStartLineNumber(true), fn.getStartLinePos(true));
-        const endPosition = editor.document.positionAt(fn.getEnd());
-        const fnRange = new vscode.Range(startPosition, endPosition);
-        return fnRange.contains(position);
-      });
-      if (activeFunction) {
-        const fnId = `${filename} ${activeFunction.getStartLineNumber()}:${activeFunction.getStartLinePos()}-${activeFunction.getEnd()}`;
+      const cursorPosition = editor.document.offsetAt(position);// .lineAt(position).range.end.character;
+      //position.character;
+      console.log("Cursor position is", cursorPosition);
+
+      const scriptUrl = vscode.Uri.joinPath(context.extensionUri, "dist", "common", "contextWorker.js");
+      const worker = new WebWorker(scriptUrl.fsPath);
+      const result = await worker.run({text: editor.document.getText(), filename, cursorPosition}) as {functionId: string; codeTokens: CodeToken[]};
+      const fnId = result.functionId;
+      if (fnId) {      
         const cacheEntry = contextCache.get(fnId);
         const documentVersion = editor.document.version;
         if (cacheEntry && cacheEntry.version === documentVersion) {
           return cacheEntry.tokens;
         }
-        const imports = code.getImports();
-        // Only include external imports which are referenced in the active function
-        const importTokens = imports
-            .flatMap(imp => code.getImportTokens(imp))
-            .filter(token => !token.module.name.includes("/"))
-            .filter(token => token.references.some(ref => activeFunction.containsRange(ref?.start ?? -1 , ref?.end ?? -1)));
-            // .map(token => ({ ...token, source: filename }));
-        const functionTokens = code.getFunctionTypes(activeFunction); // { ...code.getFunctionTypes(activeFunction), source: filename };
-        codeTokens.push(...importTokens, functionTokens);
+        codeTokens.push(...result.codeTokens);
         contextCache.set(fnId, { version: documentVersion, tokens: codeTokens });
       }
     }
@@ -155,6 +197,35 @@ export async function activate(context: vscode.ExtensionContext) {
     }
   };
 
+  provider.signatureWorkerMessageListener = async (message: SignatureWorkerMessage) => {
+    const url = message.data.url;
+    const keywords = message.data.keywords;
+    const loadTimeout = 20000;
+
+    let signatures: StackOverflowCallSignature[] | undefined = [];
+    const token: CancellationToken = { cancel: () => {}};
+    let worker: PoolWorker<{pageURL: string, searchTerms: string[]}, StackOverflowCallSignature[]> | undefined = undefined;
+    let startTime = new Date().getTime();
+  
+    try {
+      let timerId = setTimeout(() => token.cancel(), loadTimeout);
+      worker = await pool.acquireWorker(token);
+      console.log("[**] Worker acquired");
+      clearTimeout(timerId);
+      
+      timerId = setTimeout(() => worker?.cancel(), loadTimeout - (new Date().getTime() - startTime));
+      signatures = await worker?.run({ pageURL: url, searchTerms: keywords });
+      console.log("[**] Worker complete");
+      clearTimeout(timerId);
+    } finally {
+      if (worker) {
+        pool.releaseWorker(worker);
+      }
+    }
+
+    return signatures ?? [];
+  };
+
   provider.saveFileMessageListener = async (message: SaveFileMessage) => {
     const filename = message.data.filename;
     const content = message.data.content;
@@ -185,7 +256,7 @@ export async function activate(context: vscode.ExtensionContext) {
     "scout.search",
     async (searchQuery: string) => {
       if (searchQuery) {
-        provider.sendMessage("search", searchQuery);
+        provider.sendMessage("search", "", searchQuery);
       }
       await vscode.commands.executeCommand("workbench.view.extension.scout");
     }
