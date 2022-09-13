@@ -76,7 +76,6 @@ export default class Search {
     action: string,
     data?: string | Record<string, unknown>
   ): void {
-    console.info(`[LOG]: ${action}, ${component}, ${url}, ${JSON.stringify(data)}`);
     const event: EventLog = {
       timestamp: new Date(),
       url,
