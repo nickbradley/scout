@@ -1,29 +1,23 @@
-import { CodeBlock } from "../CodeBlock2";
-import { CodeToken} from "../types";
-
+import process from "process";
 import { parentPort } from "worker_threads";
 
+import { CodeBlock } from "../CodeBlock";
+import { CodeToken} from "../../types";
 
-// self.addEventListener("unhandledrejection", (event) => {
-//     // Prevent this being reported (Firefox doesn't currently respect this)
-//     event.preventDefault();
-  
-//     // Throwing here will trigger the worker's `error` event, since this
-//     // isn't `async` code and nothing handles it
-//     throw event.reason;
-//   });
+process.on("uncaughtException", (error) => {
+  throw error;
+});
 
-if (!parentPort) {
-  throw new Error("parentPort is not defined");
-}
-parentPort.on("message", async function (message) {
+process.on("unhandledRejection", (reason) => {
+  throw reason;
+});
+
+parentPort!.on("message", async function (message) {
     let fnId = "";
     const codeTokens: Array<CodeToken> = [];
     const text = message.text;
     const filename = message.filename;
     const cursorPosition = message.cursorPosition;
-
-    console.log("ContextWorker", filename, cursorPosition);
     const code = new CodeBlock(text, filename);
 
     // Get the function containing position
@@ -40,5 +34,5 @@ parentPort.on("message", async function (message) {
         codeTokens.push(...importTokens, functionTokens);
     }
   
-    parentPort.postMessage({ functionId: fnId, codeTokens });
+    parentPort!.postMessage({ functionId: fnId, codeTokens });
   });

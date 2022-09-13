@@ -82,3 +82,24 @@ export function isImportToken(token: CodeToken): token is ImportToken {
 export function isFunctionToken(token: CodeToken): token is FunctionToken {
   return typeof (token as any)["returnType"] === "string";
 }
+
+export interface Recommendation {
+  readonly text: string;
+  readonly name: string;
+  readonly parameters: string[];
+  readonly returnType: string;
+  readonly parentType: string | undefined;
+  readonly examples: Array<{
+    answerId: string;
+    answerURL: string;
+    call: string;
+    declaration: string;
+    text: string;
+  }>;
+  readonly metrics: {
+    occurrences: number;
+    isFromAcceptedAnswer: boolean;
+    isFromPopularAnswer: boolean;
+    isFromLatestAnswer: boolean;
+  };
+}

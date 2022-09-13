@@ -12,8 +12,8 @@ import {
   findNodes,
   hasAttribute,
 } from "@web/parse5-utils";
-import { CodeBlock } from "./CodeBlock2";
-import { StackOverflowCallSignature } from "../common/types";
+import { CodeBlock } from "./CodeBlock";
+import { StackOverflowCallSignature } from "../types";
 
 export default class StackOverflowPage {
   public readonly answers: StackOverflowAnswer[];

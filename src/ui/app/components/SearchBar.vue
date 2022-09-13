@@ -22,7 +22,7 @@
 <script lang="ts">
 import { Vue, Component, Prop, Watch } from "vue-property-decorator";
 import Search, { Result } from "@/Search";
-import CodeContext from "../../../common/CodeContext";
+import CodeContext from "../CodeContext";
 import ContextList from "@/components/ContextList.vue";
 import SerpSearchProvider from "@/SerpSearchProvider";
 

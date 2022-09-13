@@ -47,7 +47,7 @@ import "prismjs/components/prism-javascript";
 import Signature, {
   Parameter,
   IntegrationContext,
-} from "../../../common/Signature";
+} from "../../../host/Signature";
 
 @Component()
 export default class CallSignature extends Vue {

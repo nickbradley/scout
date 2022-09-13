@@ -22,14 +22,13 @@
 		".vscode-test-web"
 	],
 	"files": [
-		"../common/types.ts",
-		"../common/typings/markdown-link-extractor.d.ts"
+		"../types.ts",
 	],
 	// "typeRoots": [
 	// 	"typings/",
 	// 	"node_modules/@types"
 	// ],
-	"references": [
-		{"path": "../common"}
-	]
+	// "references": [
+	// 	{"path": "../common"}
+	// ]
 }

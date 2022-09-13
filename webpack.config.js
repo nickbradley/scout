@@ -106,8 +106,8 @@ const webWorkerConfig = {
   mode: "none",
   target: 'node',
   entry: {
-    page: { import: './src/common/workers/signatureWorker.ts', filename: "./common/signatureWorker.js" },
-    code: { import: './src/common/workers/contextWorker.ts', filename: "./common/contextWorker.js"},
+    page: { import: './src/host/workers/signatureWorker.ts', filename: "./common/signatureWorker.js" },
+    code: { import: './src/host/workers/contextWorker.ts', filename: "./common/contextWorker.js"},
   },
   output: {
     library: {

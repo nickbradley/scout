@@ -1,26 +1,20 @@
 import {
   Project,
-  ts,
   Node,
   SourceFile,
   CallExpression,
   Diagnostic,
+  JSDoc,
+  JSDocTag,
+  JSDocParameterTag,
+  Type,
+  Identifier,
   FunctionDeclaration,
   ImportDeclaration,
-  Identifier,
+  ScriptTarget,
+  SyntaxKind,
 } from "ts-morph";
-import { CodeToken, FunctionToken, ImportToken, TokenPosition } from "./types";
-// import { Signature } from "./Signature";
-
-export interface Signature {
-  readonly text: string;
-  readonly name: string;
-  readonly parameters: string[];
-  readonly returnType: string;
-  readonly parentType: string | undefined;
-  readonly usage: string;
-  readonly definition: string;
-}
+import { CallSignature, CodeToken, FunctionToken, ImportToken, TokenPosition } from "../types";
 
 export interface IsCodeAnnotation {
   value: string;
@@ -30,52 +24,9 @@ export interface IsCodeBlock {
   content: string;
 }
 
-function nodeToStr(node: Node): string {
-  const type = node.getType().getBaseTypeOfLiteralType().getText();
-  if (type === "any") {
-    return "unknown";
-  } else if (type === "RegExp") {
-    return "regex";
-  } else if (type.startsWith("{")) {
-    return "object";
-  } else if (type.startsWith("(")) {
-    return "function";
-  }
-  return type;
-}
-
 export class CodeBlock implements IsCodeBlock {
-  // public readonly program: ts.Program;
-
   private readonly project: Project;
   private readonly sourceFile: SourceFile;
-  // private readonly checker: TypeChecker;
-
-  // constructor(readonly content: string) {
-  //     const lang = "js";
-  //     const filename = `snippet.${lang}`;  // this is a virtual filename
-  //     const options: ts.CompilerOptions = {
-  //         allowJs: true,
-  //         module: ts.ModuleKind.None,
-  //         target: ts.ScriptTarget.ES2021,
-  //         strict: false,
-  //     }
-
-  //     this.sourceFile = ts.createSourceFile(
-  //         filename,
-  //         content,
-  //         ts.ScriptTarget.ES2021,
-  //         true
-  //     );
-
-  //     this.program = ts.createProgram([filename], options);
-  //     this.checker = this.program.getTypeChecker();
-
-  //     const diagnostics = ts.getPreEmitDiagnostics(this.program);
-  //     console.log("Error count", diagnostics.length);
-  //     // fs.writeFileSync("error.log", JSON.stringify(diagnostics));
-  //     console.log(diagnostics[0]);
-  // }
 
   constructor(readonly content: string, readonly source?: string) {
     // Using ts-morph constructor because (for some reason) it causes getSymbolAtLocation to actually return something
@@ -83,86 +34,173 @@ export class CodeBlock implements IsCodeBlock {
       useInMemoryFileSystem: true,
       compilerOptions: {
         allowJs: true,
-        target: ts.ScriptTarget.ES2021,
+        target: ScriptTarget.ES2021,
         noEmit: true,
       },
     });
 
-    this.sourceFile = this.project.createSourceFile("snippet.js", content); //, {scriptKind: ts.ScriptKind.TS}
-    // this.program = project.createProgram();
-    // this.checker = this.project.getTypeChecker();
-
-    // const diagnostics = ts.getPreEmitDiagnostics(project.createProgram());
+    this.sourceFile = this.project.createSourceFile("snippet.js", content);
   }
 
   get diagnostics(): Diagnostic[] {
     return this.project.getPreEmitDiagnostics();
   }
 
-  public getSignatures(): Signature[] {
-    const sigs: Signature[] = [];
-    const calls = this.getUnnestedCallExpressions();
-    const getDefn = (node: Node): string => {
-      let definition;
-      const defnSymbol = this.project
-        .getTypeChecker()
-        .getSymbolAtLocation(node);
-      if (defnSymbol) {
-        const valueDeclaration = defnSymbol.getValueDeclaration();
-        definition = valueDeclaration?.getText();
-        if (
-          valueDeclaration &&
-          valueDeclaration.isKind(ts.SyntaxKind.VariableDeclaration)
-        ) {
-          const valueStatement = valueDeclaration?.getVariableStatement();
-          definition = valueStatement?.getText();
-        }
+  public getNodeDefinition(node: Node): string {
+    let definition: string | undefined;
+    const defnSymbol = this.project.getTypeChecker().getSymbolAtLocation(node);
+    if (defnSymbol) {
+      const valueDeclaration = defnSymbol.getValueDeclaration();
+      definition = valueDeclaration?.getText();
+      if (
+        valueDeclaration &&
+        valueDeclaration.isKind(SyntaxKind.VariableDeclaration)
+      ) {
+        const valueStatement = valueDeclaration?.getVariableStatement();
+        definition = valueStatement?.getText();
       }
-      return definition ?? "";
-    };
+    }
+    return definition ?? "";
+  }
+
+  public getJsDocParams(
+    jsDocs: JSDoc[]
+  ): { name: string; type: Type | undefined }[] {
+    const paramTags: { name: string; type: Type | undefined }[] = [];
+    jsDocs.forEach((jsDoc: JSDoc) => {
+      // const description = jsDoc.getDescription();
+      // const comment = jsDoc.getCommentText();
+      const tags = jsDoc.getTags();
+
+      tags?.forEach((tag: JSDocTag) => {
+        const tagName = tag.getTagName();
+        // const tagcomment = tag.getCommentText();
+        // const tagText = tag.getText();
+        let paramName = "";
+        let paramType;
+
+        if (tag instanceof JSDocParameterTag) {
+          const paramTag = tag as JSDocParameterTag;
+          paramName = paramTag.getName();
+          paramType = paramTag.getType();
+        }
+        if (tagName === "param") {
+          paramTags.push({ name: paramName, type: paramType });
+        }
+      });
+    });
+    return paramTags;
+  }
+
+  public prettyPrintType(type: string | undefined): string {
+    if (type === undefined || type === "any") {
+      return ""; // "unknown"
+    } else if (type === "RegExp") {
+      return "regex";
+    } else if (type?.endsWith("}[]")) {
+      return "object[]";
+    } else if (type?.endsWith("[]") && type?.includes("=>")) {
+      return "function[]";
+    } else if (type?.startsWith("{")) {
+      return "object";
+    } else if (type?.startsWith("(")) {
+      return "function";
+    }
+    return type;
+  }
+
+  public getSignatures(): CallSignature[] {
+    const sigs: CallSignature[] = [];
     const checker = this.project.getTypeChecker();
+    const calls = this.getUnnestedCallExpressions();
 
     for (const call of calls) {
-      const signature = checker.getResolvedSignature(call);
-      const declaration = signature?.getDeclaration(); //.getText() returns the full signature
-
-      let parentType;
-      let definition = "";
-      const exp = call.getExpression();
-      if (Node.isPropertyAccessExpression(exp)) {
-        parentType = nodeToStr(exp.getExpression());
-        definition = getDefn(exp.getExpression());
-      }
-      let name = "foo";
       const usage = call.getText();
+      const signature = checker.getResolvedSignature(call);
+      const declaration = signature?.getDeclaration();
+      const returnType =
+        declaration?.getReturnType() ??
+        signature?.getReturnType() ??
+        call.getType();
+      const exp = call.getExpression();
 
+      let definition = "";
+      let parentType = declaration?.getParent()?.getType();
+      if (Node.isPropertyAccessExpression(exp)) {
+        if (!parentType) {
+          parentType = exp.getExpression().getType();
+        }
+        definition = this.getNodeDefinition(exp.getExpression());
+      }
+
+      let name = "";
       if (declaration && Node.isMethodSignature(declaration)) {
         name = declaration.getName();
       } else if (Node.isPropertyAccessExpression(exp)) {
         name = exp.getName();
       } else if (Node.isIdentifier(exp)) {
         name = exp.getText();
-        definition = getDefn(exp);
+        definition = this.getNodeDefinition(exp);
       }
 
-      const args = call.getArguments().map(nodeToStr); // CodeBlock.getTypeName(arg.kind));
-      // console.log("ARGUMENTS", args, call.arguments.map(a => a.kind));
-      const returnType = nodeToStr(call); //.getReturnType().getText();//this.checker.typeToString(this.checker.getTypeAtLocation(call)); // this.checker.typeToString(signature?.getReturnType());
-
-      sigs.push(
-        // new Signature(name, args, returnType, parentType, usage, definition)
-        {
-          text: `${parentType ? parentType + "." : ""}${name}(${args
-            .map((p) => p || "unknown")
-            .join(", ")}): ${returnType}`,
-          name,
-          parameters: args,
-          returnType,
-          parentType,
-          usage,
-          definition,
+      const jsdocs =
+        declaration &&
+        !Node.isFunctionTypeNode(declaration) &&
+        !Node.isConstructorTypeNode(declaration) &&
+        !Node.isJSDocFunctionType(declaration)
+          ? declaration.getJsDocs()
+          : [];
+      const paramTags = this.getJsDocParams(jsdocs);
+      const declarationParamters =
+        declaration && !Node.isIndexSignatureDeclaration(declaration)
+          ? declaration.getParameters()
+          : [];
+      const args = call.getArguments().map((arg, i) => {
+        const param = declarationParamters[i];
+        const name = param?.getText();
+        let type = param?.getType();
+        if (!type || type.isAny() || type.isUnknown()) {
+          const jsDocParamTag = paramTags.find(
+            (paramTag) => paramTag.name === name
+          );
+          if (jsDocParamTag && jsDocParamTag.type) {
+            type = jsDocParamTag.type;
+          } else {
+            type = arg.getType();
+          }
         }
+
+        return { name, type };
+      });
+
+      const returnTypeText = returnType?.getBaseTypeOfLiteralType().getText();
+      const parentTypeText = parentType?.getBaseTypeOfLiteralType().getText();
+      const argsTypeText = args.map((arg) =>
+        Object.assign(arg, {
+          type: arg.type.getBaseTypeOfLiteralType().getText(),
+        })
       );
+
+      const prettyParentType = this.prettyPrintType(parentTypeText);
+      const prettyReturnType = this.prettyPrintType(returnTypeText);
+      const prettyArgTypes = argsTypeText.map((arg) => {
+        const prettyArgType = this.prettyPrintType(arg.type);
+        return prettyArgType ? prettyArgType : "unknown";
+      });
+      sigs.push({
+        text: `${
+          prettyParentType ? prettyParentType + "." : ""
+        }${name}(${prettyArgTypes.join(", ")})${
+          prettyReturnType ? ": " + prettyReturnType : ""
+        }`,
+        parentType: parentTypeText,
+        name,
+        arguments: argsTypeText,
+        returnType: returnTypeText,
+        usage,
+        definition,
+        source: this.content,
+      });
     }
 
     return sigs;
@@ -170,13 +208,10 @@ export class CodeBlock implements IsCodeBlock {
 
   public getCallExpressions(): CallExpression[] {
     const nodes: CallExpression[] = [];
-    const matcher = (node: Node<ts.Node>) => {
+    const matcher = (node: Node) => {
       if (Node.isCallExpression(node)) {
         nodes.push(node);
       }
-      // if (node.kind === ts.SyntaxKind.CallExpression) {
-      //     nodes.push(node as CallExpression);
-      // }
       node.forEachChild(matcher);
     };
     this.sourceFile.forEachChild(matcher);
@@ -192,7 +227,8 @@ export class CodeBlock implements IsCodeBlock {
 
       if (Node.isIdentifier(exp)) {
         // ignore alert() call expressions
-        if (exp.getText() === "alert") {
+        const text = exp.getText();
+        if (text === "alert" || text === "require") {
           flag = false;
         }
       } else if (Node.isPropertyAccessExpression(exp)) {
@@ -215,7 +251,6 @@ export class CodeBlock implements IsCodeBlock {
     }
     return callsToReturn;
   }
-
   getTokenFromIdentifier(identifier: Identifier): CodeToken {
     return {
       name: identifier.getText(),
@@ -280,7 +315,7 @@ export class CodeBlock implements IsCodeBlock {
     const namedBindings = importClause?.getNamedBindings();
     const moduleNode = importDeclaration.getModuleSpecifier();
 
-    const importNodes = [];
+    const importNodes: Identifier[] = [];
     if (Node.isNamespaceImport(namedBindings)) {
       // import * as c from 'foo'
       const identifier = namedBindings.getNameNode();
@@ -321,5 +356,3 @@ export class CodeBlock implements IsCodeBlock {
     }
   }
 }
-
-

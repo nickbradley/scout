@@ -28,7 +28,6 @@ export default class WebWorker<T, U> {
   }
 
   public async run(data: T): Promise<U> {
-    console.log("[**] Running web worker", data);
     if (this._status !== Status.idle) {
       throw new Error("Worker is not available.");
     }

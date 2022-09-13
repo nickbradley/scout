@@ -33,9 +33,9 @@
     ]
   },
   "files": [
-    "../common/types.ts"
+    "../types.ts"
   ],
-  "references": [
-    { "path": "../common" }
-  ]
+  // "references": [
+  //   { "path": "../common" }
+  // ]
 }

@@ -1,5 +1,5 @@
 import * as vscode from "vscode";
-import { AppConfig, CodeToken, StackOverflowCallSignature } from "../common/types";
+import { AppConfig, CodeToken, StackOverflowCallSignature } from "../types";
 
 type MessageHandler<T, U> = (message: T) => Promise<U> | U;
 

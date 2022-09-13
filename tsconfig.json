@@ -3,7 +3,6 @@
     "include": [],
     "references": [
         { "path": "./src/ui" },
-        { "path": "./src/common" },
         { "path": "./src/host" }
     ]
 }

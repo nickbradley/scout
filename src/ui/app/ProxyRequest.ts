@@ -33,7 +33,7 @@ export default class ProxyRequest {
     };
 
     if (options.requestedWith) {
-      Object.assign(init.headers, { "x-requested-with": options.requestedWith });
+      Object.assign(init.headers!, { "x-requested-with": options.requestedWith });
     }
     const timerId = setTimeout(() => controller.abort(), options.fetchTimeout ?? defaultOptions.fetchTimeout);
     const res = await fetch(`${proxyUrl}/${url}`, init);

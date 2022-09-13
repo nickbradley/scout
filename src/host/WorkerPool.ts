@@ -1,7 +1,7 @@
-import WebWorker from "./WebWorker";
-import { CancellationToken } from "./types";
+import WorkerThread from "./WorkerThread";
+import { CancellationToken } from "../types";
 
-export type PoolWorker<T, U> = WebWorker<T, U> & { isAcquired: boolean; };
+export type PoolWorker<T, U> = WorkerThread<T, U> & { isAcquired: boolean; };
 
 export default class WorkerPool<T, U> {
   private readonly workers: PoolWorker<T, U>[];
@@ -22,7 +22,7 @@ export default class WorkerPool<T, U> {
     this.queue = [];
     this.workers = new Array(maxWorkers);
     for (let i = 0; i < maxWorkers; i++) {
-      const worker = Object.assign(new WebWorker<T, U>(scriptURL), {
+      const worker = Object.assign(new WorkerThread<T, U>(scriptURL), {
         isAcquired: false,
       });
       this.workers[i] = worker;

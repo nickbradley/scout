@@ -1,4 +1,3 @@
-import Page from "@/Page";
 import CodeContext from "@/CodeContext";
 
 export interface SearchProvider {
@@ -14,8 +13,6 @@ export interface Result {
   title: string;
   snippet: string;
   displayLink: string;
-  page?: Page;
-
   date?: string;
   extensions?: string[];
   snippetHighlightWords: string[];

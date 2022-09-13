@@ -13,7 +13,7 @@
 
 <script lang="ts">
 import { Vue, Component, Prop, Watch } from "vue-property-decorator";
-import CodeContext from "../../../common/CodeContext";
+import CodeContext from "../CodeContext";
 import { ContextToken } from "@/types";
 
 @Component

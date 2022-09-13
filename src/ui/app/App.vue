@@ -188,7 +188,7 @@
       "
     >
       <!-- HACK: Use "v-if" here to force element to rerender (and load the correct URL) -->
-      <PageViewer
+      <StackOverflowPage
         v-if="dialog"
         :url="displayUrl"
         :title="displayTitle"
@@ -203,7 +203,7 @@
         @selectionchange="
           (text) => search.logEvent(displayUrl, 'page', 'selection', text)
         "
-      ></PageViewer>
+      ></StackOverflowPage>
     </v-dialog>
     <Walkthrough
       v-if="!wtDisable && wtStep <= 4 && wtShow"
@@ -221,17 +221,17 @@ import SearchResult from "@/components/SearchResult.vue";
 import Walkthrough from "@/components/Walkthrough.vue";
 import GoogleSnippetProjection from "@/components/GoogleSnippetProjection.vue";
 import SignatureListProjection from "@/components/SignatureListProjection.vue";
-import PageViewer from "@/components/PageViewer.vue";
+import StackOverflowPage from "@/components/StackOverflowPage.vue";
 
 import Search, { Result } from "@/Search";
-import CodeContext from "../../common/CodeContext";
+import CodeContext from "./CodeContext";
 
 import {
   AppConfig,
   isImportToken,
   isFunctionToken,
   CodeToken,
-} from "../../common/types";
+} from "../../types";
 import { resultsCache } from "./resultsCache";
 
 interface AppEvent {
@@ -265,7 +265,7 @@ interface TaskLogEntry {
     Walkthrough,
     GoogleSnippetProjection,
     SignatureListProjection,
-    PageViewer,
+    StackOverflowPage,
   },
 })
 export default class App extends Vue {

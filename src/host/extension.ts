@@ -1,11 +1,10 @@
 import * as vscode from "vscode";
 // import NodeModule from "./NodeModule";
 import WebAppView, { SaveFileMessage, ReadFileMessage, GetTokensMessage, DecorateCodeTokensMessage, SignatureWorkerMessage } from "./WebAppView";
-import { CancellationToken, CodeToken, StackOverflowCallSignature, TokenPosition } from "../common/types";
+import { CancellationToken, CodeToken, StackOverflowCallSignature, TokenPosition } from "../types";
 import Util from "./Util";
-import Lexer from "./Lexer";
-import WorkerPool, { PoolWorker } from "../common/WorkerPool";
-import WebWorker from "../common/WebWorker";
+import WorkerPool, { PoolWorker } from "./WorkerPool";
+import WebWorker from "./WorkerThread";
 
 export async function activate(context: vscode.ExtensionContext) {
   const activeDecorations: vscode.TextEditorDecorationType[] = [];
@@ -34,6 +33,7 @@ export async function activate(context: vscode.ExtensionContext) {
   const pool = new WorkerPool<{pageURL: string, searchTerms: string[]}, StackOverflowCallSignature[]>(scriptUrl.fsPath);
   const provider = new WebAppView(context.extensionUri);
 
+  // TODO: Remove me
   provider.tokensMessageListener = async (msg: GetTokensMessage) => {
     let tokens: string[] = [];
     let sourceText = "";
@@ -45,14 +45,8 @@ export async function activate(context: vscode.ExtensionContext) {
     } else {
       const editor = vscode.window.activeTextEditor;
       filename = editor?.document.uri.fsPath ?? "";
+      // eslint-disable-next-line no-unused-vars
       sourceText = editor?.document.getText() ?? "";
-    }
-
-    try {
-      const lexer = new Lexer();
-      tokens = lexer.parse(sourceText);
-    } catch (err) {
-      console.warn(`Failed to tokenize ${filename}`, err);
     }
 
     return { filename, tokens };

@@ -1,4 +1,4 @@
-import ProxyRequest from "../../common/ProxyRequest";
+import ProxyRequest from "./ProxyRequest";
 import { Result, SearchOptions, SearchProvider } from "./Search";
 
 interface GoogleOrganicResult {

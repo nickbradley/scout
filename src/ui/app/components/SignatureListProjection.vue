@@ -90,8 +90,8 @@ import SignatureExample from "@/components/SignatureExample.vue";
 import PrettyCode from "@/components/PrettyCode.vue";
 import SignatureStats from "@/components/SignatureStats.vue";
 import { Recommendation } from "@/Page";
-import { CodeToken, StackOverflowCallSignature } from "../../../common/types";
-import Signature from "../../../common/Signature";
+import { CodeToken, StackOverflowCallSignature } from "../types";
+import Signature from "../../../host/Signature";
 
 @Component({
   components: {

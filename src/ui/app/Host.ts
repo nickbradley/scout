@@ -1,11 +1,11 @@
-import CodeContext from "../../common/CodeContext";
+import CodeContext from "./CodeContext";
 import { WebviewApi } from "vscode-webview";
 import {
   AppConfig,
   CodeToken,
   ContextToken,
   StackOverflowCallSignature,
-} from "../../common/types";
+} from "../../types";
 
 export interface HostServiceProvider {
   saveFile: (filename: string, content: string) => Promise<void>;
