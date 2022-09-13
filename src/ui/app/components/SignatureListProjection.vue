@@ -10,7 +10,11 @@
       <v-expansion-panel
         v-for="(rec, i) of recommendations.slice(0, count)"
         :key="i"
-        @change="$emit('expand', rec.text)"
+        @change="
+          if (panel !== i) {
+            $emit('expand', rec.text);
+          }
+        "
       >
         <div
           @mouseenter="$emit('mouseenter', rec)"
