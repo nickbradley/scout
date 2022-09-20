@@ -141,7 +141,7 @@ export default class SignatureListProjection extends Vue {
           metrics: {
             occurrences:
               // hack to show tutorial result in nice order for screenshot
-              sig.text === "T[].reduce(function): T" ? 1000 : 0,
+              sig.text === "T[].reduce(function, U): U" ? 1000 : 0,
             keywordDensity: sig.answerKeywords.length / sig.answerWordCount,
             typeOverlap:
               support.parentTypes.length +

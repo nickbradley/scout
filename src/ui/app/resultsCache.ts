@@ -2,20 +2,20 @@
 export const resultsCache = {
   "javascript sum object property array site:stackoverflow.com": [
     {
-      title: "Better way to sum a property value in an array - Stack Overflow",
-      url: "https://stackoverflow.com/questions/23247859/better-way-to-sum-a-property-value-in-an-array",
-      displayLink: "https://stackoverflow.com › questions › better-way-to-s...",
-      snippet:
-        "18 Answers 18 · brilliant answer, is it possible to put $scope.travelerTotal = $scope.sum($scope. · Yes if it comes after the sum function is created. – Gruff ...",
-      snippetHighlightWords: ["sum", "sum"],
-    },
-    {
       title: "Sum values of objects in array - javascript - Stack Overflow",
       url: "https://stackoverflow.com/questions/35480773/sum-values-of-objects-in-array",
       displayLink: "https://stackoverflow.com › questions › sum-values-of-...",
       snippet:
         "The key feature of the function is the Array#reduce methode and a property which returns the actual count calue and the actual property value. Show activity on ...",
       snippetHighlightWords: ["Array", "property", "property value"],
+    },
+    {
+      title: "Better way to sum a property value in an array - Stack Overflow",
+      url: "https://stackoverflow.com/questions/23247859/better-way-to-sum-a-property-value-in-an-array",
+      displayLink: "https://stackoverflow.com › questions › better-way-to-s...",
+      snippet:
+        "18 Answers 18 · brilliant answer, is it possible to put $scope.travelerTotal = $scope.sum($scope. · Yes if it comes after the sum function is created. – Gruff ...",
+      snippetHighlightWords: ["sum", "sum"],
     },
     {
       title: "How to sum properties of elements in an object-array?",

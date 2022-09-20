@@ -405,7 +405,7 @@ export default class App extends Vue {
         progress: 80,
       },
       {
-        attach: ".code-example",
+        attach: "div.v-list", //".code-example",
         title: "You're all set!",
         text: "You can use this example to complete the tutorial. Or explore the other signatures below.",
         action: "Click Next in the Task Instructions pane on the right.",
@@ -422,7 +422,7 @@ export default class App extends Vue {
     this.displayFocusedElement = selector;
     this.dialog = true;
     const resultIndex = this.results.findIndex(
-      (res) => res.url === url && selector === "#answer-43281805"
+      (res) => res.url === url && selector === "#answer-59730051"
     );
     if (resultIndex === 0 && this.wtStep === 2) {
       this.wtShow = false;
@@ -529,7 +529,7 @@ export default class App extends Vue {
     this.search.logEvent(result?.url || "", "projection", "expand", sigText);
     if (result) {
       const resultIndex = this.results.findIndex(
-        (res) => res.url === result.url && sigText === "T[].reduce(function): T"
+        (res) => res.url === result.url && sigText === "T[].reduce(function, U): U"
       );
       if (resultIndex === 0 && this.wtStep === 1) {
         this.wtShow = false;
