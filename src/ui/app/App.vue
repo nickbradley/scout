@@ -228,7 +228,7 @@ import CodeContext from "./CodeContext";
 import {
   AppConfig,
   isImportToken,
-  isFunctionToken,
+  isFunctionCallToken,
   CodeToken,
 } from "../../types";
 import { resultsCache } from "./resultsCache";
@@ -355,21 +355,17 @@ export default class App extends Vue {
   }
 
   get hostContext(): CodeContext {
-    let context;
-    if (this.study.contextOverride) {
-      context = new CodeContext(this.study.contextOverride);
-    } else {
-      context = this.codeTokens.map((t) => {
+    const context = this.codeTokens
+      .filter((t) => isImportToken(t) || isFunctionCallToken(t))
+      .map((t) => {
         if (isImportToken(t)) {
           return { kind: "library", value: t.module.name };
-        } else if (isFunctionToken(t)) {
+        } else {
           return { kind: "call", value: t.name };
         }
       });
-      context.push({ kind: "language", value: "javascript" });
-    }
-
-    return context;
+    context.push({ kind: "language", value: "javascript" });
+    return new CodeContext(context);
   }
 
   get walkthroughStep(): WalkthroughStep {
@@ -384,8 +380,8 @@ export default class App extends Vue {
       {
         attach: ".v-expansion-panel-header",
         title: "Call Signatures",
-        text: "Scout extracts call signatures from each Stack Overflow page.",
-        action: "Click the signature to see examples.",
+        text: "Scout extracts call signatures from each Stack Overflow page. Types matching the source code are highlighted on hover.",
+        action: "Click the signature to see example usages.",
         progress: 40,
       },
       {
@@ -529,7 +525,8 @@ export default class App extends Vue {
     this.search.logEvent(result?.url || "", "projection", "expand", sigText);
     if (result) {
       const resultIndex = this.results.findIndex(
-        (res) => res.url === result.url && sigText === "T[].reduce(function, U): U"
+        (res) =>
+          res.url === result.url && sigText === "T[].reduce(function, U): U"
       );
       if (resultIndex === 0 && this.wtStep === 1) {
         this.wtShow = false;
@@ -575,7 +572,6 @@ export default class App extends Vue {
         this.appEvents = [];
         this.study.activeTask = activeTaskId;
         this.codeTokens = [];
-        // this.hostContext = new CodeContext();
         this.selectedContext = null;
         isNewTask = true;
       }
@@ -591,16 +587,15 @@ export default class App extends Vue {
       if (treatment) {
         this.study.showSnippets = treatment.enableFragments;
         this.study.showContext = treatment.showContext;
-        if (
-          JSON.stringify(this.study.contextOverride) !==
-          JSON.stringify(treatment.contextOverride)
-        ) {
-          this.study.contextOverride = treatment.contextOverride;
-        }
       }
 
-      const tokens = (await this.$host.getContext()).tokens;
+      const actualTokens = (await this.$host.getContext()).tokens;
+      // console.log("ACTUAL TOKENS", actualTokens);
+      const overrideTokens = treatment?.contextOverride || [];
+
+      const tokens = actualTokens.length > 0 ? actualTokens : overrideTokens;
       if (JSON.stringify(tokens) !== JSON.stringify(this.codeTokens)) {
+        console.log("UPDATING TOKENS", tokens);
         this.codeTokens = tokens;
       }
 
