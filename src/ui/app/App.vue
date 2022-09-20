@@ -207,7 +207,6 @@
     </v-dialog>
     <Walkthrough
       v-if="!wtDisable && wtStep <= 4 && wtShow"
-      :value="wtShow"
       v-bind="walkthroughStep"
     ></Walkthrough>
   </v-app>
@@ -376,10 +375,10 @@ export default class App extends Vue {
   get walkthroughStep(): WalkthroughStep {
     const steps = [
       {
-        attach: ".v-select__slot",
+        attach: ".v-input__slot",
         title: "Search",
         text: "Search Google for Stack Overflow results.",
-        action: 'Type "sum object property array" and press Enter.',
+        action: "Type <code>sum object property array</code> and press Enter.",
         progress: 20,
       },
       {
@@ -390,10 +389,11 @@ export default class App extends Vue {
         progress: 40,
       },
       {
-        attach: ".mdi-open-in-new",
+        attach: ".v-expansion-panel-content .code-example",
         title: "Usage Examples",
-        text: "Scout shows several example usages of the call signature from the Stack Overflow page.",
-        action: "Click the button on the right to open the full page.",
+        text: "Scout shows up to three example usages of the call signature from the Stack Overflow page.",
+        action:
+          "Click the <i class='v-icon notranslate mdi mdi-open-in-new theme--light'></i> button to open the Stack Overflow answer.",
         top: true,
         progress: 60,
       },
@@ -409,6 +409,7 @@ export default class App extends Vue {
         title: "You're all set!",
         text: "You can use this example to complete the tutorial. Or explore the other signatures below.",
         action: "Click Next in the Task Instructions pane on the right.",
+        closable: true,
         progress: 100,
       },
     ];
@@ -428,7 +429,7 @@ export default class App extends Vue {
       setTimeout(() => {
         this.wtStep++;
         this.wtShow = true;
-      }, 1500);
+      }, 500);
     }
   }
 
@@ -439,7 +440,9 @@ export default class App extends Vue {
     this.displayFocusedElement = "";
 
     if (this.wtStep === 3) {
+      this.wtShow = false;
       this.wtStep++;
+      this.$nextTick(() => (this.wtShow = true));
     }
   }
 
@@ -529,7 +532,9 @@ export default class App extends Vue {
         (res) => res.url === result.url && sigText === "T[].reduce(function): T"
       );
       if (resultIndex === 0 && this.wtStep === 1) {
+        this.wtShow = false;
         this.wtStep++;
+        this.$nextTick(() => (this.wtShow = true));
       }
     }
   }
