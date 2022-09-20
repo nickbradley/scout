@@ -13,8 +13,10 @@ import {
   ImportDeclaration,
   ScriptTarget,
   SyntaxKind,
+  PropertyAccessExpression,
+  MethodSignature,
 } from "ts-morph";
-import { CallSignature, CodeToken, FunctionToken, ImportToken, TokenPosition } from "../types";
+import { CallSignature, CodeToken, FunctionToken, ImportToken, FunctionCallToken, TokenPosition } from "../types";
 
 export interface IsCodeAnnotation {
   value: string;
@@ -206,7 +208,7 @@ export class CodeBlock implements IsCodeBlock {
     return sigs;
   }
 
-  public getCallExpressions(): CallExpression[] {
+  public getCallExpressions(root: Node = this.sourceFile): CallExpression[] {
     const nodes: CallExpression[] = [];
     const matcher = (node: Node) => {
       if (Node.isCallExpression(node)) {
@@ -214,7 +216,7 @@ export class CodeBlock implements IsCodeBlock {
       }
       node.forEachChild(matcher);
     };
-    this.sourceFile.forEachChild(matcher);
+    root.forEachChild(matcher);
     return nodes;
   }
 
@@ -302,6 +304,36 @@ export class CodeBlock implements IsCodeBlock {
         },
       })),
       returnType: functionDeclaration.getReturnType().getBaseTypeOfLiteralType().getText(),
+    };
+  }
+
+  public getCallTypes(callExpression: CallExpression): FunctionCallToken {
+    let nameNode: Identifier;
+    if (Node.isPropertyAccessExpression(callExpression.getExpression())) {
+      // foo.bar() or foo().bar()
+      const propertyAccessExpression = callExpression.getExpression() as PropertyAccessExpression;
+      nameNode = propertyAccessExpression.getNameNode();
+    } else {
+      // bar()
+      nameNode = callExpression.getExpression() as Identifier;
+    }
+
+    const expressionSignature = nameNode.getSymbol()?.getValueDeclaration() as MethodSignature;
+    const expressionParameters = expressionSignature?.getParameters();
+
+    return {
+      source: this.source,
+      name: nameNode.getText(),
+      position: this.getNodePosition(callExpression),
+      variables: [],
+      arguments: callExpression.getArguments()?.map((arg, i) => ({
+        source: this.source,
+        name: expressionParameters ? expressionParameters[i]?.getName() : "", 
+        type: arg.getType().getBaseTypeOfLiteralType().getText(),
+        value: arg.getText(),
+        position: this.getNodePosition(arg),
+      })) ?? [],
+      returnType: callExpression.getReturnType().getBaseTypeOfLiteralType().getText(),
     };
   }
 

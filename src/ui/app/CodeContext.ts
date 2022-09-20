@@ -3,7 +3,7 @@ import {
   LanguageToken,
   LibraryToken,
   CallToken,
-} from "../../common/types";
+} from "../../types";
 
 export default class CodeContext {
   constructor(public readonly tokens: ContextToken[] = []) {}

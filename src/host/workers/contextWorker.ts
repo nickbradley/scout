@@ -31,7 +31,8 @@ parentPort!.on("message", async function (message) {
             .filter(token => !token.module.name.includes("/"))
             .filter(token => token.references.some(ref => activeFunction.containsRange(ref?.start ?? -1 , ref?.end ?? -1)));
         const functionTokens = code.getFunctionTypes(activeFunction);
-        codeTokens.push(...importTokens, functionTokens);
+        const calls = code.getCallExpressions(activeFunction).map((exp) => code.getCallTypes(exp));
+        codeTokens.push(...importTokens, ...calls, functionTokens);
     }
   
     parentPort!.postMessage({ functionId: fnId, codeTokens });

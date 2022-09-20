@@ -68,11 +68,17 @@ export interface CodeToken {
 }
 
 export type VariableToken = CodeToken & { type: CodeToken };
+export type BoundToken = CodeToken & { type: string, value: any };
 export type ImportToken = CodeToken & { module: CodeToken, references: Array<TokenPosition | undefined> };
 export type FunctionToken = CodeToken & {
   returnType: string;
   variables: VariableToken[];
   parameters: VariableToken[];
+};
+export type FunctionCallToken = CodeToken & {
+  returnType: string;
+  variables: BoundToken[];
+  arguments: BoundToken[];
 };
 
 export function isImportToken(token: CodeToken): token is ImportToken {
@@ -80,7 +86,11 @@ export function isImportToken(token: CodeToken): token is ImportToken {
 }
 
 export function isFunctionToken(token: CodeToken): token is FunctionToken {
-  return typeof (token as any)["returnType"] === "string";
+  return typeof (token as any)["parameters"] === "object";
+}
+
+export function isFunctionCallToken(token: CodeToken): token is FunctionCallToken {
+  return typeof (token as any)["arguments"] === "object";
 }
 
 export interface Recommendation {
