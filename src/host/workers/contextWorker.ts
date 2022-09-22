@@ -29,7 +29,7 @@ parentPort!.on("message", async function (message) {
         const importTokens = imports
             .flatMap(imp => code.getImportTokens(imp))
             .filter(token => !token.module.name.includes("/"))
-            .filter(token => token.references.some(ref => activeFunction.containsRange(ref?.start ?? -1 , ref?.end ?? -1)));
+            // .filter(token => token.references.some(ref => activeFunction.containsRange(ref?.start ?? -1 , ref?.end ?? -1)));
         const functionTokens = code.getFunctionTypes(activeFunction);
         const calls = code.getCallExpressions(activeFunction).map((exp) => code.getCallTypes(exp));
         codeTokens.push(...importTokens, ...calls, functionTokens);
