@@ -461,6 +461,11 @@ export default class App extends Vue {
   }
 
   async onSearch(searchPromise: Promise<Search>): Promise<void> {
+    this.appEvents.push({
+      timestamp: new Date(),
+      name: "search",
+      data: "search-start",
+    });
     this.wtShow = false;
     this.signatures = [];
 
@@ -492,6 +497,21 @@ export default class App extends Vue {
             .finally(() => {
               this.pagesToLoad--;
               result.areSignaturesLoading = false;
+              search.logEvent(
+                result.url,
+                "projection",
+                "loaded",
+                `projection ${search.results.length - this.pagesToLoad} of ${
+                  search.results.length
+                }`
+              );
+              if (this.pagesToLoad === 0) {
+                this.appEvents.push({
+                  timestamp: new Date(),
+                  name: "search",
+                  data: "search-done",
+                })
+              }
               const resultIndex = this.results.findIndex(
                 (res) => res.url === result.url
               );
@@ -504,7 +524,24 @@ export default class App extends Vue {
             });
         }
       } else {
-        setTimeout(() => (this.pagesToLoad = 0), 1200); // just for effect
+        setTimeout(() => {
+          this.pagesToLoad = 0;
+          search.results.forEach((result, i) =>
+            search.logEvent(
+              result.url,
+              "projection",
+              "loaded",
+              `projection ${search.results.length - i} of ${
+                search.results.length
+              }`
+            )
+          );
+          this.appEvents.push({
+            timestamp: new Date(),
+            name: "search",
+            data: "search-done",
+          });
+        }, 1200); // just for effect
       }
     } catch (err) {
       console.warn(err);
@@ -590,7 +627,7 @@ export default class App extends Vue {
       }
 
       const actualTokens = (await this.$host.getContext()).tokens;
-      // console.log("ACTUAL TOKENS", actualTokens);
+      console.log("ACTUAL TOKENS", actualTokens);
       const overrideTokens = treatment?.contextOverride || [];
 
       const tokens = actualTokens.length > 0 ? actualTokens : overrideTokens;
