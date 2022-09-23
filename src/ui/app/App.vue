@@ -396,7 +396,7 @@ export default class App extends Vue {
       {
         attach: ".close-dialog",
         title: "Full Page View",
-        text: "The full Stack Overflow page is displayed scrolled to the answer containing the usage example (the bottom of the first code block).",
+        text: "The full Stack Overflow page is displayed scrolled to the answer containing the usage example.",
         action: "Click the X or press Esc to close the page.",
         progress: 80,
       },
@@ -510,7 +510,7 @@ export default class App extends Vue {
                   timestamp: new Date(),
                   name: "search",
                   data: "search-done",
-                })
+                });
               }
               const resultIndex = this.results.findIndex(
                 (res) => res.url === result.url
@@ -627,12 +627,10 @@ export default class App extends Vue {
       }
 
       const actualTokens = (await this.$host.getContext()).tokens;
-      console.log("ACTUAL TOKENS", actualTokens);
       const overrideTokens = treatment?.contextOverride || [];
 
       const tokens = actualTokens.length > 0 ? actualTokens : overrideTokens;
       if (JSON.stringify(tokens) !== JSON.stringify(this.codeTokens)) {
-        console.log("UPDATING TOKENS", tokens);
         this.codeTokens = tokens;
       }
 
