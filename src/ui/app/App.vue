@@ -470,6 +470,10 @@ export default class App extends Vue {
     this.wtShow = false;
     this.signatures = [];
 
+    if (this.study.activeTask === "tutorial") {
+      this.searchDisabled = true;
+    }
+
     try {
       this.resetResults = true;
       setTimeout(() => (this.pagesToLoad = 0), 12000);
@@ -618,6 +622,7 @@ export default class App extends Vue {
         this.wtShow = true;
       } else {
         this.wtDisable = true;
+        this.searchDisabled = false;
       }
       const treatment = toastData.tasks.find(
         (task) => task.id === activeTaskId
