@@ -363,7 +363,8 @@ export default class App extends Vue {
         } else {
           return { kind: "call", value: t.name };
         }
-      });
+      })
+      .filter((a, i, arr) => arr.findIndex((s) => a.value === s.value) === i);
     context.push({ kind: "language", value: "javascript" });
     return new CodeContext(context);
   }
