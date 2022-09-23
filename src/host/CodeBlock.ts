@@ -307,6 +307,21 @@ export class CodeBlock implements IsCodeBlock {
     };
   }
 
+  public isCallExpressionImported(callExpression: CallExpression): boolean {
+    let nameNode: Identifier;
+    if (Node.isPropertyAccessExpression(callExpression.getExpression())) {
+      // foo.bar() or foo().bar()
+      const propertyAccessExpression = callExpression.getExpression() as PropertyAccessExpression;
+      nameNode = propertyAccessExpression.getExpression() as Identifier;  // foo
+    } else {
+      // bar()
+      nameNode = callExpression.getExpression() as Identifier;  // bar
+    }
+
+    const declarations = nameNode.getSymbol()?.getDeclarations();
+    return declarations && declarations?.length > 0 ? Node.isImportClause(declarations[0]) : false;
+  }
+
   public getCallTypes(callExpression: CallExpression): FunctionCallToken {
     let nameNode: Identifier;
     if (Node.isPropertyAccessExpression(callExpression.getExpression())) {

@@ -31,7 +31,9 @@ parentPort!.on("message", async function (message) {
             .filter(token => !token.module.name.includes("/"))
             // .filter(token => token.references.some(ref => activeFunction.containsRange(ref?.start ?? -1 , ref?.end ?? -1)));
         const functionTokens = code.getFunctionTypes(activeFunction);
-        const calls = code.getCallExpressions(activeFunction).map((exp) => code.getCallTypes(exp));
+        const calls = code.getCallExpressions(activeFunction)
+        .filter((exp) => code.isCallExpressionImported(exp))
+        .map((exp) => code.getCallTypes(exp));
         codeTokens.push(...importTokens, ...calls, functionTokens);
     }
   
