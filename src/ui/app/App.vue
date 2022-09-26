@@ -635,7 +635,8 @@ export default class App extends Vue {
       const actualTokens = (await this.$host.getContext()).tokens;
       const overrideTokens = treatment?.contextOverride || [];
 
-      const tokens = actualTokens.length > 0 ? actualTokens : overrideTokens;
+      // const tokens = actualTokens.length > 0 ? actualTokens : overrideTokens;
+      const tokens = overrideTokens.length > 0 ? overrideTokens : actualTokens;
       if (JSON.stringify(tokens) !== JSON.stringify(this.codeTokens)) {
         this.codeTokens = tokens;
       }
