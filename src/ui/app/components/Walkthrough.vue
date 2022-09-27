@@ -20,7 +20,7 @@
         >
       </v-card-title>
       <v-card-text class="text-left">
-        {{ text }}
+        <span v-html="text"></span>
         <v-divider></v-divider>
         <v-alert
           dense
@@ -66,6 +66,9 @@ export default class Walkthrough extends Vue {
         classes += " bottom";
       }
     }
+    if (!this.visible) {
+      classes += " hidden";
+    }
     return classes;
   }
 }
@@ -77,6 +80,10 @@ export default class Walkthrough extends Vue {
   margin: 10px;
   contain: initial;
   overflow: visible;
+}
+
+.tooltip.hidden {
+  display: none;
 }
 
 .tooltip::before {

@@ -388,9 +388,9 @@ export default class App extends Vue {
       {
         attach: ".v-expansion-panel-content .code-example",
         title: "Usage Examples",
-        text: "Scout shows up to three example usages of the call signature from the Stack Overflow page.",
+        text: "Scout shows up to three call signature from the Stack Overflow page. The USAGE tab shows a concise example call. The CODE tab provides the complete example code. The <i class='v-icon notranslate mdi mdi-open-in-new theme--light'></i> button opens the full page.",
         action:
-          "Click the <i class='v-icon notranslate mdi mdi-open-in-new theme--light'></i> button to open the Stack Overflow answer.",
+          "Click the CODE tab to see the full example code then click <i class='v-icon notranslate mdi mdi-open-in-new theme--light'></i> to open the full page.",
         top: true,
         progress: 60,
       },
@@ -405,7 +405,7 @@ export default class App extends Vue {
         attach: "div.v-list", //".code-example",
         title: "You're all set!",
         text: "You can use this example to complete the tutorial. Or explore the other signatures below.",
-        action: "Click Next in the Task Instructions pane on the right.",
+        action: "Click Next in the Task Instructions pane on the right and use the USAGE example above to complete the task.",
         closable: true,
         progress: 100,
       },
