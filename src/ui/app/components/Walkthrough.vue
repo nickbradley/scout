@@ -11,6 +11,7 @@
     :content-class="css"
     :top="top"
     :value="visible"
+    :min-width="270"
   >
     <v-card id="walkthrough">
       <v-card-title color="white">
@@ -24,8 +25,9 @@
         <v-divider></v-divider>
         <v-alert
           dense
-          elevation="2"
-          class="text-caption"
+          elevation="1"
+          tile
+          class="text-caption mb-1"
           border="left"
           colored-border
           color="success"

@@ -389,23 +389,23 @@ export default class App extends Vue {
       {
         attach: ".v-input__slot",
         title: "Search",
-        text: "Search Google for Stack Overflow results.",
+        text: "Search Google for Stack Overflow (SO) results.",
         action: "Type <code>sum object property array</code> and press Enter.",
         progress: 20,
       },
       {
         attach: ".v-expansion-panel-header",
         title: "Call Signatures",
-        text: "Scout extracts call signatures from each Stack Overflow page. Types matching the source code are highlighted on hover.",
+        text: "Scout extracts up to 3 call signatures from each Stack Overflow (SO) page. Types matching the source code are highlighted on hover.",
         action: "Click the signature to see example usages.",
         progress: 40,
       },
       {
         attach: ".v-expansion-panel-content .code-example",
         title: "Usage Examples",
-        text: "Scout shows up to three call signature from the Stack Overflow page. The USAGE tab shows a concise example call while the CODE tab provides the complete example code.",
+        text: "The USAGE tab shows a concise example call. The CODE tab provides the full code example from SO.",
         action:
-          "Open the CODE tab then click <i class='v-icon notranslate mdi mdi-open-in-new theme--light'></i> to open the full page.",
+          "Click the CODE tab then click <i class='v-icon notranslate mdi mdi-open-in-new theme--light'></i> to open the full SO page.",
         top: true,
         progress: 60,
       },
