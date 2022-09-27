@@ -209,6 +209,14 @@
       v-if="!wtDisable && wtStep <= 4 && wtShow"
       v-bind="walkthroughStep"
     ></Walkthrough>
+    <v-snackbar v-model="snackbar" :timeout="10000"
+      >No signatures available: using Google results.
+      <template v-slot:action="{ attrs }">
+        <v-btn color="indigo" text v-bind="attrs" @click="snackbar = false">
+          Close
+        </v-btn>
+      </template>
+    </v-snackbar>
   </v-app>
 </template>
 
@@ -306,6 +314,13 @@ export default class App extends Vue {
 
   display = "page";
   signatures = [];
+
+  snackbar = false;
+
+  @Watch("study", { deep: true })
+  showSnackbar(): void {
+    this.snackbar = !this.study.showSnippets;
+  }
 
   @Watch("log", { deep: true })
   async saveSearches(): Promise<void> {
@@ -405,7 +420,8 @@ export default class App extends Vue {
         attach: "div.v-list", //".code-example",
         title: "You're all set!",
         text: "You can use this example to complete the tutorial. Or explore the other signatures below.",
-        action: "Click Next in the Task Instructions pane on the right and use the USAGE example above to complete the task.",
+        action:
+          "Click Next in the Task Instructions pane on the right and use the USAGE example above to complete the task.",
         closable: true,
         progress: 100,
       },
