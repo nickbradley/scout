@@ -403,9 +403,9 @@ export default class App extends Vue {
       {
         attach: ".v-expansion-panel-content .code-example",
         title: "Usage Examples",
-        text: "Scout shows up to three call signature from the Stack Overflow page. The USAGE tab shows a concise example call. The CODE tab provides the complete example code. The <i class='v-icon notranslate mdi mdi-open-in-new theme--light'></i> button opens the full page.",
+        text: "Scout shows up to three call signature from the Stack Overflow page. The USAGE tab shows a concise example call while the CODE tab provides the complete example code.",
         action:
-          "Click the CODE tab to see the full example code then click <i class='v-icon notranslate mdi mdi-open-in-new theme--light'></i> to open the full page.",
+          "Open the CODE tab then click <i class='v-icon notranslate mdi mdi-open-in-new theme--light'></i> to open the full page.",
         top: true,
         progress: 60,
       },
