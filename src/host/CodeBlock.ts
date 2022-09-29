@@ -117,7 +117,11 @@ export class CodeBlock implements IsCodeBlock {
     const calls = this.getUnnestedCallExpressions();
 
     for (const call of calls) {
-      const usage = call.getText();
+      const variableStmt = call.getParent()?.getParent()?.getParent();
+      const usage = Node.isVariableStatement(variableStmt) ?
+      variableStmt.getText() :
+      call.getText();
+
       const signature = checker.getResolvedSignature(call);
       const declaration = signature?.getDeclaration();
       const returnType =
