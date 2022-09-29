@@ -1,9 +1,5 @@
 <template>
-  <div
-    class="mx-0 py-3 text-truncate"
-    @mouseenter="onMouseOver"
-    @mouseleave="onMouseLeave"
-  >
+  <div class="mx-0 py-3 text-truncate">
     <code class="pa-0">
       <span
         v-html="scope"
