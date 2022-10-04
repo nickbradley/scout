@@ -206,7 +206,7 @@ export default class SearchResult extends Vue {
       (answer) =>
         new Block(
           answer.dataset.answerid || "",
-          answer.querySelector(".s-prose") as HTMLElement
+          answer //.querySelector(".s-prose") as HTMLElement
         )
     );
     this._blocks = blocks;
@@ -281,7 +281,12 @@ export default class SearchResult extends Vue {
           height: number;
           width: number;
         };
-        blocks: Block[];
+        document: {
+          wdith: number;
+          height: number;
+        };
+        question: Block;
+        answers: Block[];
       }
     ) => void
   ): void {
@@ -302,8 +307,20 @@ export default class SearchResult extends Vue {
         );
         const x = win?.scrollX ?? NaN;
         const y = win?.scrollY ?? NaN;
-        const blocks = this.getBlocks();
-        listener("scroll", { viewport: { x, y, height, width }, blocks });
+        const questionElement = this.doc?.querySelector("#question");
+        const answers = this.getBlocks();
+        listener("scroll", {
+          viewport: { x, y, height, width },
+          document: {
+            height: this.doc?.body.scrollHeight,
+            width: this.doc?.body.scrollWidth,
+          },
+          question: new Block(
+            questionElement.dataset.questionid || "",
+            questionElement
+          ),
+          answers,
+        });
       }, 500) as unknown as number;
     };
 
