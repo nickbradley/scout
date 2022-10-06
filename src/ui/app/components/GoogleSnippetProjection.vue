@@ -1,5 +1,6 @@
 <template>
   <v-card-text
+    ref="snippet"
     id="snippet"
     class="pa-0 d-inline"
     v-html="embelishedSnippet"
@@ -11,6 +12,8 @@
 
 <script lang="ts">
 import { Vue, Component, Prop } from "vue-property-decorator";
+
+import * as Util from "../Util";
 
 @Component()
 export default class GoogleSnippetProjection extends Vue {
@@ -40,6 +43,13 @@ export default class GoogleSnippetProjection extends Vue {
         this.$emit("copy", selection.toString());
       }
     }
+  }
+
+  mounted(): void {
+    const rect = this.$refs.snippet.getBoundingClientRect();
+    const wc = Util.getWordCount(this.snippet);
+    const lc = Util.getLineCount(this.snippet);
+    this.$emit("load", { height: rect.height, width: rect.width, wc, lc });
   }
 }
 </script>

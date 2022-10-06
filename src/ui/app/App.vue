@@ -65,6 +65,10 @@
                 (data) =>
                   search.logEvent(result.url, 'projection', 'selection', data)
               "
+              @load="
+                (props) =>
+                  search.logEvent(result.url, 'projection', 'load', props)
+              "
             ></GoogleSnippetProjection>
           </SearchResult>
         </template>
@@ -100,6 +104,10 @@
                       sig: rec.text,
                       selection: text,
                     })
+                "
+                @tabchange="
+                  (props) =>
+                    search.logEvent(result.url, 'projection', 'tab', props)
                 "
               >
               </SignatureListProjection>
@@ -146,6 +154,10 @@
                         sig: rec.text,
                         selection: text,
                       })
+                  "
+                  @tabchange="
+                    (props) =>
+                      search.logEvent(result.url, 'projection', 'tab', props)
                   "
                 >
                 </SignatureListProjection>

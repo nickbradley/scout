@@ -73,6 +73,9 @@
                     (selection) =>
                       $emit('selectionchange', rec, selection.toString())
                   "
+                  @tabchange="
+                    (props) => $emit('tabchange', { ...props, sig: rec.text })
+                  "
                 ></SignatureExample>
               </v-list-item>
             </v-list>
